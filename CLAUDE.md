@@ -9,10 +9,11 @@ See `@README.md` for complete project overview, architecture, design principles,
 ## Claude Code Specific Guidance
 
 ### Development Workflow
-- No build tools required - run TypeScript files directly with `npx tsx`
+- No build tools required
 - All core functions should be pure (no side effects) and ≤25 lines
 - Use functional composition via `flow()` utility, not method chaining
 - Test individual modules by running them directly
+- Each function ideally under 25 lines, single responsibility
 
 ### Key Implementation Notes
 - Token counting uses tiktoken with character-based fallback
