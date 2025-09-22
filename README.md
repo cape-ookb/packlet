@@ -76,8 +76,14 @@ pnpm install
 # Run the chunker
 pnpm dev
 
-# Run tests
+# Run tests (watch mode)
 pnpm test
+
+# Run tests once (CI mode)
+pnpm test:run
+
+# Run specific test file
+pnpm test:run flatten-ast
 
 # Run tests with coverage
 pnpm test:coverage
