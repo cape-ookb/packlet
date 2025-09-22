@@ -62,6 +62,36 @@ const pipeline = flow(
 
 Each stage transforms the data and passes it to the next stage. Functions are pure with no side effects.
 
+## Development
+
+### Prerequisites
+- Node.js ≥18.0.0
+- pnpm ≥8.0.0
+
+### Setup
+```bash
+# Install dependencies
+pnpm install
+
+# Run the chunker
+pnpm dev
+
+# Run tests
+pnpm test
+
+# Run tests with coverage
+pnpm test:coverage
+
+# Type checking
+pnpm typecheck
+
+# Linting
+pnpm lint
+```
+
+### Package Management
+This project uses **pnpm** for dependency management. All commands should use `pnpm` instead of `npm` or `yarn`.
+
 ## Key Files for Understanding
 
 - **`@strategy.md`** - Complete 16-step algorithm specification and principles
