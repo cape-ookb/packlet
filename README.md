@@ -1,34 +1,69 @@
-# Chunker Context Summary
+# Document Chunking System
+
+A high-quality document chunking system designed for vector database indexing. Processes markdown documents (especially documentation) into semantically coherent chunks optimized for embedding and retrieval.
 
 ## Current Status
 Working on building a high-quality document chunking system in TypeScript. The goal is to create semantically coherent chunks for vector database indexing with low-quality chunks.
 
-## Problem Identified
-The existing hierarchical chunker (`scripts/lib/hierarchical-chunker.js`) has a performance bug causing timeouts when processing large documents. It should complete in <10 seconds but hangs indefinitely.
-
 ## Architecture
-Modular TypeScript chunker in `/chunker` directory with these files:
-- `index.ts` - Pipeline orchestration using flow composition
-- `parse-markdown.ts` - Parse markdown to AST
-- `flatten-ast.ts` - Extract nodes from AST (references flatten-ast.md for algorithm details)
-- `split-node.ts` - Recursive splitting of oversized nodes
-- `packer.ts` - Intelligent buffering with look-ahead merge
-- `overlap.ts` - Sentence-based context overlap
-- `normalize.ts` - Text cleanup preserving code blocks
-- `metadata.ts` - Attach chunk metadata
-- `guardrails.ts` - Quality validation
-- `stats.ts` - Performance metrics
-- `tokenizer.ts` - Token counting (tiktoken/heuristic)
-- `utils.ts` - Flow utility
-- `types.ts` - TypeScript interfaces
 
-## Key Design Decisions
-1. **Hierarchical splitting** - Only split when chunks exceed token limits
-2. **Sentence overlap** - Better than token overlap for semantic continuity
-3. **Quality filtering during creation** - Not post-filtering
-4. **Target metrics**: 200-400 chunks, 400-500 avg tokens, <10 sec processing
+The project consists of two main implementations:
 
-## Related Files
-- `/chunker/*.ts` - TypeScript implementation stubs with detailed documentation
-- `/scripts/chunking-strategy.md` - Complete algorithm specification (16-step process)
-- `/chunker/flatten-ast.md` - Referenced for detailed flattening algorithm
+### TypeScript Chunker (Primary)
+Modular pipeline-based chunker following functional programming principles:
+
+- **`index.ts`** - Main orchestration pipeline using flow composition
+- **`parse-markdown.ts`** - Parse markdown to AST
+- **`flatten-ast.ts`** - Extract nodes from AST (references flatten-ast.md for algorithm details)
+- **`split-node.ts`** - Recursive splitting of oversized nodes
+- **`packer.ts`** - Intelligent buffering with look-ahead merge
+- **`overlap.ts`** - Sentence-based context overlap between chunks
+- **`normalize.ts`** - Text cleanup preserving code blocks
+- **`metadata.ts`** - Attach chunk metadata (headings, paths, etc.)
+- **`guardrails.ts`** - Quality validation and filtering
+- **`stats.ts`** - Performance metrics and analysis
+- **`tokenizer.ts`** - Token counting (tiktoken with fallback)
+- **`utils.ts`** - Flow composition utilities
+- **`types.ts`** - TypeScript interfaces
+
+### Python Implementation (Reference)
+`generate_chunks.py` - Working reference implementation using LangChain for markdown chunking.
+
+## Key Design Principles
+
+1. **Hierarchical Splitting** - Split by structure (headings → paragraphs → sentences) before arbitrary cuts
+2. **Token-Aware Sizing** - Use tiktoken for accurate token measurement, not character counts
+3. **Sentence-Based Overlap** - Maintains semantic continuity better than token boundaries
+4. **Quality-First** - Prevent low-quality chunks during creation, not through post-filtering
+5. **Small Pure Functions** - Each function ≤25 lines, single responsibility, no side effects where possible
+6. **Flow Composition** - Pipeline uses functional composition, not method chaining
+
+## Target Metrics
+
+- **Token Range**: ~400-500 average tokens per chunk. 64-512 strict range.
+- **Processing Speed**: <10 seconds for large documents (0.5MB)
+- **Quality**: 0 low-quality chunks (1 maximum for edge cases)
+
+## Flow Architecture
+
+The chunker uses functional composition via `flow()` utility:
+```typescript
+const pipeline = flow(
+  parseMarkdown,
+  flattenAst,
+  (nodes) => splitOversized(nodes, options, countTokens),
+  (nodes) => packNodes(nodes, options, countTokens),
+  (chunks) => addOverlap(chunks, options),
+  normalizeChunks,
+  (chunks) => attachMetadata(chunks, options, countTokens),
+  (chunks) => assertOrFilterInvalid(chunks, options),
+);
+```
+
+Each stage transforms the data and passes it to the next stage. Functions are pure with no side effects.
+
+## Key Files for Understanding
+
+- **`@strategy.md`** - Complete 16-step algorithm specification and principles
+- **`@flatten-ast.md`** - Detailed AST flattening algorithm
+- **`@chunk-format-documentation.md`** - Output chunk structure specification
