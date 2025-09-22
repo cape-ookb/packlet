@@ -3,6 +3,7 @@
 .DS_Store
 chunks
 docs
+sample-docs
 
 # Dependencies
 node_modules/

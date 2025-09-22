@@ -2,7 +2,7 @@
 
 1. **Set up parser**: Install `remark-parse` (and `remark-gfm` for tables) and confirm Markdown → mdast parsing works on sample docs. Deliverable: `parseMarkdown.ts` that returns an mdast tree.
 
-2. **Flatten AST**: Write `flattenAst.ts` that converts mdast → array of flat nodes (headings, paragraphs, list items, code blocks, tables, blockquotes). Deliverable: function + unit test with sample Markdown input and expected node array.
+2. **Flatten AST**: Write `flatten-ast.ts` that converts mdast → array of flat nodes (headings, paragraphs, list items, code blocks, tables, blockquotes). Deliverable: function + unit test with sample Markdown input and expected node array.
 
 3. **Token counter**: Implement `tokenizer.ts` wrapping `js-tiktoken`. Deliverable: function `countTokens(text)` with test verifying counts on sample text.
 

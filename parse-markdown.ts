@@ -14,8 +14,16 @@
  * - Tables and other markdown elements
  */
 
-// Parse Markdown into an AST structure
-export function parseMarkdown(text: string): any {
-  // TODO: Parse markdown into AST nodes using remark/mdast
-  return {};
+import { unified } from 'unified';
+import remarkParse from 'remark-parse';
+import remarkGfm from 'remark-gfm';
+import type { AstRoot } from './types';
+
+export function parseMarkdown(text: string): AstRoot {
+  const processor = unified()
+    .use(remarkParse)
+    .use(remarkGfm);
+
+  const ast = processor.parse(text);
+  return ast as AstRoot;
 }
