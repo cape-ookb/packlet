@@ -234,4 +234,35 @@ Final content.`;
       expect(node.headingTrail).toEqual(expectedTrails[index]);
     });
   });
+
+  it('should match expected JSON output for comprehensive sample', () => {
+    const content = readFileSync(join(__dirname, 'fixtures/sample-for-json.md'), 'utf-8');
+    const expectedJson = JSON.parse(readFileSync(join(__dirname, 'fixtures/sample-for-json.expected.json'), 'utf-8'));
+
+    const ast = parseMarkdown(content);
+    const flatNodes = flattenAst(ast);
+
+    // Clean up position data to match expected format (line/column only, no offset)
+    const cleanedNodes = flatNodes.map(node => ({
+      ...node,
+      position: node.position ? {
+        start: { line: node.position.start.line, column: node.position.start.column },
+        end: { line: node.position.end.line, column: node.position.end.column }
+      } : undefined
+    }));
+
+    expect(cleanedNodes).toEqual(expectedJson);
+
+    // Additional verification - check we have all expected node types
+    const nodeTypes = flatNodes.map(n => n.type);
+    expect(nodeTypes).toContain('heading');
+    expect(nodeTypes).toContain('paragraph');
+    expect(nodeTypes).toContain('code');
+    expect(nodeTypes).toContain('list-item');
+    expect(nodeTypes).toContain('table');
+    expect(nodeTypes).toContain('blockquote');
+
+    // Verify total count matches expected
+    expect(flatNodes).toHaveLength(21);
+  });
 });

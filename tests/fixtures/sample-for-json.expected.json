@@ -1,0 +1,397 @@
+[
+  {
+    "type": "heading",
+    "text": "Main Documentation",
+    "headingTrail": [
+      "Main Documentation"
+    ],
+    "depth": 1,
+    "position": {
+      "start": {
+        "line": 1,
+        "column": 1
+      },
+      "end": {
+        "line": 1,
+        "column": 21
+      }
+    }
+  },
+  {
+    "type": "paragraph",
+    "text": "This is the introduction paragraph explaining the purpose of this document.",
+    "headingTrail": [
+      "Main Documentation"
+    ],
+    "position": {
+      "start": {
+        "line": 3,
+        "column": 1
+      },
+      "end": {
+        "line": 3,
+        "column": 76
+      }
+    }
+  },
+  {
+    "type": "heading",
+    "text": "Getting Started",
+    "headingTrail": [
+      "Main Documentation",
+      "Getting Started"
+    ],
+    "depth": 2,
+    "position": {
+      "start": {
+        "line": 5,
+        "column": 1
+      },
+      "end": {
+        "line": 5,
+        "column": 19
+      }
+    }
+  },
+  {
+    "type": "paragraph",
+    "text": "Here's how to get started with our system.",
+    "headingTrail": [
+      "Main Documentation",
+      "Getting Started"
+    ],
+    "position": {
+      "start": {
+        "line": 7,
+        "column": 1
+      },
+      "end": {
+        "line": 7,
+        "column": 43
+      }
+    }
+  },
+  {
+    "type": "heading",
+    "text": "Installation",
+    "headingTrail": [
+      "Main Documentation",
+      "Getting Started",
+      "Installation"
+    ],
+    "depth": 3,
+    "position": {
+      "start": {
+        "line": 9,
+        "column": 1
+      },
+      "end": {
+        "line": 9,
+        "column": 17
+      }
+    }
+  },
+  {
+    "type": "paragraph",
+    "text": "Run the following command:",
+    "headingTrail": [
+      "Main Documentation",
+      "Getting Started",
+      "Installation"
+    ],
+    "position": {
+      "start": {
+        "line": 11,
+        "column": 1
+      },
+      "end": {
+        "line": 11,
+        "column": 27
+      }
+    }
+  },
+  {
+    "type": "code",
+    "text": "npm install our-package",
+    "headingTrail": [
+      "Main Documentation",
+      "Getting Started",
+      "Installation"
+    ],
+    "lang": "bash",
+    "position": {
+      "start": {
+        "line": 13,
+        "column": 1
+      },
+      "end": {
+        "line": 15,
+        "column": 4
+      }
+    }
+  },
+  {
+    "type": "heading",
+    "text": "Configuration",
+    "headingTrail": [
+      "Main Documentation",
+      "Getting Started",
+      "Configuration"
+    ],
+    "depth": 3,
+    "position": {
+      "start": {
+        "line": 17,
+        "column": 1
+      },
+      "end": {
+        "line": 17,
+        "column": 18
+      }
+    }
+  },
+  {
+    "type": "paragraph",
+    "text": "You can configure the system using:",
+    "headingTrail": [
+      "Main Documentation",
+      "Getting Started",
+      "Configuration"
+    ],
+    "position": {
+      "start": {
+        "line": 19,
+        "column": 1
+      },
+      "end": {
+        "line": 19,
+        "column": 36
+      }
+    }
+  },
+  {
+    "type": "code",
+    "text": "const config = {\n  apiKey: \"your-key\",\n  timeout: 5000\n};",
+    "headingTrail": [
+      "Main Documentation",
+      "Getting Started",
+      "Configuration"
+    ],
+    "lang": "javascript",
+    "position": {
+      "start": {
+        "line": 21,
+        "column": 1
+      },
+      "end": {
+        "line": 26,
+        "column": 4
+      }
+    }
+  },
+  {
+    "type": "heading",
+    "text": "Features",
+    "headingTrail": [
+      "Main Documentation",
+      "Features"
+    ],
+    "depth": 2,
+    "position": {
+      "start": {
+        "line": 28,
+        "column": 1
+      },
+      "end": {
+        "line": 28,
+        "column": 12
+      }
+    }
+  },
+  {
+    "type": "paragraph",
+    "text": "Our system provides several key features:",
+    "headingTrail": [
+      "Main Documentation",
+      "Features"
+    ],
+    "position": {
+      "start": {
+        "line": 30,
+        "column": 1
+      },
+      "end": {
+        "line": 30,
+        "column": 42
+      }
+    }
+  },
+  {
+    "type": "list-item",
+    "text": "Fast processing",
+    "headingTrail": [
+      "Main Documentation",
+      "Features"
+    ],
+    "position": {
+      "start": {
+        "line": 32,
+        "column": 1
+      },
+      "end": {
+        "line": 32,
+        "column": 18
+      }
+    }
+  },
+  {
+    "type": "list-item",
+    "text": "Easy configuration",
+    "headingTrail": [
+      "Main Documentation",
+      "Features"
+    ],
+    "position": {
+      "start": {
+        "line": 33,
+        "column": 1
+      },
+      "end": {
+        "line": 33,
+        "column": 21
+      }
+    }
+  },
+  {
+    "type": "list-item",
+    "text": "Robust error handling",
+    "headingTrail": [
+      "Main Documentation",
+      "Features"
+    ],
+    "position": {
+      "start": {
+        "line": 34,
+        "column": 1
+      },
+      "end": {
+        "line": 34,
+        "column": 24
+      }
+    }
+  },
+  {
+    "type": "heading",
+    "text": "Performance",
+    "headingTrail": [
+      "Main Documentation",
+      "Features",
+      "Performance"
+    ],
+    "depth": 3,
+    "position": {
+      "start": {
+        "line": 36,
+        "column": 1
+      },
+      "end": {
+        "line": 36,
+        "column": 16
+      }
+    }
+  },
+  {
+    "type": "paragraph",
+    "text": "The system is optimized for speed.",
+    "headingTrail": [
+      "Main Documentation",
+      "Features",
+      "Performance"
+    ],
+    "position": {
+      "start": {
+        "line": 38,
+        "column": 1
+      },
+      "end": {
+        "line": 38,
+        "column": 35
+      }
+    }
+  },
+  {
+    "type": "table",
+    "text": "MetricValueThroughput1000 req/sLatency< 50ms",
+    "headingTrail": [
+      "Main Documentation",
+      "Features",
+      "Performance"
+    ],
+    "position": {
+      "start": {
+        "line": 40,
+        "column": 1
+      },
+      "end": {
+        "line": 43,
+        "column": 21
+      }
+    }
+  },
+  {
+    "type": "blockquote",
+    "text": "Performance may vary based on your hardware configuration.",
+    "headingTrail": [
+      "Main Documentation",
+      "Features",
+      "Performance"
+    ],
+    "position": {
+      "start": {
+        "line": 45,
+        "column": 1
+      },
+      "end": {
+        "line": 45,
+        "column": 61
+      }
+    }
+  },
+  {
+    "type": "heading",
+    "text": "Conclusion",
+    "headingTrail": [
+      "Main Documentation",
+      "Conclusion"
+    ],
+    "depth": 2,
+    "position": {
+      "start": {
+        "line": 47,
+        "column": 1
+      },
+      "end": {
+        "line": 47,
+        "column": 14
+      }
+    }
+  },
+  {
+    "type": "paragraph",
+    "text": "This concludes the documentation overview.",
+    "headingTrail": [
+      "Main Documentation",
+      "Conclusion"
+    ],
+    "position": {
+      "start": {
+        "line": 49,
+        "column": 1
+      },
+      "end": {
+        "line": 49,
+        "column": 43
+      }
+    }
+  }
+]

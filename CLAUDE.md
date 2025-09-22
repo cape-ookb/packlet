@@ -32,3 +32,8 @@ See `@README.md` for complete project overview, architecture, design principles,
 - Functions: ≤3 parameters (prefer options object)
 - Cyclomatic complexity ≤5
 - No I/O or timing in core functions (only in boundary adapters)
+
+### Temporary Scripts
+- One-off scripts for generating test fixtures, data analysis, or debugging can be saved in `tmp/` directory
+- These scripts are not part of the main codebase but may be useful for future reference
+- Examples: fixture generators, data converters, analysis scripts

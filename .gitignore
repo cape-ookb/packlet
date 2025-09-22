@@ -4,6 +4,7 @@
 chunks
 docs
 sample-docs
+tmp
 
 # Dependencies
 node_modules/
