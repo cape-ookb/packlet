@@ -32,3 +32,39 @@ export type Chunk = {
 	tokens: number;
 	metadata?: Record<string, any>;
 };
+
+// Enhanced chunk type matching chunk-format-documentation.md
+export type EnhancedChunk = {
+	// Core identifiers
+	id: string;
+	parentId: string;
+	prevId: string | null;
+	nextId: string | null;
+
+	// Content fields
+	embedText: string;
+	displayMarkdown: string;
+
+	// Structural information
+	chunkNumber: number;
+	contentType: string;
+	heading: string;
+	headerPath: string[];
+
+	// Position tracking
+	charOffsets: {
+		charStart: number;
+		charEnd: number;
+		sourceLength: number;
+	};
+
+	// Metadata
+	metadata: {
+		source: string;
+		fileName: string;
+		timestamp: string;
+		nodeTypes: string[];
+		tokenCount: number;
+		[key: string]: any;
+	};
+};
