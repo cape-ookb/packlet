@@ -61,13 +61,14 @@ Store comprehensive header information in metadata for programmatic use and retr
 * **No markdown prefixes**: Store only text in `headerPath`, not `#` symbols
 * **Array vs string**: Keep both forms - array for manipulation (`headerPath`), string for display/search (`headerBreadcrumb`)
 * **Separator consistency**: Always use `" > "` for `headerBreadcrumb`
-* **Alternative (future if required) format**: Can use objects in `headerPath` for richer metadata:
+* **Future enhancement (not for current implementation)**: In the future, if needed, `headerPath` could use objects for richer metadata:
   ```json
   "headerPath": [
     { "text": "Individual Chunk File Output Format", "depth": 1 },
     { "text": "Field Descriptions", "depth": 2 }
   ]
   ```
+  For now, keep `headerPath` as a simple string array with depth tracked separately in `headerDepths`.
 
 ## Separation of Concerns
 
@@ -222,8 +223,7 @@ This conditional approach:
 ### Questions Requiring Clarification
 
 1. **EnhancedChunk type**: Should we update the existing type definition to match spec exactly?
-2. **Alternative headerPath format**: Should we implement the object-based format now or leave for future?
-3. **Function signature**: Should `fileTitle` be optional or required parameter in the main chunking function?
+2. **Function signature**: Should `fileTitle` be optional or required parameter in the main chunking function?
 
 ### Testing Requirements
 
