@@ -2,6 +2,12 @@
 
 This document outlines the comprehensive refactor needed to align the current implementation with the new chunk output format specification defined in `chunk-output-format.md` and `title-in-each-chunk.md`.
 
+## Dev Process
+
+- Work on one task at a time.
+- Once complete check off tasks.
+- Ask before continuing onto the next task.
+
 ## Overview
 
 **Current State**: The implementation uses legacy field names and is missing several required fields.
