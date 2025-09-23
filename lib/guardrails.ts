@@ -1,33 +1,29 @@
 /**
  * guardrails.ts
  *
- * Validates chunks: too short, formatting-only, orphaned code, empty headers.
+ * Validates chunk quality and reports issues.
  *
- * Development: throws on violations.
- * Production: logs + strips invalid chunks.
+ * NOTE: We prevent low-quality chunks during creation (in packer), not through post-filtering.
+ * This module is primarily for validation and monitoring, not filtering.
  *
  * Quality checks:
- * - Minimum length (e.g., 100 chars or ~200 tokens unless meaningful header/title)
- * - Absolute minimum of 64 tokens.
  * - Not just formatting (---, ```, ###)
- * - Not orphaned code without context (< 200 chars prose nearby)
+ * - Not orphaned code without context
  * - Not empty headers
  * - Not exceeding max token limit
  * - Not whitespace-only or empty string
+ * - Token count validation (with single-chunk exception)
  *
  * Modes:
- * - strictMode: Throw errors on violations (development)
- * - lenientMode: Log warnings and filter out bad chunks (production)
+ * - strictMode: Throw errors on violations (development/testing)
+ * - lenientMode: Log warnings only (production)
+ *
+ * Single-chunk exception: Small chunks are allowed if the entire document
+ * fits in one chunk (prevents penalizing small documents).
  *
  * Metadata:
- * - Each violation should include a reason code (e.g., "TOO_SHORT", "ORPHANED_CODE")
+ * - Each violation includes a reason code (e.g., "TOO_SHORT", "ORPHANED_CODE")
  * - Can be attached to logs or monitoring for analysis
- *
- * Helps ensure:
- * - All chunks are meaningful for retrieval
- * - No wasted embeddings on low-quality content
- * - Consistent quality across the corpus
- * - Clear visibility into common failure cases for tuning
  */
 
 import { Chunk, ChunkOptions } from './types';
@@ -42,8 +38,15 @@ function isEmptyOrWhitespace(content: string): boolean {
   return content.trim().length === 0;
 }
 
-function isTooShort(chunk: Chunk, minTokens: number): boolean {
-  return (chunk.tokenStats?.tokens || chunk.tokens || 0) < minTokens;
+function isTooShort(chunk: Chunk, minTokens: number, isSingleChunkDocument: boolean): boolean {
+  const tokens = chunk.tokenStats?.tokens || chunk.tokens || 0;
+
+  // Single-chunk documents are exempt from minTokens requirement
+  if (isSingleChunkDocument) {
+    return false;
+  }
+
+  return tokens < minTokens;
 }
 
 function exceedsMaxTokens(chunk: Chunk, maxTokens: number): boolean {
@@ -105,7 +108,7 @@ function isOrphanedCode(content: string, minProseChars: number = 200): boolean {
   return proseContent.length < minProseChars;
 }
 
-function validateChunk(chunk: Chunk, options: ChunkOptions): ValidationError[] {
+function validateChunk(chunk: Chunk, options: ChunkOptions, isSingleChunkDocument: boolean = false): ValidationError[] {
   const errors: ValidationError[] = [];
   const content = chunk.originalText || chunk.content || '';
 
@@ -119,7 +122,7 @@ function validateChunk(chunk: Chunk, options: ChunkOptions): ValidationError[] {
   }
 
   // Check minimum token count
-  if (isTooShort(chunk, options.minTokens)) {
+  if (isTooShort(chunk, options.minTokens, isSingleChunkDocument)) {
     errors.push({
       code: 'TOO_SHORT',
       message: `Chunk has ${chunk.tokenStats?.tokens || chunk.tokens || 0} tokens, below minimum of ${options.minTokens}`,
@@ -172,17 +175,15 @@ function logValidationErrors(errors: ValidationError[]): void {
   });
 }
 
-export function assertOrFilterInvalid(chunks: Chunk[], options: ChunkOptions): Chunk[] {
+export function validateChunks(chunks: Chunk[], options: ChunkOptions): Chunk[] {
   const strictMode = options.strictMode ?? false;
-  const validChunks: Chunk[] = [];
   const allErrors: ValidationError[] = [];
+  const isSingleChunkDocument = chunks.length === 1;
 
   for (const chunk of chunks) {
-    const errors = validateChunk(chunk, options);
+    const errors = validateChunk(chunk, options, isSingleChunkDocument);
 
-    if (errors.length === 0) {
-      validChunks.push(chunk);
-    } else {
+    if (errors.length > 0) {
       allErrors.push(...errors);
 
       if (strictMode) {
@@ -190,15 +191,21 @@ export function assertOrFilterInvalid(chunks: Chunk[], options: ChunkOptions): C
         const firstError = errors[0];
         throw new Error(`Chunk validation failed: ${firstError.code} - ${firstError.message}`);
       } else {
-        // In lenient mode, log and filter out invalid chunks
+        // In lenient mode, just log warnings - no filtering
         logValidationErrors(errors);
       }
     }
   }
 
   if (!strictMode && allErrors.length > 0) {
-    console.warn(`[Guardrails] Filtered out ${allErrors.length} invalid chunks from ${chunks.length} total chunks`);
+    console.warn(`[Guardrails] Found ${allErrors.length} validation issues in ${chunks.length} total chunks`);
   }
 
-  return validChunks;
+  // Return all chunks - we no longer filter out "invalid" chunks
+  return chunks;
+}
+
+// Keep the old function name for backward compatibility, but mark as deprecated
+export function assertOrFilterInvalid(chunks: Chunk[], options: ChunkOptions): Chunk[] {
+  return validateChunks(chunks, options);
 }

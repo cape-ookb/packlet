@@ -76,7 +76,8 @@ function processNode(
   nextNode: FlatNode | undefined,
   buffer: FlatNode[],
   chunks: Chunk[],
-  options: ChunkOptions
+  options: ChunkOptions,
+  wouldBeSingleChunk: boolean
 ): void {
   if (!canAddNode(buffer, node, options.maxTokens)) {
     flushBuffer(buffer, chunks);
@@ -86,9 +87,49 @@ function processNode(
 
   if (!shouldLookAhead(buffer, nextNode, options)) {
     const currentTokens = countTokens(combineNodes(buffer));
-    if (currentTokens >= options.minTokens || !nextNode) {
+
+    // Only flush if we meet minTokens OR this would be a single chunk document
+    if (currentTokens >= options.minTokens || (wouldBeSingleChunk && !nextNode)) {
       flushBuffer(buffer, chunks);
     }
+    // If we're below minTokens and this would be multi-chunk, keep accumulating
+    // (don't flush small chunks in multi-chunk documents)
+  }
+}
+
+function flushFinalBuffer(buffer: FlatNode[], chunks: Chunk[], options: ChunkOptions, wouldBeSingleChunk: boolean): void {
+  if (buffer.length > 0) {
+    const currentTokens = countTokens(combineNodes(buffer));
+
+    if (wouldBeSingleChunk || currentTokens >= options.minTokens) {
+      // Allow: single chunk documents OR chunks that meet minTokens
+      chunks.push(createChunk(buffer));
+    } else {
+      // Multi-chunk document with small final chunk - merge with previous chunk if possible
+      if (chunks.length > 0) {
+        const lastChunk = chunks[chunks.length - 1];
+        const lastChunkContent = lastChunk.originalText || lastChunk.content || '';
+        const bufferContent = combineNodes(buffer);
+        const mergedContent = lastChunkContent + '\n\n' + bufferContent;
+        const mergedTokens = countTokens(mergedContent);
+
+        if (mergedTokens <= options.maxTokens) {
+          // Merge with previous chunk
+          chunks[chunks.length - 1] = {
+            ...lastChunk,
+            content: mergedContent,
+            tokens: mergedTokens
+          };
+        } else {
+          // Can't merge, create separate chunk (edge case)
+          chunks.push(createChunk(buffer));
+        }
+      } else {
+        // Shouldn't happen, but fallback
+        chunks.push(createChunk(buffer));
+      }
+    }
+    buffer.length = 0;
   }
 }
 
@@ -96,12 +137,18 @@ export function packNodes(nodes: FlatNode[], options: ChunkOptions): Chunk[] {
   const chunks: Chunk[] = [];
   const buffer: FlatNode[] = [];
 
+  // First pass: determine if entire content would fit in single chunk
+  const totalText = combineNodes(nodes);
+  const totalTokens = countTokens(totalText);
+  const wouldBeSingleChunk = totalTokens <= options.maxTokens;
+
   for (let i = 0; i < nodes.length; i++) {
     const node = nodes[i];
     const nextNode = nodes[i + 1];
-    processNode(node, nextNode, buffer, chunks, options);
+    processNode(node, nextNode, buffer, chunks, options, wouldBeSingleChunk);
   }
 
-  flushBuffer(buffer, chunks);
+  // Final flush with single-chunk consideration
+  flushFinalBuffer(buffer, chunks, options, wouldBeSingleChunk);
   return chunks;
 }

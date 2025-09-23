@@ -129,9 +129,9 @@ This document outlines the comprehensive refactor needed to align the current im
 **References**: `title-in-each-chunk.md:207-211`
 
 **Tasks**:
-- [ ] "conditional" mode: Smart context detection
-- [ ] "always" mode: Always prepend full breadcrumb
-- [ ] "none" mode: Never prepend (`embedText` = `originalText`)
+- [x] "conditional" mode: Smart context detection
+- [x] "always" mode: Always prepend full breadcrumb
+- [x] "none" mode: Never prepend (`embedText` = `originalText`)
 
 ## Phase 4: Pipeline Integration (MEDIUM PRIORITY)
 

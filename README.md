@@ -37,7 +37,7 @@ Modular pipeline-based chunker following functional programming principles:
 1. **Hierarchical Splitting** - Split by structure (headings → paragraphs → sentences) before arbitrary cuts
 2. **Token-Aware Sizing** - Use tiktoken for accurate token measurement, not character counts
 3. **Sentence-Based Overlap** - Maintains semantic continuity better than token boundaries
-4. **Quality-First** - Prevent low-quality chunks during creation, not through post-filtering
+4. **Quality-First** - Prevent low-quality chunks during creation, not through post-filtering. Single-chunk documents (entire file fits in one chunk) are exempt from minTokens to avoid penalizing small documents.
 5. **Small Pure Functions** - Each function ≤25 lines, single responsibility, no side effects where possible
 6. **Flow Composition** - Pipeline uses functional composition, not method chaining
 
@@ -45,7 +45,7 @@ Modular pipeline-based chunker following functional programming principles:
 
 - **Token Range**: ~400-500 average tokens per chunk. 64-512 strict range.
 - **Processing Speed**: <10 seconds for large documents (0.5MB)
-- **Quality**: 0 low-quality chunks (1 maximum for edge cases)
+- **Quality**: 0 low-quality chunks in multi-chunk documents (small single-chunk documents are allowed)
 
 ## Flow Architecture
 
