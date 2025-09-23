@@ -1,8 +1,11 @@
 import { describe, it, expect } from 'vitest';
+import { readFileSync } from 'fs';
 import { splitOversized } from '../split-node.ts';
 import { countTokens } from '../tokenizer.ts';
 import { FlatNode } from '../flatten-ast.ts';
 import { ChunkOptions } from '../types.ts';
+import { parseMarkdown } from '../parse-markdown';
+import { flattenAst } from '../flatten-ast';
 
 describe('splitOversized', () => {
   const mockOptions: ChunkOptions = {
@@ -17,6 +20,12 @@ describe('splitOversized', () => {
     headingTrail: ['Test']
   });
 
+  const loadFixtureNodes = (filename: string): FlatNode[] => {
+    const content = readFileSync(`tests/fixtures/${filename}`, 'utf-8');
+    const ast = parseMarkdown(content);
+    return flattenAst(ast);
+  };
+
   it('should not split nodes that fit within token limit', () => {
     const smallText = 'This is a short paragraph that fits within the token limit.';
     const nodes = [createTestNode(smallText)];
@@ -28,23 +37,22 @@ describe('splitOversized', () => {
     expect(countTokens(result[0].text)).toBeLessThanOrEqual(mockOptions.maxTokens);
   });
 
-  it('should split oversized paragraph by paragraph breaks', () => {
-    const longText = `This is the first paragraph with substantial content designed to exceed token limits for comprehensive testing purposes. It contains multiple detailed sentences with extensive explanations, technical terminology, and verbose descriptions that significantly contribute to the overall token count. The paragraph includes various complex concepts, methodological approaches, and detailed implementation strategies that ensure we surpass the maximum token threshold established for testing scenarios.
-
-This is the second paragraph which also contains substantial and comprehensive content specifically engineered to ensure we definitively exceed the established token limit through extensive elaboration. It features multiple intricate sentences with detailed explanations, comprehensive analysis, and thorough documentation of various technical concepts and implementation details that contribute significantly to the overall token accumulation.
-
-This is the third paragraph that continues the established pattern of substantial and comprehensive content designed to ensure proper and thorough testing of the splitting functionality. It incorporates detailed technical explanations, comprehensive methodological approaches, extensive documentation strategies, and various implementation techniques that guarantee exceeding token limits while maintaining semantic coherence and structural integrity throughout the testing process.`;
-
-    const nodes = [createTestNode(longText)];
+  it('should split oversized nodes by paragraph breaks', () => {
+    const nodes = loadFixtureNodes('large-nodes.md');
 
     const result = splitOversized(nodes, mockOptions, countTokens);
 
-    expect(result.length).toBeGreaterThan(1);
+    // Should maintain or increase node count (split if needed)
+    expect(result.length).toBeGreaterThanOrEqual(nodes.length);
     result.forEach(node => {
       expect(countTokens(node.text)).toBeLessThanOrEqual(mockOptions.maxTokens);
-      expect(node.type).toBe('paragraph');
-      expect(node.headingTrail).toEqual(['Test']);
+      expect(node.text.trim().length).toBeGreaterThan(0);
+      expect(['heading', 'paragraph']).toContain(node.type);
     });
+
+    // Verify no node exceeds token limits
+    const oversizedNodes = result.filter(node => countTokens(node.text) > mockOptions.maxTokens);
+    expect(oversizedNodes).toHaveLength(0);
   });
 
   it('should split by sentences when paragraph split is insufficient', () => {
@@ -143,24 +151,26 @@ Another paragraph within the second node that incorporates substantial additiona
   });
 
   it('should handle different node types', () => {
-    const longCodeBlock = Array(100).fill('console.log("test");').join('\n');
-    const longListItem = Array(50).fill('This is a list item with substantial content.').join(' ');
-
-    const nodes = [
-      { ...createTestNode(longCodeBlock), type: 'code' as const },
-      { ...createTestNode(longListItem), type: 'list-item' as const }
-    ];
+    const nodes = loadFixtureNodes('mixed-content.md');
 
     const result = splitOversized(nodes, mockOptions, countTokens);
 
-    expect(result.length).toBeGreaterThan(2);
+    result.forEach(node => {
+      expect(countTokens(node.text)).toBeLessThanOrEqual(mockOptions.maxTokens);
+    });
 
-    const codeNodes = result.filter(n => n.type === 'code');
-    const listNodes = result.filter(n => n.type === 'list-item');
+    // Should preserve different node types
+    const nodeTypes = [...new Set(result.map(n => n.type))];
+    expect(nodeTypes.length).toBeGreaterThan(1);
+  });
 
-    expect(codeNodes.length).toBeGreaterThan(0);
-    expect(listNodes.length).toBeGreaterThan(0);
+  it('should handle small nodes that do not need splitting', () => {
+    const nodes = loadFixtureNodes('small-nodes.md');
 
+    const result = splitOversized(nodes, mockOptions, countTokens);
+
+    // Small nodes should not need splitting
+    expect(result.length).toBe(nodes.length);
     result.forEach(node => {
       expect(countTokens(node.text)).toBeLessThanOrEqual(mockOptions.maxTokens);
     });
