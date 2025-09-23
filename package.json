@@ -1,5 +1,5 @@
 {
-  "name": "chunker",
+  "name": "packlet",
   "version": "1.0.0",
   "description": "A high-quality document chunking system designed for vector database indexing",
   "main": "index.ts",

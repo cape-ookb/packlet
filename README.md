@@ -1,9 +1,12 @@
-# Document Chunking System
+# packlet - Document Chunking System
 
-A high-quality document chunking system designed for vector database indexing. Processes markdown documents (especially documentation) into semantically coherent chunks optimized for embedding and retrieval.
+Token-aware Markdown chunker: mdast-driven hierarchy, recursive splitting, look-ahead packing, optional overlap, rich metadata & guardrails.
+
+## About
+A high-quality document chunking system for vector database indexing. It processes Markdown into semantically coherent, token-aware chunks optimized for embedding and retrieval—using remark/mdast for structure, recursive splitting with look-ahead packing, and optional overlap. It avoids tiny/formatting-only fragments and enriches each chunk with heading breadcrumbs, token counts, and source positions for precise, high-recall search.
 
 ## Current Status
-Working on building a high-quality document chunking system in TypeScript. The goal is to create semantically coherent chunks for vector database indexing with low-quality chunks.
+Fully functional TypeScript with comprehensive test coverage. Still needs some cleanup around clear title/header handling, edge casea and test cleanup/clarity improvements.
 
 ## Architecture
 
