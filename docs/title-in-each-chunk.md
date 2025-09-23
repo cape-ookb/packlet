@@ -15,7 +15,7 @@ Store comprehensive header information in metadata for programmatic use and retr
 
 ### Required Fields
 
-* **`fileTitle`** `string` – Document-level title passed as a parameter to the chunking function. The calling code is responsible for extracting this from frontmatter, first H1, filename, or any other source. This represents the overall document and is kept separate from the heading hierarchy.
+* **`fileTitle`** `string` (required) – Document-level title passed as a required parameter to the chunking function. The calling code is responsible for extracting this from frontmatter, first H1, filename, or any other source. This represents the overall document and is kept separate from the heading hierarchy.
 
 * **`headerPath`** `string[]` – Array containing the hierarchical path of headings from the document root to the current section. Contains only the heading text without markdown syntax (`#` marks). Starts from the first heading in the document (usually H1) and includes all parent headings down to the current section.
   - Example: `["API Documentation", "Authentication", "OAuth2 Setup"]`
@@ -210,7 +210,7 @@ This conditional approach:
 ### Low Priority - Edge Cases & Polish
 
 - [ ] **Update function signatures** (lib/index.ts, lib/metadata.ts)
-  - [ ] Add `fileTitle?: string` parameter to main chunking function
+  - [ ] Add `fileTitle: string` parameter (required) to main chunking function
   - [ ] Pass fileTitle through pipeline to metadata stage
   - [ ] Document that calling code handles frontmatter/title extraction
 
@@ -223,7 +223,6 @@ This conditional approach:
 ### Questions Requiring Clarification
 
 1. **EnhancedChunk type**: Should we update the existing type definition to match spec exactly?
-2. **Function signature**: Should `fileTitle` be optional or required parameter in the main chunking function?
 
 ### Testing Requirements
 
