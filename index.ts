@@ -19,7 +19,7 @@ export function chunkMarkdown(doc: string, opts: ChunkOptions): { chunks: Chunk[
 		flattenAst,
 		(nodes) => splitOversized(nodes, options, countTokens),
 		(nodes) => packNodes(nodes, options, countTokens),
-		(chunks) => addOverlap(chunks, options),
+		(chunks) => addOverlap(chunks, options, countTokens),
 		normalizeChunks,
 		(chunks) => attachMetadata(chunks, options, countTokens),
 		(chunks) => assertOrFilterInvalid(chunks, options),

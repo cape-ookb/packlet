@@ -22,8 +22,65 @@
  * - Adjust token counts after adding overlap
  */
 
-// Add overlap sentences from previous chunk
-export function addOverlap(chunks: any[], options: any): any[] {
-  // TODO: Add sentence overlap for context continuity
-  return chunks;
+import { Chunk, ChunkOptions } from './types';
+
+function extractSentences(text: string): string[] {
+  const sentences = text.split(/(?<=[.!?])\s+/).filter(s => s.trim().length > 0);
+  return sentences.length > 0 ? sentences : [text];
+}
+
+function getTrailingSentences(text: string, count: number): string {
+  if (count <= 0) return '';
+
+  const sentences = extractSentences(text);
+  const trailingSentences = sentences.slice(-count);
+  return trailingSentences.join(' ');
+}
+
+function updateTokenCount(chunk: Chunk, countTokens: Function): Chunk {
+  return {
+    ...chunk,
+    tokens: countTokens(chunk.content)
+  };
+}
+
+function applyOverlapToChunk(
+  chunk: Chunk,
+  previousChunk: Chunk | null,
+  overlapSentences: number,
+  countTokens: Function
+): Chunk {
+  if (!previousChunk || overlapSentences <= 0) {
+    return chunk;
+  }
+
+  const overlap = getTrailingSentences(previousChunk.content, overlapSentences);
+  if (!overlap) {
+    return chunk;
+  }
+
+  const newContent = `${overlap} ${chunk.content}`;
+  const updatedChunk = {
+    ...chunk,
+    content: newContent
+  };
+
+  return updateTokenCount(updatedChunk, countTokens);
+}
+
+export function addOverlap(chunks: Chunk[], options: ChunkOptions, countTokens: Function): Chunk[] {
+  if (chunks.length <= 1) {
+    return chunks;
+  }
+
+  const result: Chunk[] = [chunks[0]]; // First chunk has no overlap
+
+  for (let i = 1; i < chunks.length; i++) {
+    const chunk = chunks[i];
+    const previousChunk = chunks[i - 1];
+    const overlappedChunk = applyOverlapToChunk(chunk, previousChunk, options.overlapSentences, countTokens);
+    result.push(overlappedChunk);
+  }
+
+  return result;
 }
