@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-See `@README.md` for complete project overview, architecture, design principles, and development commands.
+See `README.md` for complete project overview, architecture, design principles, and development commands.
 
 ## Claude Code Specific Guidance
 
@@ -16,7 +16,7 @@ See `@README.md` for complete project overview, architecture, design principles,
 
 ### Key Implementation Notes
 - Token counting uses tiktoken with character-based fallback
-- AST flattening algorithm details are in `flatten-ast.md`
+- AST flattening algorithm details are in `docs/flatten-ast.md`
 - Pipeline processes: parse → flatten → split → pack → overlap → normalize → metadata → validate
 - Each pipeline stage is a pure function that transforms data
 

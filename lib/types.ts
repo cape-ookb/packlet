@@ -33,7 +33,7 @@ export type Chunk = {
 	metadata?: Record<string, any>;
 };
 
-// Enhanced chunk type matching chunk-format-documentation.md
+// Enhanced chunk type matching ../docs/chunk-format-documentation.md
 export type EnhancedChunk = {
 	// Core identifiers
 	id: string;

@@ -6,7 +6,7 @@
  * Returns array of `{ type, text, headingTrail, position }`.
  * Pure transformation, no token logic.
  *
- * See ./flatten-ast.md for detailed algorithm documentation and examples.
+ * See ../docs/flatten-ast.md for detailed algorithm documentation and examples.
  *
  * Responsibilities:
  * - Traverse the AST tree depth-first
@@ -15,7 +15,7 @@
  * - Preserve node type and position information
  * - Return flat array while preserving hierarchical context
  *
- * The flatten-ast.md file contains:
+ * The ../docs/flatten-ast.md file contains:
  * - Detailed traversal algorithm
  * - Edge case handling
  * - Example AST transformations

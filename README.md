@@ -14,7 +14,7 @@ Modular pipeline-based chunker following functional programming principles:
 
 - **`index.ts`** - Main orchestration pipeline using flow composition
 - **`parse-markdown.ts`** - Parse markdown to AST
-- **`flatten-ast.ts`** - Extract nodes from AST (references flatten-ast.md for algorithm details)
+- **`flatten-ast.ts`** - Extract nodes from AST (references docs/flatten-ast.md for algorithm details)
 - **`split-node.ts`** - Recursive splitting of oversized nodes
 - **`packer.ts`** - Intelligent buffering with look-ahead merge
 - **`overlap.ts`** - Sentence-based context overlap between chunks
@@ -110,6 +110,6 @@ This project uses **pnpm** for dependency management. All commands should use `p
 
 ## Key Files for Understanding
 
-- **`@strategy.md`** - Complete 16-step algorithm specification and principles
-- **`@flatten-ast.md`** - Detailed AST flattening algorithm
-- **`@chunk-format-documentation.md`** - Output chunk structure specification
+- **`docs/strategy.md`** - Complete 16-step algorithm specification and principles
+- **`docs/flatten-ast.md`** - Detailed AST flattening algorithm
+- **`docs/chunk-format-documentation.md`** - Output chunk structure specification
