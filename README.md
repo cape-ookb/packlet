@@ -1,16 +1,36 @@
-# packlet - Document Chunking System
+<div align="center">
+
+# 📦 packlet
 
 ![Logo](logo-small.png)
 
-Token-aware Markdown chunker: mdast-driven hierarchy, recursive splitting, look-ahead packing, optional overlap, rich metadata & guardrails.
+**Token-aware Markdown chunker with intelligent splitting and semantic preservation**
 
-## About
-A high-quality document chunking system for vector database indexing. It processes Markdown into semantically coherent, token-aware chunks optimized for embedding and retrieval—using remark/mdast for structure, recursive splitting with look-ahead packing, and optional overlap. It avoids tiny/formatting-only fragments and enriches each chunk with heading breadcrumbs, token counts, and source positions for precise, high-recall search.
+[![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Vitest](https://img.shields.io/badge/Vitest-6E9F18?style=flat-square&logo=vitest&logoColor=white)](https://vitest.dev/)
+[![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
+
+*mdast-driven hierarchy • recursive splitting • look-ahead packing • optional overlap • rich metadata*
+
+</div>
+
+## ✨ Features
+
+- 🎯 **Smart Chunking**: Hierarchical splitting by structure (headings → paragraphs → sentences)
+- 🔢 **Token-Aware**: Accurate token counting with tiktoken, not character approximations
+- 🔗 **Semantic Overlap**: Sentence-based context preservation between chunks
+- 📊 **Rich Metadata**: Heading breadcrumbs, token counts, and source positions
+- ⚡ **High Performance**: <10s processing for large documents (0.5MB+)
+- 🛡️ **Quality First**: Prevents low-quality chunks during creation, not post-filtering
+
+## 🚀 Quick Start
+
+A high-quality document chunking system for vector database indexing. Processes Markdown into semantically coherent, token-aware chunks optimized for embedding and retrieval.
 
 ## Current Status
 Fully functional TypeScript with comprehensive test coverage. Still needs some cleanup around clear title/header handling, edge casea and test cleanup/clarity improvements.
 
-## Architecture
+## 🏗️ Architecture
 
 The project consists of two main implementations:
 
@@ -34,7 +54,7 @@ Modular pipeline-based chunker following functional programming principles:
 ### Python Implementation (Reference)
 `generate_chunks.py` - Working reference implementation using LangChain for markdown chunking.
 
-## Key Design Principles
+## 🎨 Design Principles
 
 1. **Hierarchical Splitting** - Split by structure (headings → paragraphs → sentences) before arbitrary cuts
 2. **Token-Aware Sizing** - Use tiktoken for accurate token measurement, not character counts
@@ -43,7 +63,7 @@ Modular pipeline-based chunker following functional programming principles:
 5. **Small Pure Functions** - Each function ≤25 lines, single responsibility, no side effects where possible
 6. **Flow Composition** - Pipeline uses functional composition, not method chaining
 
-## Target Metrics
+## 🎯 Target Metrics
 
 - **Token Range**: ~400-500 average tokens per chunk. 64-512 strict range.
 - **Processing Speed**: <10 seconds for large documents (0.5MB)
@@ -67,11 +87,11 @@ const pipeline = flow(
 
 Each stage transforms the data and passes it to the next stage. Functions are pure with no side effects.
 
-## Development
+## 🛠️ Development
 
 ### Prerequisites
-- Node.js ≥18.0.0
-- pnpm ≥8.0.0
+![Node.js](https://img.shields.io/badge/Node.js-18+-339933?style=flat-square&logo=node.js&logoColor=white)
+![pnpm](https://img.shields.io/badge/pnpm-8+-F69220?style=flat-square&logo=pnpm&logoColor=white)
 
 ### Test Fixtures
 The project includes markdown test fixtures in `tests/fixtures/` used for testing various chunking scenarios:
@@ -85,14 +105,19 @@ The project includes markdown test fixtures in `tests/fixtures/` used for testin
 
 **⚠️ IMPORTANT:** Always use fixture files for tests instead of inline markdown strings. See `docs/testing-guidelines.md` for details.
 
-### Setup
+### 🚀 Setup
+
 ```bash
 # Install dependencies
 pnpm install
 
 # Run the chunker
 pnpm dev
+```
 
+### 🧪 Testing
+
+```bash
 # Run tests (watch mode)
 pnpm test
 
@@ -104,7 +129,11 @@ pnpm test:run flatten-ast
 
 # Run tests with coverage
 pnpm test:coverage
+```
 
+### 🔧 Code Quality
+
+```bash
 # Type checking
 pnpm typecheck
 
@@ -115,7 +144,7 @@ pnpm lint
 ### Package Management
 This project uses **pnpm** for dependency management. All commands should use `pnpm` instead of `npm` or `yarn`.
 
-## Key Files for Understanding
+## 📚 Documentation
 
 - **`docs/strategy.md`** - Complete 16-step algorithm specification and principles
 - **`docs/flatten-ast.md`** - Detailed AST flattening algorithm
