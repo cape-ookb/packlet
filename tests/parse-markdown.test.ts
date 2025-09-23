@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import { parseMarkdown } from '../parse-markdown';
+import { parseMarkdown } from '../lib/parse-markdown';
 
 describe('parseMarkdown', () => {
   it('should parse simple markdown into an AST', () => {

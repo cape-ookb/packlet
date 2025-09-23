@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'fs';
-import { countTokens } from '../tokenizer.ts';
+import { countTokens } from '../lib/tokenizer.ts';
 
 describe('countTokens', () => {
   it('should count tokens for simple text', () => {

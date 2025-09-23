@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'fs';
-import { computeStats } from '../stats';
-import { countTokens } from '../tokenizer';
-import { Chunk, ChunkOptions } from '../types';
+import { computeStats } from '../lib/stats';
+import { countTokens } from '../lib/tokenizer';
+import { Chunk, ChunkOptions } from '../lib/types';
 
 describe('computeStats', () => {
   const createChunk = (content: string): Chunk => ({

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { assertOrFilterInvalid } from '../guardrails';
-import { countTokens } from '../tokenizer';
-import { Chunk, ChunkOptions } from '../types';
+import { assertOrFilterInvalid } from '../lib/guardrails';
+import { countTokens } from '../lib/tokenizer';
+import { Chunk, ChunkOptions } from '../lib/types';
 
 describe('guardrails', () => {
   const createChunk = (content: string, tokens?: number): Chunk => ({

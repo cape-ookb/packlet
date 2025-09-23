@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { attachMetadata } from '../metadata';
-import { countTokens } from '../tokenizer';
-import { Chunk, ChunkOptions } from '../types';
+import { attachMetadata } from '../lib/metadata';
+import { countTokens } from '../lib/tokenizer';
+import { Chunk, ChunkOptions } from '../lib/types';
 
 describe('attachMetadata', () => {
   const mockOptions: ChunkOptions = {

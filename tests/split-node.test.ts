@@ -1,11 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'fs';
-import { splitOversized } from '../split-node.ts';
-import { countTokens } from '../tokenizer.ts';
-import { FlatNode } from '../flatten-ast.ts';
-import { ChunkOptions } from '../types.ts';
-import { parseMarkdown } from '../parse-markdown';
-import { flattenAst } from '../flatten-ast';
+import { splitOversized } from '../lib/split-node.ts';
+import { countTokens } from '../lib/tokenizer.ts';
+import { FlatNode } from '../lib/flatten-ast.ts';
+import { ChunkOptions } from '../lib/types.ts';
+import { parseMarkdown } from '../lib/parse-markdown';
+import { flattenAst } from '../lib/flatten-ast';
 
 describe('splitOversized', () => {
   const mockOptions: ChunkOptions = {

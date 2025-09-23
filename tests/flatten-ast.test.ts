@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import { parseMarkdown } from '../parse-markdown';
-import { flattenAst, type FlatNode } from '../flatten-ast';
+import { parseMarkdown } from '../lib/parse-markdown';
+import { flattenAst, type FlatNode } from '../lib/flatten-ast';
 
 describe('flattenAst', () => {
   it('should flatten simple heading and paragraph', () => {

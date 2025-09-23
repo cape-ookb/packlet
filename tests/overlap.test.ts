@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { addOverlap } from '../overlap';
-import { countTokens } from '../tokenizer';
-import { Chunk, ChunkOptions } from '../types';
+import { addOverlap } from '../lib/overlap';
+import { countTokens } from '../lib/tokenizer';
+import { Chunk, ChunkOptions } from '../lib/types';
 
 describe('addOverlap', () => {
   const mockOptions: ChunkOptions = {

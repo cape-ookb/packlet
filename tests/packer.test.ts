@@ -1,11 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'fs';
-import { packNodes } from '../packer';
-import { countTokens } from '../tokenizer';
-import { FlatNode } from '../flatten-ast';
-import { ChunkOptions } from '../types';
-import { parseMarkdown } from '../parse-markdown';
-import { flattenAst } from '../flatten-ast';
+import { packNodes } from '../lib/packer';
+import { countTokens } from '../lib/tokenizer';
+import { FlatNode } from '../lib/flatten-ast';
+import { ChunkOptions } from '../lib/types';
+import { parseMarkdown } from '../lib/parse-markdown';
+import { flattenAst } from '../lib/flatten-ast';
 
 describe('packNodes', () => {
   const mockOptions: ChunkOptions = {

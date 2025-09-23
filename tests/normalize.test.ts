@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'fs';
-import { normalizeChunks } from '../normalize';
-import { Chunk } from '../types';
+import { normalizeChunks } from '../lib/normalize';
+import { Chunk } from '../lib/types';
 
 describe('normalizeChunks', () => {
   const createChunk = (content: string): Chunk => ({

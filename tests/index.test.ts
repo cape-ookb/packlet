@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import { chunkMarkdown } from '../index';
-import { ChunkOptions } from '../types';
+import { chunkMarkdown } from '../lib/index';
+import { ChunkOptions } from '../lib/types';
 
 const defaultOptions: ChunkOptions = {
   minTokens: 50,
