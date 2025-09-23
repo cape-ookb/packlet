@@ -77,19 +77,23 @@ Each chunk file contains a single JSON object with the following structure:
 
 ## Field Descriptions
 
+Each chunk represents a semantically meaningful segment of content (typically from markdown documents) optimized for vector embedding and retrieval.
+
 ### Core Identifiers
 - **`id`**: Unique identifier for this chunk in format `{contentType}:{docName}::ch{number}`
   - Example: `"doc:skeleton::ch4"`
-  - Used for direct chunk retrieval and as embedding keys
+  - Used for direct chunk retrieval and as embedding keys in vector databases
 - **`parentId`**: Identifier for the parent document in format `{contentType}:{docName}`
   - Example: `"doc:skeleton"`
-  - Links chunks back to their originating document
+  - Links chunks back to their originating document for document-level operations
 - **`prevId`**: ID of the previous chunk in sequence (null for first chunk)
   - Example: `"doc:skeleton::ch3"`
   - Enables sequential navigation through document chunks
+  - `null` for the first chunk in a document
 - **`nextId`**: ID of the next chunk in sequence (null for last chunk)
   - Example: `"doc:skeleton::ch5"`
   - Enables sequential navigation through document chunks
+  - `null` for the last chunk in a document
 
 ### Content Fields
 
@@ -97,9 +101,17 @@ Each chunk file contains a single JSON object with the following structure:
 
 - **`content`** (internal): Used during pipeline processing. This is the working text that gets modified through various stages (normalization, overlap addition, etc.). This field is part of the basic `Chunk` type used internally but is not included in the final output.
 
-- **`originalText`**: The chunk's content after all processing steps (normalization, overlap) but before any context prepending. This preserves the processed chunk for display purposes without breadcrumbs. Preserves formatting, links, and markdown syntax. Used for presenting chunks to users in search results.
+- **`originalText`**: Original markdown content for human display and presentation
+  - Preserves all formatting, links, and markdown syntax exactly as processed
+  - Used for presenting chunks to users in search results and UI displays
+  - Contains the clean chunk content after normalization and overlap but before context prepending
+  - Essential for maintaining readable, properly formatted content for end users
 
-- **`embedText`**: The final text that gets embedded/encoded in vector databases. This is `originalText` with potential breadcrumbs or other context prepended based on configuration. This is what actually gets vectorized for search. Includes contextual prefix with document title and section hierarchy, cleaned of markdown formatting but preserves semantic meaning.
+- **`embedText`**: Processed text specifically optimized for vector embeddings and search
+  - Built from `originalText` with contextual enhancements for better semantic understanding
+  - May include contextual prefix with document title and section hierarchy
+  - Cleaned and formatted for optimal vector database performance
+  - This is the actual text that gets vectorized and indexed for retrieval
   - Example: `"Title: skeleton.txt\n\n### Base\n\nControls the style of the..."`
 
 **Why all three?**
@@ -222,20 +234,13 @@ The goal is to merge all valuable content from the legacy document into this one
 
 #### Field Standardization Tasks ✅ COMPLETED
 
-All field standardization tasks have been completed:
-- ✅ Updated field names throughout documentation (`displayMarkdown` → `originalText`, `charOffsets` → `sourcePosition`, `sourceLength` → `totalChars`)
-- ✅ Replaced deprecated `heading` field with `sectionTitle` references
-- ✅ Updated `tokenCount` references to use `tokenStats.tokens` object structure
-- ✅ Standardized token limit documentation with current defaults
-- ✅ Updated overlap description to use `overlapSentences` instead of token counts
+#### Content Migration Tasks ✅ COMPLETED
 
-#### Content Migration Tasks
-
-- [ ] **Merge useful content from chunk-format-documentation.md**
-  - [ ] Migrate concrete examples with actual values (e.g., `"doc:skeleton::ch4"` for ID format)
-  - [ ] Incorporate detailed purpose descriptions for fields (more detailed than current descriptions)
-  - [ ] Add the "Chunking Strategy" context section (but update token limits to current defaults)
-  - [ ] Preserve AST position derivation note: "Derived from AST position data: start.offset, end.offset"
+All content migration tasks have been completed:
+- ✅ Migrated concrete examples with actual values (e.g., `"doc:skeleton::ch4"` for ID format)
+- ✅ Incorporated detailed purpose descriptions for fields with more context about their use cases
+- ✅ Added the "Chunking Strategy" context section with updated token limits to current defaults
+- ✅ Preserved AST position derivation note: "Derived from AST position data: start.offset, end.offset"
 
 - [ ] **Add missing field documentation**
   - [ ] Document `nodeTypes` array if implementation requires it
