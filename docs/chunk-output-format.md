@@ -79,40 +79,38 @@ Each chunk file contains a single JSON object with the following structure:
 
 Each chunk represents a semantically meaningful segment of content (typically from markdown documents) optimized for vector embedding and retrieval.
 
-### Core Identifiers
-- **`id`**: Unique identifier for this chunk in format `{contentType}:{docName}::ch{number}`
+## Required Fields
+
+### Core Identifiers (Required)
+- **`id`** *(required)*: Unique identifier for this chunk in format `{contentType}:{docName}::ch{number}`
   - Example: `"doc:skeleton::ch4"`
   - Used for direct chunk retrieval and as embedding keys in vector databases
-- **`parentId`**: Identifier for the parent document in format `{contentType}:{docName}`
+- **`parentId`** *(required)*: Identifier for the parent document in format `{contentType}:{docName}`
   - Example: `"doc:skeleton"`
   - Links chunks back to their originating document for document-level operations
-- **`prevId`**: ID of the previous chunk in sequence (null for first chunk)
-  - Example: `"doc:skeleton::ch3"`
-  - Enables sequential navigation through document chunks
-  - `null` for the first chunk in a document
-- **`nextId`**: ID of the next chunk in sequence (null for last chunk)
-  - Example: `"doc:skeleton::ch5"`
-  - Enables sequential navigation through document chunks
-  - `null` for the last chunk in a document
+- **`chunkNumber`** *(required)*: Zero-based sequential position within the parent document
+  - Example: `4` (indicates this is the 5th chunk in the document)
+  - Used for ordering and reference
+- **`contentType`** *(required)*: Type of source content
+  - Example: `"doc"` for documentation, `"post"` for blog posts
+  - Enables content-type-specific processing and filtering
 
-### Content Fields
-
-**Three distinct content fields serve different purposes:**
-
-- **`content`** (internal): Used during pipeline processing. This is the working text that gets modified through various stages (normalization, overlap addition, etc.). This field is part of the basic `Chunk` type used internally but is not included in the final output.
-
-- **`originalText`**: Original markdown content for human display and presentation
+### Content Fields (Required)
+- **`originalText`** *(required)*: Original markdown content for human display and presentation
   - Preserves all formatting, links, and markdown syntax exactly as processed
   - Used for presenting chunks to users in search results and UI displays
   - Contains the clean chunk content after normalization and overlap but before context prepending
   - Essential for maintaining readable, properly formatted content for end users
 
-- **`embedText`**: Processed text specifically optimized for vector embeddings and search
+- **`embedText`** *(required)*: Processed text specifically optimized for vector embeddings and search
   - Built from `originalText` with contextual enhancements for better semantic understanding
   - May include contextual prefix with document title and section hierarchy
   - Cleaned and formatted for optimal vector database performance
   - This is the actual text that gets vectorized and indexed for retrieval
   - Example: `"Title: skeleton.txt\n\n### Base\n\nControls the style of the..."`
+
+**Internal Processing Field:**
+- **`content`** *(internal only)*: Used during pipeline processing. This is the working text that gets modified through various stages (normalization, overlap addition, etc.). This field is part of the basic `Chunk` type used internally but is not included in the final output.
 
 **Why all three?**
 - `content` allows flexible internal processing without affecting final output structure
@@ -135,39 +133,57 @@ For a chunk from a document titled "API Documentation" in the "Authentication > 
 - `originalText`: Preserves exact formatting for user presentation
 - `embedText`: Adds contextual breadcrumb prefix for better search relevance
 
-Additional fields:
-- **`chunkNumber`**: Zero-based sequential position within the parent document
-  - Example: `4` (indicates this is the 5th chunk in the document)
-  - Used for ordering and reference
-- **`contentType`**: Type of source content
-  - Example: `"doc"` for documentation, `"post"` for blog posts
-  - Enables content-type-specific processing and filtering
-- **`nodeTypes`**: Array of AST node type IDs that this chunk contains
+### Structural Information (Required)
+- **`fileTitle`** *(required)*: Document-level title passed as a required parameter to the chunking function. The calling code is responsible for extracting this from frontmatter, first H1, filename, or any other source
+  - Example: `"API Documentation"`
+
+- **`sectionTitle`** *(required)*: The heading text of the current section (last value from `headerPath`). Most relevant heading found in the chunk. Empty string if no heading is found.
+  - Example: `"OAuth Setup"`
+
+- **`headerPath`** *(required)*: Array containing the hierarchical path of headings from the document root to the current section. Contains only heading text without markdown syntax. Provides full document context for the chunk's position.
+  - Example: `["Getting Started", "Authentication", "OAuth Setup"]`
+
+- **`headerBreadcrumb`** *(required)*: Pre-formatted display string created by joining `headerPath` with `" > "` separator. Never includes `fileTitle`. Used for contextual understanding and navigation.
+  - Example: `"Getting Started > Authentication > OAuth Setup"`
+
+- **`headerDepths`** *(required)*: Array of heading levels (1-6) corresponding to each entry in `headerPath`
+  - Example: `[1, 2, 3]` (H1, H2, H3 headings respectively)
+
+- **`headerSlugs`** *(required)*: Array of URL-safe anchor IDs corresponding to each heading in `headerPath`
+  - Example: `["getting-started", "authentication", "oauth-setup"]`
+
+- **`sectionSlug`** *(required)*: The URL-safe anchor ID for the current section
+  - Example: `"oauth-setup"` (last value from `headerSlugs`)
+
+### Position and Token Data (Required)
+- **`sourcePosition`** *(required)*: Character-based position information representing positions in the **original source text only**
+  - `charStart`: Starting character position in source document
+  - `charEnd`: Ending character position in source document
+  - `totalChars`: Total character length of the original source document
+  - Used for highlighting and precise content location
+  - Derived from AST position data: `start.offset`, `end.offset`
+
+- **`tokenStats`** *(required)*: Token counting information
+  - `tokens`: Actual token count from tiktoken
+  - `estimatedTokens`: Estimated token count using character heuristics
+
+## Optional Fields
+
+### Navigation (Optional)
+- **`prevId`** *(optional)*: ID of the previous chunk in sequence (null for first chunk)
+  - Example: `"doc:skeleton::ch3"`
+  - Enables sequential navigation through document chunks
+  - `null` for the first chunk in a document
+- **`nextId`** *(optional)*: ID of the next chunk in sequence (null for last chunk)
+  - Example: `"doc:skeleton::ch5"`
+  - Enables sequential navigation through document chunks
+  - `null` for the last chunk in a document
+
+### Content Analysis (Optional)
+- **`nodeTypes`** *(optional)*: Array of AST node type IDs that this chunk contains
   - Example: `["paragraph", "list", "code", "table"]`
   - Indicates the structural composition of the chunk content
   - Useful for content-aware processing and filtering
-
-### Structural Information
-- **`fileTitle`** (required): Document-level title passed as a required parameter to the chunking function. The calling code is responsible for extracting this from frontmatter, first H1, filename, or any other source
-  - Example: `"API Documentation"`
-
-- **`sectionTitle`**: The heading text of the current section (last value from `headerPath`). Most relevant heading found in the chunk. Empty string if no heading is found.
-  - Example: `"OAuth Setup"`
-
-- **`headerPath`**: Array containing the hierarchical path of headings from the document root to the current section. Contains only heading text without markdown syntax. Provides full document context for the chunk's position.
-  - Example: `["Getting Started", "Authentication", "OAuth Setup"]`
-
-- **`headerBreadcrumb`**: Pre-formatted display string created by joining `headerPath` with `" > "` separator. Never includes `fileTitle`. Used for contextual understanding and navigation.
-  - Example: `"Getting Started > Authentication > OAuth Setup"`
-
-- **`headerDepths`**: Array of heading levels (1-6) corresponding to each entry in `headerPath`
-  - Example: `[1, 2, 3]` (H1, H2, H3 headings respectively)
-
-- **`headerSlugs`**: Array of URL-safe anchor IDs corresponding to each heading in `headerPath`
-  - Example: `["getting-started", "authentication", "oauth-setup"]`
-
-- **`sectionSlug`**: The URL-safe anchor ID for the current section
-  - Example: `"oauth-setup"` (last value from `headerSlugs`)
 
 **Complete header example:**
 ```json
@@ -182,43 +198,39 @@ Additional fields:
 }
 ```
 
-**Field name changes:**
-- **`heading`**: Primary heading that applies to this chunk (renamed to `sectionTitle`)
-- **`headerHierarchy`**: String representation of heading hierarchy (renamed to `headerBreadcrumb`)
-
-### Position Data
-- **`sourcePosition`**: Character-based position information representing positions in the **original source text only**
-  - `charStart`: Starting character position in source document
-  - `charEnd`: Ending character position in source document
-  - `totalChars`: Total character length of the original source document
-  - Used for highlighting and precise content location
-  - Derived from AST position data: `start.offset`, `end.offset`
-
-  **Important:** These positions represent the original source document only and do NOT include:
-  - Breadcrumb prepending (which happens during `embedText` generation)
-  - Any normalization or cleaning changes
-  - Header path additions or modifications
-
-  This ensures offsets always map back to the original document positions for accurate source tracking and highlighting.
-
-### Token Information
-- **`tokenStats`**: Token counting information
-  - `tokens`: Actual token count from tiktoken
-  - `estimatedTokens`: Estimated token count using character heuristics
-
-### Processing Metadata
-- **`metadata`**: Processing and provenance information
+### Processing Metadata (Optional)
+- **`metadata`** *(optional)*: Processing and provenance information
   - `sourceFile`: Original filename that was processed (e.g., `"skeleton.txt"`)
   - `processedAt`: ISO8601 timestamp of when chunk was created
   - `chunkingOptions`: Configuration used for chunking
   - `pipeline`: Version and performance information
   - Additional fields vary by content type (title, date, tags, etc.)
 
-**Additional fields from legacy format:**
-- **`source`**: Source location information `{ filePath: string, startLine: number, endLine: number }`
+**Additional optional fields from legacy format:**
+- **`source`** *(optional)*: Source location information `{ filePath: string, startLine: number, endLine: number }`
 
-**Field name changes:**
-- **`tokenCount`**: Single token count number (renamed to `tokenStats.tokens` object structure)
+**Important position data note:**
+The `sourcePosition` data represents the original source document only and does NOT include:
+- Breadcrumb prepending (which happens during `embedText` generation)
+- Any normalization or cleaning changes
+- Header path additions or modifications
+
+This ensures offsets always map back to the original document positions for accurate source tracking and highlighting.
+
+## Implementation Status
+
+### Current Pipeline Status
+**Pipeline Flow**: `parseMarkdown` → `flattenAst` → `splitOversized` → `packNodes` → `addOverlap` → `normalizeChunks` → `attachMetadata` → `assertOrFilterInvalid`
+
+**Key Implementation Files**:
+- `lib/index.ts`: Main pipeline orchestration
+- `lib/metadata.ts`: Metadata attachment (needs updates per this spec)
+- `lib/types.ts`: Type definitions (has `Chunk` and partial `EnhancedChunk`)
+- `lib/packer.ts`: Creates initial chunks with `content` field
+
+**Implementation Gap**: Currently using basic `Chunk` type with untyped metadata. `EnhancedChunk` exists but needs updates to match this spec.
+
+### Required Type Updates
 
 **Implementation Note:**
 The current `EnhancedChunk` type in `lib/types.ts` uses legacy field names and is missing several fields documented here. The type definition needs to be updated to match this specification:
@@ -230,6 +242,32 @@ Required updates to `EnhancedChunk` type:
 - Rename `heading` → `sectionTitle`
 - Add missing fields: `fileTitle`, `headerBreadcrumb`, `headerDepths`, `headerSlugs`, `sectionSlug`
 - Update `tokenCount` → `tokenStats.tokens` object structure
+
+### Migration Notes for Existing Systems
+
+If you're migrating from the legacy chunk format documented in `chunk-format-documentation.md`, use this mapping table:
+
+| Legacy Field Name | New Field Name | Notes |
+|------------------|----------------|-------|
+| `displayMarkdown` | `originalText` | Same purpose: formatted content for display |
+| `charOffsets` | `sourcePosition` | Object structure unchanged, clearer name |
+| `charOffsets.sourceLength` | `sourcePosition.totalChars` | Renamed for consistency |
+| `heading` | `sectionTitle` | Same purpose: current section heading text |
+| `headerHierarchy` | `headerBreadcrumb` | Same format: `" > "` separated string |
+| `tokenCount` | `tokenStats.tokens` | Now part of structured token information object |
+
+**New required fields** (not in legacy format):
+- `fileTitle`: Document-level title (required parameter)
+- `headerDepths`: Array of heading levels [1-6]
+- `headerSlugs`: Array of URL-safe anchor IDs
+- `sectionSlug`: Current section's anchor ID
+- `tokenStats.estimatedTokens`: Character-based token estimate
+
+**Breaking changes to be aware of:**
+1. `sourcePosition` excludes breadcrumb modifications (positions are source-only)
+2. `headerBreadcrumb` never includes `fileTitle` (separated for clarity)
+3. `fileTitle` is now a required parameter from calling code
+4. Token information moved to structured `tokenStats` object
 
 ## Example Output
 
@@ -321,40 +359,17 @@ The goal is to merge all valuable content from the legacy document into this one
 
 #### Content Migration Tasks ✅ COMPLETED
 
-All content migration tasks have been completed:
-- ✅ Migrated concrete examples with actual values (e.g., `"doc:skeleton::ch4"` for ID format)
-- ✅ Incorporated detailed purpose descriptions for fields with more context about their use cases
-- ✅ Added the "Chunking Strategy" context section with updated token limits to current defaults
-- ✅ Preserved AST position derivation note: "Derived from AST position data: start.offset, end.offset"
-
 #### Missing Field Documentation ✅ COMPLETED
-
-All missing field documentation has been added:
-- ✅ Documented `nodeTypes` array with examples and use cases
-- ✅ Added comprehensive examples showing the difference between `embedText` and `originalText`
-- ✅ Included detailed examples of `headerPath`, `headerBreadcrumb`, and slug fields with complete JSON example
 
 #### Implementation Alignment Tasks ✅ COMPLETED
 
-All implementation alignment tasks have been completed:
-- ✅ Added all required metadata fields from title-in-each-chunk.md TODO list:
-  - ✅ `fileTitle` (required parameter from calling code)
-  - ✅ `headerBreadcrumb` (pre-joined `headerPath.join(" > ")`, never includes fileTitle)
-  - ✅ `headerDepths` (array of numbers 1-6 for each heading in headerPath)
-  - ✅ `headerSlugs` (URL-safe IDs using github-slugger for each heading)
-  - ✅ `sectionSlug` (last value from headerSlugs)
-  - ✅ `sectionTitle` (last value from headerPath, replaces `heading`)
-- ✅ Documented `breadcrumbMode` option: "conditional" (default) | "always" | "none"
-- ✅ Added detailed note that sourcePosition excludes breadcrumbs/normalizations
-- ✅ Identified required updates to `EnhancedChunk` type to match specification
+#### Documentation Structure Tasks ✅ COMPLETED
 
-#### Documentation Structure Tasks
-
-- [ ] **Reorganize merged content**
-  - [ ] Create clear sections for required vs optional fields
-  - [ ] Group related fields (identifiers, content, position, metadata)
-  - [ ] Add "Implementation Status" section if needed
-  - [ ] Include migration notes for systems using old field names
+All documentation structure tasks have been completed:
+- ✅ Created clear sections separating required vs optional fields
+- ✅ Grouped related fields (Core Identifiers, Content Fields, Structural Information, Position/Token Data, Navigation, Content Analysis, Processing Metadata)
+- ✅ Added comprehensive "Implementation Status" section with current pipeline status and implementation gaps
+- ✅ Included detailed migration notes with field mapping table and breaking changes documentation
 
 - [ ] **Update cross-references**
   - [ ] Update README.md to reference only this merged document
