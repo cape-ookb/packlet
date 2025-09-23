@@ -63,6 +63,36 @@ These fields are **always consistent** and **never modified** based on embedding
 
 The final embedded text is generated separately from metadata. Use a conditional approach to balance context preservation with token efficiency.
 
+### Example Scenarios
+
+**Scenario 1: Middle of section prose**
+- Input: Regular paragraph in the middle of a section
+- fileTitle: "API Documentation"
+- headerPath: ["API Documentation", "Authentication", "OAuth Setup"]
+- Decision: No breadcrumb needed (clear context from flow)
+- embedText: `[original chunk text]`
+
+**Scenario 2: Section start with heading**
+- Input: Chunk starting with "### OAuth Setup"
+- fileTitle: "API Documentation"
+- headerPath: ["API Documentation", "Authentication", "OAuth Setup"]
+- Decision: Prepend full breadcrumb (new section)
+- embedText: `API Documentation > Authentication > OAuth Setup\n\n### OAuth Setup\n[rest of chunk]`
+
+**Scenario 3: Isolated code block**
+- Input: Code-only chunk with no prose
+- fileTitle: "API Documentation"
+- headerPath: ["API Documentation", "Authentication", "OAuth Setup"]
+- Decision: Prepend full breadcrumb (lacks context)
+- embedText: `API Documentation > Authentication > OAuth Setup\n\n\`\`\`javascript\n[code]\n\`\`\``
+
+**Scenario 4: Short chunk**
+- Input: 150-token chunk
+- fileTitle: "API Documentation"
+- Options: minTokens=200, overlapTokens=50
+- Decision: Prepend breadcrumb (below minTokens threshold)
+- embedText: `API Documentation > Authentication > OAuth Setup\n\n[chunk text]`
+
 ### Context Generation Process
 
 **Step 1: Build Context Strings**

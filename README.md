@@ -115,4 +115,6 @@ This project uses **pnpm** for dependency management. All commands should use `p
 
 - **`docs/strategy.md`** - Complete 16-step algorithm specification and principles
 - **`docs/flatten-ast.md`** - Detailed AST flattening algorithm
-- **`docs/chunk-format-documentation.md`** - Output chunk structure specification
+- **`docs/chunk-output-format.md`** - Current specification for individual chunk file output format with complete field definitions
+- **`docs/title-in-each-chunk.md`** - Specification for title and header handling, breadcrumb generation, and context prepending
+- **`docs/chunk-format-documentation.md`** - Legacy output chunk structure specification (to be merged with chunk-output-format.md)

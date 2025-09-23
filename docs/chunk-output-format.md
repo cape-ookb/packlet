@@ -2,6 +2,18 @@
 
 This document describes the format for saving individual chunk files from the chunking pipeline.
 
+## Current Implementation Status
+
+**Pipeline Flow**: `parseMarkdown` → `flattenAst` → `splitOversized` → `packNodes` → `addOverlap` → `normalizeChunks` → `attachMetadata` → `assertOrFilterInvalid`
+
+**Key Files**:
+- `lib/index.ts`: Main pipeline orchestration
+- `lib/metadata.ts`: Metadata attachment (needs updates per this spec)
+- `lib/types.ts`: Type definitions (has `Chunk` and partial `EnhancedChunk`)
+- `lib/packer.ts`: Creates initial chunks with `content` field
+
+**Implementation Gap**: Currently using basic `Chunk` type with untyped metadata. `EnhancedChunk` exists but needs updates to match this spec.
+
 ## File Naming Convention
 
 Each chunk is saved as an individual JSON file using the following naming pattern:
@@ -153,3 +165,43 @@ This format is compatible with:
 - Document retrieval pipelines
 - Chunk analysis and debugging tools
 - RAG (Retrieval Augmented Generation) systems
+
+---
+
+## Clarification Questions for Merging with chunk-format-documentation.md
+
+### Field Discrepancies to Resolve:
+
+1. **`displayMarkdown` vs `originalText`**:
+   - chunk-format-documentation.md uses `displayMarkdown` (line 38-40)
+   - This document specifies `originalText` (line 92-93)
+   - **Question**: Should we standardize on `originalText` as specified in the current implementation?
+
+2. **Token Limit Differences**:
+   - chunk-format-documentation.md specifies max 625 tokens (line 85)
+   - README.md mentions target ~400-500 average, 64-512 strict range (line 46)
+   - **Question**: Which token limits should be the canonical specification?
+
+3. **Metadata Structure**:
+   - chunk-format-documentation.md has simpler metadata (source, fileName, timestamp) (lines 73-78)
+   - This document has richer metadata with pipeline info and chunkingOptions (lines 66-74)
+   - **Question**: Should we maintain both simple and extended metadata formats?
+
+4. **Additional Fields in chunk-format-documentation.md**:
+   - `nodeTypes` array (line 79) - not present in current spec
+   - `tokenCount` as direct field (line 78) vs `tokenStats` object here
+   - **Question**: Are nodeTypes still relevant for the current implementation?
+
+5. **charOffsets Differences**:
+   - chunk-format-documentation.md uses `sourceLength` (line 68)
+   - This document uses `totalChars` (line 120)
+   - **Question**: Should we standardize on `totalChars`?
+
+### Content to Potentially Merge:
+
+- **Chunking Strategy section** from chunk-format-documentation.md (lines 82-93) provides useful context about token limits and overlap ratios
+- **Purpose descriptions** from chunk-format-documentation.md are more detailed for some fields
+- **Examples** from chunk-format-documentation.md provide concrete values that could enhance understanding
+
+### Recommendation:
+Merge chunk-format-documentation.md into this document as it appears to be legacy, keeping the best of both while standardizing on the current implementation's field names.
