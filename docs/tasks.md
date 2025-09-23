@@ -53,7 +53,7 @@ This document outlines the comprehensive refactor needed to align the current im
 **Tasks**:
 - [x] Add `breadcrumbMode?: "conditional" | "always" | "none"` to ChunkOptions
 - [x] Set default to "conditional" in default config
-- [ ] Add `fileTitle: string` parameter requirement to main function signature
+- [x] Add `fileTitle: string` parameter requirement to main function signature
 
 ## Phase 2: Metadata Generation Updates (HIGH PRIORITY)
 

@@ -94,7 +94,7 @@ function calculateSourcePosition(chunkNumber: number, chunks: Chunk[]): { charSt
   return { charStart: 0, charEnd: 0, totalChars: totalLength };
 }
 
-export function attachMetadata(chunks: Chunk[], _options: ChunkOptions): Chunk[] {
+export function attachMetadata(chunks: Chunk[], _options: ChunkOptions, fileTitle?: string): Chunk[] {
   const contentType = 'doc'; // Default content type
   const source = 'chunker-output';
   const fileName = 'processed-content.md';
