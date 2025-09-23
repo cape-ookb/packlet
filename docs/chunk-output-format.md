@@ -168,62 +168,76 @@ This format is compatible with:
 
 ---
 
-## Clarification Questions for Merging with chunk-format-documentation.md
+## Documentation Merge Task List
 
-### Field Discrepancies to Resolve:
+### Tasks for Merging chunk-format-documentation.md into this Document
 
-1. **`displayMarkdown` vs `originalText`**:
-   - chunk-format-documentation.md uses `displayMarkdown` (line 38-40)
-   - This document specifies `originalText` (line 92-93)
-   - **Resolution**: Per title-in-each-chunk.md TODO (line 229), rename `displayMarkdown` to `originalText` in the implementation to store original chunk content before modifications
+#### Field Standardization Tasks
 
-2. **Token Limit Differences**:
-   - chunk-format-documentation.md specifies max 625 tokens (line 85)
-   - README.md mentions target ~400-500 average, 64-512 strict range (line 46)
-   - **Resolution**: Use README.md specifications (target ~400-500 average, 64-512 strict range). See `lib/default-config.ts` for current defaults: targetTokens=400, minTokens=64, maxTokens=512
+- [ ] **Update field names throughout documentation**
+  - [ ] Change all references from `displayMarkdown` to `originalText`
+  - [ ] Change all references from `charOffsets` to `sourcePosition`
+  - [ ] Change `sourceLength` to `totalChars` within position object
+  - [ ] Replace deprecated `heading` field with `sectionTitle`
+  - [ ] Update `tokenCount` references to use `tokenStats.tokens`
 
-3. **Metadata Structure**:
-   - chunk-format-documentation.md has simpler metadata (source, fileName, timestamp) (lines 73-78)
-   - This document has richer metadata with pipeline info and chunkingOptions (lines 66-74)
-   - **Resolution**: Use the richer metadata structure from this document; the title-in-each-chunk.md TODOs specify adding multiple new metadata fields (fileTitle, headerBreadcrumb, headerDepths, headerSlugs, sectionSlug, sectionTitle)
+- [ ] **Standardize token limit documentation**
+  - [ ] Remove outdated 625 token maximum references
+  - [ ] Document current defaults: targetTokens=400, minTokens=64, maxTokens=512
+  - [ ] Add reference to `lib/default-config.ts` for configurable defaults
+  - [ ] Update overlap description to use `overlapSentences` instead of token counts
 
-4. **Additional Fields in chunk-format-documentation.md**:
-   - `nodeTypes` array (line 79) - not present in current spec
-   - `tokenCount` as direct field (line 78) vs `tokenStats` object here
-   - **Resolution**: Use `tokenStats` object as specified here; nodeTypes can be omitted unless specifically needed
+#### Content Migration Tasks
 
-5. **Field Naming Differences**:
-   - chunk-format-documentation.md uses `charOffsets` with `sourceLength` (lines 64-69)
-   - This document uses `sourcePosition` with `totalChars` (lines 116-120)
-   - **Resolution**: Use `sourcePosition` as the object name (clearer that it's about source document position) with `charStart`, `charEnd`, and `totalChars` fields for consistency
+- [ ] **Merge useful content from chunk-format-documentation.md**
+  - [ ] Migrate concrete examples with actual values (lines 13-29)
+  - [ ] Incorporate detailed purpose descriptions for fields (lines 12-61)
+  - [ ] Add the "Chunking Strategy" context section (lines 82-93)
+  - [ ] Preserve AST position derivation note (line 69)
 
-### Content to Potentially Merge:
+- [ ] **Add missing field documentation**
+  - [ ] Document `nodeTypes` array if implementation requires it
+  - [ ] Add examples showing the difference between `embedText` and `originalText`
+  - [ ] Include examples of `headerPath`, `headerBreadcrumb`, and slug fields
 
-- **Chunking Strategy section** from chunk-format-documentation.md (lines 82-93) provides useful context about token limits and overlap ratios
-- **Purpose descriptions** from chunk-format-documentation.md are more detailed for some fields
-- **Examples** from chunk-format-documentation.md provide concrete values that could enhance understanding
+#### Implementation Alignment Tasks
 
-### Implementation Alignment with title-in-each-chunk.md TODOs:
+- [ ] **Align with title-in-each-chunk.md requirements**
+  - [ ] Add all metadata fields from TODO list (lines 177-186):
+    - [ ] `fileTitle` (document-level title parameter)
+    - [ ] `headerBreadcrumb` (pre-joined with " > " separator)
+    - [ ] `headerDepths` (array of heading levels)
+    - [ ] `headerSlugs` (array of anchor IDs)
+    - [ ] `sectionSlug` (current section anchor)
+    - [ ] `sectionTitle` (current section heading)
+  - [ ] Document `breadcrumbMode` option (conditional/always/none)
+  - [ ] Add note about `sourcePosition` representing original text only
 
-Based on the TODO list in title-in-each-chunk.md (lines 175-256), the following changes are needed:
+#### Documentation Structure Tasks
 
-1. **Type Definition Updates** (lines 227-242):
-   - Update `EnhancedChunk` type in lib/types.ts
-   - Rename `displayMarkdown` → `originalText`
-   - Keep `embedText` field for vector database content
-   - Add missing metadata fields: fileTitle, headerBreadcrumb, headerDepths, headerSlugs, sectionSlug, sectionTitle
+- [ ] **Reorganize merged content**
+  - [ ] Create clear sections for required vs optional fields
+  - [ ] Group related fields (identifiers, content, position, metadata)
+  - [ ] Add "Implementation Status" section if needed
+  - [ ] Include migration notes for systems using old field names
 
-2. **Core Metadata Fields to Add** (lines 177-186):
-   - `fileTitle` - document-level title passed as parameter
-   - `headerBreadcrumb` - pre-joined string with " > " separator
-   - `headerDepths` - array tracking depth of each heading
-   - `headerSlugs` - array for anchor IDs
-   - `sectionSlug` - slug of current section
-   - `sectionTitle` - current section heading (replaces deprecated `heading` field)
+- [ ] **Update cross-references**
+  - [ ] Update README.md to reference only this merged document
+  - [ ] Mark chunk-format-documentation.md as deprecated
+  - [ ] Add deprecation notice to chunk-format-documentation.md pointing here
 
-3. **Breadcrumb Mode Option** (lines 207-211):
-   - Add `breadcrumbMode?: "conditional" | "always" | "none"` to ChunkOptions
-   - Default to "conditional"
+#### Validation Tasks
 
-### Recommendation:
-Merge chunk-format-documentation.md into this document, using the field names and structure defined here and in title-in-each-chunk.md TODOs. The legacy document provides useful examples and context that should be preserved.
+- [ ] **Verify consistency across documentation**
+  - [ ] Ensure all field names match implementation in `lib/types.ts`
+  - [ ] Cross-check with actual output from the chunking pipeline
+  - [ ] Validate JSON structure examples are complete and accurate
+  - [ ] Confirm all TODO items from title-in-each-chunk.md are addressed
+
+### Next Steps
+
+1. **Review and prioritize** the task list above
+2. **Execute tasks** systematically, checking off completed items
+3. **Archive or deprecate** chunk-format-documentation.md once merge is complete
+4. **Update implementation** in lib/types.ts and related files to match the merged specification
+5. **Test** the implementation against the documented format
