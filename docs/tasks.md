@@ -12,11 +12,11 @@ This document outlines the comprehensive refactor needed to align the current im
 
 **Current State**: The implementation uses legacy field names and is missing several required fields.
 **Target State**: Full compliance with the new chunk output format specification.
-**Key Gap**: `EnhancedChunk` type uses outdated field names and missing critical metadata fields.
+**Key Gap**: `Chunk` type uses outdated field names and missing critical metadata fields.
 
 ## Phase 1: Core Type Definitions (HIGH PRIORITY)
 
-### 1.1 Update EnhancedChunk Type Definition
+### 1.1 Update Chunk Type Definition
 **File**: `lib/types.ts`
 **References**:
 - `chunk-output-format.md:250-258` (Required Type Updates)
@@ -127,7 +127,7 @@ This document outlines the comprehensive refactor needed to align the current im
 **Tasks**:
 - [ ] Add `fileTitle: string` as required parameter
 - [ ] Pass `fileTitle` through pipeline to metadata stage
-- [ ] Update return type from `Chunk[]` to `EnhancedChunk[]`
+- [x] Updated return type to unified `Chunk[]` with enhanced fields
 - [ ] Integrate embed text generation step
 - [ ] Document that calling code handles frontmatter/title extraction
 
@@ -216,7 +216,7 @@ This document outlines the comprehensive refactor needed to align the current im
 ## Success Criteria
 
 - [ ] All tests pass with ≥90% coverage
-- [ ] `EnhancedChunk` type matches specification exactly with metadata object
+- [x] `Chunk` type updated with all enhanced fields and metadata object
 - [ ] Output format complies with `chunk-output-format.md`
 - [ ] Breadcrumb logic follows `title-in-each-chunk.md` rules
 - [ ] Metadata object contains all vector database filtering fields

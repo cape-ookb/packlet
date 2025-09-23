@@ -8,11 +8,11 @@ This document describes the format for saving individual chunk files from the ch
 
 **Key Files**:
 - `lib/index.ts`: Main pipeline orchestration
-- `lib/metadata.ts`: Metadata attachment (needs updates per this spec)
-- `lib/types.ts`: Type definitions (has `Chunk` and partial `EnhancedChunk`)
+- `lib/metadata.ts`: Metadata attachment (implements this spec)
+- `lib/types.ts`: Type definitions (has unified `Chunk` type with all enhanced fields)
 - `lib/packer.ts`: Creates initial chunks with `content` field
 
-**Implementation Gap**: Currently using basic `Chunk` type with untyped metadata. `EnhancedChunk` exists but needs updates to match this spec.
+**Implementation Status**: Using unified `Chunk` type with optional enhanced fields. Fields are populated during metadata attachment stage.
 
 ## File Naming Convention
 

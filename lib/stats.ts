@@ -87,9 +87,10 @@ function analyzeTokenDistribution(chunks: Chunk[], options: ChunkOptions) {
   let overTarget = 0;
 
   for (const chunk of chunks) {
-    if (chunk.tokens < targetTokens - tolerance) {
+    const tokens = chunk.tokenStats?.tokens || chunk.tokens || 0;
+    if (tokens < targetTokens - tolerance) {
       underTarget++;
-    } else if (chunk.tokens > targetTokens + tolerance) {
+    } else if (tokens > targetTokens + tolerance) {
       overTarget++;
     } else {
       atTarget++;
@@ -137,9 +138,9 @@ export function computeStats(chunks: Chunk[], options: ChunkOptions, startTime?:
     return baseStats;
   }
 
-  const tokenCounts = chunks.map(chunk => chunk.tokens);
+  const tokenCounts = chunks.map(chunk => chunk.tokenStats?.tokens || chunk.tokens || 0);
   const totalTokens = tokenCounts.reduce((sum, tokens) => sum + tokens, 0);
-  const sourceLength = chunks.reduce((sum, chunk) => sum + chunk.content.length, 0);
+  const sourceLength = chunks.reduce((sum, chunk) => sum + (chunk.originalText || chunk.content || '').length, 0);
 
   const expectedChunks = calculateExpectedChunks(sourceLength, options);
   const actualChunks = chunks.length;

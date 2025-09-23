@@ -27,61 +27,58 @@ export type AstRoot = {
 	children: AstNode[];
 };
 
-// Chunk types
+// Unified Chunk type matching ../docs/chunk-output-format.md
 export type Chunk = {
-	content: string;
-	tokens: number;
-	metadata?: Record<string, any>;
-};
+	// Legacy fields (for pipeline processing)
+	content?: string; // Will be deprecated in favor of originalText
+	tokens?: number; // Will be deprecated in favor of tokenStats.tokens
 
-// Enhanced chunk type matching ../docs/chunk-output-format.md
-export type EnhancedChunk = {
-	// Core identifiers
-	id: string;
-	parentId: string;
-	prevId: string | null;
-	nextId: string | null;
+	// Core identifiers (populated by metadata stage)
+	id?: string;
+	parentId?: string;
+	prevId?: string | null;
+	nextId?: string | null;
 
 	// Content fields
-	embedText: string;
-	originalText: string;
+	embedText?: string;
+	originalText?: string;
 
-	// Position tracking
-	sourcePosition: {
+	// Position tracking (populated by metadata stage)
+	sourcePosition?: {
 		charStart: number;
 		charEnd: number;
 		totalChars: number;
 	};
 
-	// Token information
-	tokenStats: {
+	// Token information (populated by metadata stage)
+	tokenStats?: {
 		tokens: number;
 		estimatedTokens: number;
 	};
 
-	// Pipeline information
-	pipeline: {
+	// Pipeline information (populated by metadata stage)
+	pipeline?: {
 		version: string;
 		processingTimeMs: number;
 	};
 
-	// Structural information
-	chunkNumber: number;
+	// Structural information (populated by metadata stage)
+	chunkNumber?: number;
 
-	// Metadata object (for vector database filtering)
-	metadata: {
-		contentType: string;
-		sectionTitle: string;
-		headerPath: string[];
-		fileTitle: string;
-		headerBreadcrumb: string;
-		headerDepths: number[];
-		headerSlugs: string[];
-		sectionSlug: string;
-		sourceFile: string;
-		nodeTypes: string[];
-		processedAt: string;
-		chunkingOptions: object;
+	// Metadata object (for vector database filtering, populated by metadata stage)
+	metadata?: {
+		contentType?: string;
+		sectionTitle?: string;
+		headerPath?: string[];
+		fileTitle?: string;
+		headerBreadcrumb?: string;
+		headerDepths?: number[];
+		headerSlugs?: string[];
+		sectionSlug?: string;
+		sourceFile?: string;
+		nodeTypes?: string[];
+		processedAt?: string;
+		chunkingOptions?: object;
 		[key: string]: any;
 	};
 };

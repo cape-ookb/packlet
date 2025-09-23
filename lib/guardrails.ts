@@ -43,11 +43,11 @@ function isEmptyOrWhitespace(content: string): boolean {
 }
 
 function isTooShort(chunk: Chunk, minTokens: number): boolean {
-  return chunk.tokens < minTokens;
+  return (chunk.tokenStats?.tokens || chunk.tokens || 0) < minTokens;
 }
 
 function exceedsMaxTokens(chunk: Chunk, maxTokens: number): boolean {
-  return chunk.tokens > maxTokens;
+  return (chunk.tokenStats?.tokens || chunk.tokens || 0) > maxTokens;
 }
 
 function isFormattingOnly(content: string): boolean {
@@ -107,7 +107,7 @@ function isOrphanedCode(content: string, minProseChars: number = 200): boolean {
 
 function validateChunk(chunk: Chunk, options: ChunkOptions): ValidationError[] {
   const errors: ValidationError[] = [];
-  const content = chunk.content;
+  const content = chunk.originalText || chunk.content || '';
 
   // Check for empty or whitespace-only content
   if (isEmptyOrWhitespace(content)) {
@@ -122,7 +122,7 @@ function validateChunk(chunk: Chunk, options: ChunkOptions): ValidationError[] {
   if (isTooShort(chunk, options.minTokens)) {
     errors.push({
       code: 'TOO_SHORT',
-      message: `Chunk has ${chunk.tokens} tokens, below minimum of ${options.minTokens}`,
+      message: `Chunk has ${chunk.tokenStats?.tokens || chunk.tokens || 0} tokens, below minimum of ${options.minTokens}`,
       chunk
     });
   }
@@ -131,7 +131,7 @@ function validateChunk(chunk: Chunk, options: ChunkOptions): ValidationError[] {
   if (exceedsMaxTokens(chunk, options.maxTokens)) {
     errors.push({
       code: 'TOO_LONG',
-      message: `Chunk has ${chunk.tokens} tokens, exceeds maximum of ${options.maxTokens}`,
+      message: `Chunk has ${chunk.tokenStats?.tokens || chunk.tokens || 0} tokens, exceeds maximum of ${options.maxTokens}`,
       chunk
     });
   }

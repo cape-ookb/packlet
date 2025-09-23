@@ -50,7 +50,7 @@ function main() {
 
     console.log('Chunking document...');
     const startTime = Date.now();
-    const result = chunkMarkdown(content, options);
+    const result = chunkMarkdown(content, docName, options);
     const endTime = Date.now();
 
     // Prepare document name and metadata
@@ -82,8 +82,8 @@ function main() {
         parentId: parentId,
         prevId: prevId,
         nextId: nextId,
-        embedText: chunk.content.trim(),
-        originalText: chunk.content.trim(),
+        embedText: chunk.originalText.trim(),
+        originalText: chunk.originalText.trim(),
         chunkNumber: index,
         contentType: contentType,
         heading: heading,
@@ -92,11 +92,11 @@ function main() {
         sourcePosition: {
           charStart: charStart,
           charEnd: Math.min(charEnd, content.length),
-          totalChars: chunk.content.length
+          totalChars: chunk.originalText.length
         },
         tokenStats: {
-          tokens: chunk.tokens,
-          estimatedTokens: Math.ceil(chunk.content.length / 3.8)
+          tokens: chunk.tokenStats.tokens,
+          estimatedTokens: Math.ceil(chunk.originalText.length / 3.8)
         },
         metadata: {
           sourceFile: filename,
@@ -134,9 +134,9 @@ function main() {
     }
 
   } catch (error) {
-    console.error('❌ Error:', error.message);
+    console.error('❌ Error:', (error as Error).message);
 
-    if (error.code === 'ENOENT') {
+    if ((error as any).code === 'ENOENT') {
       console.error(`\nFile not found: ${filename}`);
       console.error('Available files in docs/:');
       try {

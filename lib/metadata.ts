@@ -23,6 +23,7 @@
 
 import { Chunk, ChunkOptions } from './types';
 import { countTokens } from './tokenizer';
+import GithubSlugger from 'github-slugger';
 
 function generateChunkId(parentId: string, chunkNumber: number): string {
   return `${parentId}::ch${chunkNumber}`;
@@ -72,6 +73,30 @@ function createTimestamp(): string {
   return new Date().toISOString();
 }
 
+function extractHeaderDepths(chunk: Chunk): number[] {
+  // Extract depths from headingTrail metadata if available
+  const existingDepths = chunk.metadata?.headerDepths || [];
+  if (Array.isArray(existingDepths) && existingDepths.length > 0) {
+    return existingDepths;
+  }
+
+  // Fallback: try to extract from content
+  const headerPath = extractHeaderPath(chunk);
+  return headerPath.map(heading => {
+    const match = heading.match(/^#{1,6}/);
+    return match ? match[0].length : 1;
+  });
+}
+
+function generateHeaderSlugs(headerPath: string[]): string[] {
+  const slugger = new GithubSlugger();
+  return headerPath.map(heading => {
+    // Remove markdown # symbols if present
+    const cleanHeading = heading.replace(/^#+\s*/, '');
+    return slugger.slug(cleanHeading);
+  });
+}
+
 function calculateSourcePosition(chunkNumber: number, chunks: Chunk[]): { charStart: number; charEnd: number; totalChars: number } {
   let charStart = 0;
   let totalLength = 0;
@@ -94,59 +119,91 @@ function calculateSourcePosition(chunkNumber: number, chunks: Chunk[]): { charSt
   return { charStart: 0, charEnd: 0, totalChars: totalLength };
 }
 
-export function attachMetadata(chunks: Chunk[], _options: ChunkOptions, fileTitle?: string): Chunk[] {
+export function attachMetadata(chunks: Chunk[], options: ChunkOptions, fileTitle?: string): Chunk[] {
   const contentType = 'doc'; // Default content type
-  const source = 'chunker-output';
-  const fileName = 'processed-content.md';
-  const parentId = `${contentType}:${source}`;
-  const timestamp = createTimestamp();
+  const sourceFile = 'processed-content.md'; // Default source file name
+  const parentId = `${contentType}:${sourceFile}`;
+  const processedAt = createTimestamp();
+  const startTime = performance.now();
 
-  return chunks.map((chunk, index) => {
+  const result = chunks.map((chunk, index) => {
+    // Core identifiers
     const chunkId = generateChunkId(parentId, index);
     const prevId = index > 0 ? generateChunkId(parentId, index - 1) : null;
     const nextId = index < chunks.length - 1 ? generateChunkId(parentId, index + 1) : null;
 
-    const heading = extractHeading(chunk.content);
+    // Extract structural information
     const headerPath = extractHeaderPath(chunk);
+    const headerDepths = extractHeaderDepths(chunk);
+    const headerSlugs = generateHeaderSlugs(headerPath);
     const nodeTypes = extractNodeTypes(chunk);
     const sourcePosition = calculateSourcePosition(index, chunks);
     const tokenCount = countTokens(chunk.content);
 
+    // Build derived fields
+    const headerBreadcrumb = headerPath.join(' > ');
+    const sectionTitle = headerPath.length > 0 ? headerPath[headerPath.length - 1] : '';
+    const sectionSlug = headerSlugs.length > 0 ? headerSlugs[headerSlugs.length - 1] : '';
+
+    // Calculate estimated tokens (rough character-based estimate)
+    const estimatedTokens = Math.ceil(chunk.content.length / 3.8);
+
     return {
-      ...chunk,
-      tokens: tokenCount, // Update with accurate count
+      // Core identifiers
+      id: chunkId,
+      parentId,
+      prevId,
+      nextId,
+
+      // Content fields
+      embedText: chunk.content.trim(), // Will be updated in embed text generation phase
+      originalText: chunk.content.trim(),
+
+      // Position tracking
+      sourcePosition,
+
+      // Token information
+      tokenStats: {
+        tokens: tokenCount,
+        estimatedTokens
+      },
+
+      // Pipeline information (will be updated later)
+      pipeline: {
+        version: '1.0.0',
+        processingTimeMs: 0 // Will be calculated at end
+      },
+
+      // Structural information
+      chunkNumber: index,
+
+      // Metadata object (for vector database filtering)
       metadata: {
-        ...chunk.metadata,
-        // Core identifiers
-        id: chunkId,
-        parentId,
-        prevId,
-        nextId,
-        chunkNumber: index,
-
-        // Structural information
         contentType,
-        heading,
+        sectionTitle,
         headerPath,
-
-        // Content analysis
+        fileTitle: fileTitle || 'untitled',
+        headerBreadcrumb,
+        headerDepths,
+        headerSlugs,
+        sectionSlug,
+        sourceFile,
         nodeTypes,
-        tokenCount,
-
-        // Source tracking
-        source,
-        fileName,
-        timestamp,
-
-        // Position tracking
-        sourcePosition,
-
-        // Additional metadata
-        hasCode: nodeTypes.includes('code'),
-        hasHeadings: nodeTypes.includes('heading'),
-        hasLists: nodeTypes.includes('list-item'),
-        contentLength: chunk.content.length
+        processedAt,
+        chunkingOptions: options
       }
     };
   });
+
+  // Update pipeline processing time for all chunks
+  const endTime = performance.now();
+  const processingTimeMs = Math.round(endTime - startTime);
+
+  return result.map(chunk => ({
+    ...chunk,
+    pipeline: {
+      ...chunk.pipeline,
+      processingTimeMs
+    }
+  }));
 }

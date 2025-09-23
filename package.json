@@ -23,6 +23,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "github-slugger": "^2.0.0",
     "js-tiktoken": "^1.0.12",
     "remark": "^15.0.1",
     "remark-gfm": "^4.0.1",
