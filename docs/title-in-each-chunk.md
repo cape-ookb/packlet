@@ -98,3 +98,51 @@ You could also represent each step as an object if you prefer richer metadata:
 ```
 
 That way, you don’t need a separate `headerDepths` array.
+
+---
+
+Short answer: **use a conditional approach** in terms of what goes into the actual chunk text to be embedded.
+
+# Title vs H1
+
+* Keep **both** in metadata: `fileTitle` (document title) and `headerPath` starting at the **first H1 actually in the file**.
+* Build `headerHierarchy` from `headerPath` only (no `fileTitle`).
+* When **`fileTitle !== headerPath[0]`**, do **not** rewrite `headerPath`; instead, when embedding text **prepend** `fileTitle` ahead of the hierarchy.
+
+# Embedded text (what goes into the chunk body)
+
+Prefer a conditional approach with clear rules to control token overhead while preserving context.
+
+### Breadcrumb (headerHierarchy) Prepend Rules
+
+1. **Compute** `headerHierarchy = headerPath.join(" > ")` (no `#` marks).
+2. **If** `fileTitle` exists and `fileTitle !== headerPath[0]`, set `fullBreadcrumb = fileTitle + " > " + breadcrumb`; else `fullBreadcrumb = breadcrumb`.
+3. **Prepend `fullBreadcrumb`** to the **chunk text** in these cases:
+
+   * The chunk **contains or starts a new section** (i.e., includes a heading node for its section).
+   * The chunk’s **nodeType(s) lack self-evident context** (e.g., table-only, code-only, list-only).
+   * The chunk is **shorter than `minTokens` + overlap** (extra context helps retrieval).
+4. **Otherwise** (middle-of-section prose with clear flow), **prepend only `fileTitle`** if present and distinct; if `fileTitle` equals H1, prepend nothing.
+5. **Never duplicate**: if the chunk already begins with that exact heading line, don’t add the breadcrumb.
+6. **Cap length**: if `fullBreadcrumb.length > 160 chars`, truncate middle segments with `…` but keep first (Title) and last (current section).
+7. **Formatting**: breadcrumb is a plain first line, then a blank line. Example:
+
+   ```
+   Document Title > API Reference > Authentication
+
+   <chunk text…>
+   ```
+
+### Edge Cases
+
+* **No H1 present**: `headerPath` starts at the first encountered heading level; still include `fileTitle` (or file stem) before it.
+* **Multiple H1s**: treat the **first H1** as document root for `headerPath`; later H1s begin new top-level sections.
+* **Frontmatter title**: use as `fileTitle`; don’t inject it into `headerPath`.
+
+### Why conditional
+
+* Keeps **token cost predictable** (you’re not repeating long trails on every chunk).
+* Ensures **disambiguation** where it matters most (section starts, code/table-only chunks).
+* Avoids redundancy when the chunk already carries obvious context.
+
+If need to make this toggleable in the future, add `options.breadcrumbMode: "conditional" | "always" | "none"` with `"conditional"` as the default.
