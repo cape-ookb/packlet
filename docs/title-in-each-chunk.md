@@ -9,6 +9,12 @@ This specification maintains a clear separation between:
 1. **Metadata Fields** - Pure structural data stored for programmatic access (never modified based on context)
 2. **Embedded Text** - The actual chunk content that may have context prepended for better comprehension
 
+### Key Content Fields
+
+- **`originalText`**: The chunk's content as extracted from the source document, without any modifications or prepended context
+- **`embedText`**: The final text that gets embedded/encoded in vector databases, which may include prepended breadcrumbs or other context based on configuration
+- **`content`**: Used internally during pipeline processing for working with chunk text
+
 ## Metadata Fields
 
 Store comprehensive header information in metadata for programmatic use and retrieval. These fields are **always consistent** and **never modified** based on embedding conditions:
@@ -222,11 +228,33 @@ This conditional approach:
 
 ### Questions Requiring Clarification
 
-1. **EnhancedChunk type**: Should we update the existing type definition to match spec exactly?
+1. **Type definitions to update**:
+
+   **Current state in lib/types.ts:**
+   - Has basic `Chunk` type with: `content`, `tokens`, `metadata?: Record<string, any>`
+   - Has separate `EnhancedChunk` type that partially matches the spec
+
+   **Required changes:**
+   - Rename `displayMarkdown` to `originalText` (stores the original chunk content before any modifications)
+   - Keep `embedText` field (this is what actually gets encoded/embedded in vector databases - may have breadcrumbs prepended)
+   - Add missing metadata fields to `EnhancedChunk`:
+     - `fileTitle` field
+     - `headerBreadcrumb` field (pre-joined string)
+     - `headerDepths` array
+     - `headerSlugs` array
+     - `sectionSlug` field
+     - `sectionTitle` field
+
+   **Field purposes for clarity:**
+   - `originalText`: The chunk's content as extracted from the source, before any modifications
+   - `embedText`: The final text that gets embedded/encoded, which may include prepended breadcrumbs for context
+   - `content`: (in basic `Chunk`) Working content during pipeline processing
+
+   **Recommendation:** Update `EnhancedChunk` to include all spec fields and use it as the output type, while keeping `Chunk` simple for internal pipeline processing
 
 ### Testing Requirements
 
-- [ ] Add tests for fileTitle parameter handling (present vs absent)
+- [ ] Add tests for fileTitle parameter handling (required parameter validation)
 - [ ] Add tests for headerBreadcrumb building with separator
 - [ ] Add tests for breadcrumb prepending logic (all conditions)
 - [ ] Add tests for edge cases (no H1, multiple H1s, no headings)
