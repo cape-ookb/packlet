@@ -80,7 +80,7 @@ describe('chunkMarkdown pipeline', () => {
 
   it('should process small-nodes.md fixture with small options', () => {
     const content = readFileSync(join(__dirname, 'fixtures/small-nodes.md'), 'utf-8');
-    const result = chunkMarkdown(content, smallOptions);
+    const result = chunkMarkdown(content, 'small-nodes.md', smallOptions);
 
     expect(result.chunks).toBeDefined();
     expect(result.chunks.length).toBeGreaterThan(0);
@@ -120,7 +120,7 @@ describe('chunkMarkdown pipeline', () => {
 
   it('should apply default options when not provided', () => {
     const content = readFileSync(join(__dirname, 'fixtures/simple.md'), 'utf-8');
-    const result = chunkMarkdown(content, { strictMode: false, minTokens: 50, maxTokens: 300 });
+    const result = chunkMarkdown(content, 'simple.md', { strictMode: false, minTokens: 50, maxTokens: 300 });
 
     expect(result.chunks).toBeDefined();
     expect(result.stats).toBeDefined();

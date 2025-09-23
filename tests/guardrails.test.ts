@@ -27,7 +27,7 @@ describe('guardrails', () => {
       const chunks = [createChunk(''), createChunk('   '), createChunk('\n\n\t  \n')];
 
       const result = assertOrFilterInvalid(chunks, defaultOptions);
-      expect(result).toHaveLength(0);
+      expect(result).toHaveLength(3); // Returns all chunks, but logs warnings
     });
 
     it('should throw on empty chunks in strict mode', () => {
@@ -45,7 +45,7 @@ describe('guardrails', () => {
       const chunks = [createChunk(shortContent, 5)];
 
       const result = assertOrFilterInvalid(chunks, defaultOptions);
-      expect(result).toHaveLength(0);
+      expect(result).toHaveLength(1); // Returns chunk but logs warning
     });
 
     it('should detect chunks that are too long', () => {
@@ -54,11 +54,23 @@ describe('guardrails', () => {
       const chunks = [createChunk(longContent, 250)];
 
       const result = assertOrFilterInvalid(chunks, defaultOptions);
-      expect(result).toHaveLength(0);
+      expect(result).toHaveLength(1); // Returns chunk but logs warning
     });
 
-    it('should throw on too short chunks in strict mode', () => {
+    it('should not throw on too short single chunks in strict mode (single-chunk exception)', () => {
       const chunks = [createChunk('Short', 5)];
+
+      // Single-chunk documents are exempt from TOO_SHORT validation
+      const result = assertOrFilterInvalid(chunks, strictOptions);
+      expect(result).toHaveLength(1);
+    });
+
+    it('should throw on too short chunks in multi-chunk strict mode', () => {
+      // Create multiple chunks to avoid single-chunk exception
+      const chunks = [
+        createChunk('Short', 5),
+        createChunk('Another short', 8)
+      ];
 
       expect(() => assertOrFilterInvalid(chunks, strictOptions))
         .toThrow('Chunk validation failed: TOO_SHORT');
@@ -90,7 +102,7 @@ describe('guardrails', () => {
       ];
 
       const result = assertOrFilterInvalid(chunks, defaultOptions);
-      expect(result).toHaveLength(0);
+      expect(result).toHaveLength(3); // Returns all chunks but logs warnings
     });
 
     it('should detect horizontal rules only', () => {
@@ -101,7 +113,7 @@ describe('guardrails', () => {
       ];
 
       const result = assertOrFilterInvalid(chunks, defaultOptions);
-      expect(result).toHaveLength(0);
+      expect(result).toHaveLength(3); // Returns all chunks but logs warnings
     });
 
     it('should detect empty code blocks', () => {
@@ -112,7 +124,7 @@ describe('guardrails', () => {
       ];
 
       const result = assertOrFilterInvalid(chunks, defaultOptions);
-      expect(result).toHaveLength(0);
+      expect(result).toHaveLength(3); // Returns all chunks but logs warnings
     });
 
     it('should detect emphasis characters only', () => {
@@ -125,7 +137,7 @@ describe('guardrails', () => {
       ];
 
       const result = assertOrFilterInvalid(chunks, defaultOptions);
-      expect(result).toHaveLength(0);
+      expect(result).toHaveLength(5); // Returns all chunks but logs warnings
     });
 
     it('should detect table separators only', () => {
@@ -136,7 +148,7 @@ describe('guardrails', () => {
       ];
 
       const result = assertOrFilterInvalid(chunks, defaultOptions);
-      expect(result).toHaveLength(0);
+      expect(result).toHaveLength(3); // Returns all chunks but logs warnings
     });
 
     it('should detect blockquote markers only', () => {
@@ -147,7 +159,7 @@ describe('guardrails', () => {
       ];
 
       const result = assertOrFilterInvalid(chunks, defaultOptions);
-      expect(result).toHaveLength(0);
+      expect(result).toHaveLength(3); // Returns all chunks but logs warnings
     });
 
     it('should accept formatting with content', () => {
@@ -171,7 +183,7 @@ describe('guardrails', () => {
       ];
 
       const result = assertOrFilterInvalid(chunks, defaultOptions);
-      expect(result).toHaveLength(0);
+      expect(result).toHaveLength(3); // Returns all chunks but logs warnings
     });
 
     it('should accept headers with content', () => {
@@ -194,7 +206,7 @@ describe('guardrails', () => {
       ];
 
       const result = assertOrFilterInvalid(chunks, defaultOptions);
-      expect(result).toHaveLength(0);
+      expect(result).toHaveLength(3); // Returns all chunks but logs warnings
     });
 
     it('should accept code with sufficient context', () => {
@@ -223,10 +235,10 @@ describe('guardrails', () => {
       const chunks = [createChunk('###', 2)]; // Both formatting-only AND too short
 
       const result = assertOrFilterInvalid(chunks, defaultOptions);
-      expect(result).toHaveLength(0);
+      expect(result).toHaveLength(1); // Returns chunk but logs multiple warnings
     });
 
-    it('should filter out invalid chunks while keeping valid ones', () => {
+    it('should detect invalid chunks while keeping all chunks', () => {
       const validContent = 'This is a valid chunk with sufficient content and proper token count to pass all validation checks.';
       const chunks = [
         createChunk(''), // Empty
@@ -237,8 +249,8 @@ describe('guardrails', () => {
       ];
 
       const result = assertOrFilterInvalid(chunks, defaultOptions);
-      expect(result).toHaveLength(1);
-      expect(result[0].content).toBe(validContent);
+      expect(result).toHaveLength(5); // Returns all chunks, logs warnings for invalid ones
+      expect(result[2].content).toBe(validContent); // Valid chunk is preserved
     });
 
     it('should throw on first error in strict mode', () => {
@@ -254,7 +266,11 @@ describe('guardrails', () => {
 
   describe('error reporting', () => {
     it('should provide detailed error messages', () => {
-      const chunks = [createChunk('Short', 5)];
+      // Use multi-chunk scenario to avoid single-chunk exception
+      const chunks = [
+        createChunk('Short', 5),
+        createChunk('Also short', 6)
+      ];
 
       expect(() => assertOrFilterInvalid(chunks, strictOptions))
         .toThrow('Chunk has 5 tokens, below minimum of 50');
@@ -265,7 +281,8 @@ describe('guardrails', () => {
       expect(() => assertOrFilterInvalid([createChunk('')], strictOptions))
         .toThrow(/EMPTY_CONTENT/);
 
-      expect(() => assertOrFilterInvalid([createChunk('Short', 5)], strictOptions))
+      // Use multi-chunk scenario for TOO_SHORT to avoid single-chunk exception
+      expect(() => assertOrFilterInvalid([createChunk('Short', 5), createChunk('Also short', 6)], strictOptions))
         .toThrow(/TOO_SHORT/);
 
       expect(() => assertOrFilterInvalid([createChunk('Long content', 250)], strictOptions))
@@ -308,12 +325,15 @@ describe('guardrails', () => {
       ];
 
       const result = assertOrFilterInvalid(chunks, defaultOptions);
-      expect(result).toHaveLength(3); // Should keep 3 valid chunks, filter 3 invalid
+      expect(result).toHaveLength(6); // Returns all chunks, logs warnings for invalid ones
 
-      // Verify the valid chunks are preserved
+      // Verify all chunks are preserved
       expect(result[0].content).toContain('API Documentation');
-      expect(result[1].content).toContain('GET /api/users');
-      expect(result[2].content).toContain('developer portal');
+      expect(result[1].content).toContain('Authentication is required');
+      expect(result[2].content).toContain('def process_data'); // Invalid orphaned code
+      expect(result[3].content).toContain('GET /api/users');
+      expect(result[4].content).toContain('###'); // Invalid empty header
+      expect(result[5].content).toContain('developer portal');
     });
   });
 });

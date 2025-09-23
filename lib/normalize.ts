@@ -111,6 +111,6 @@ function normalizeText(text: string): string {
 export function normalizeChunks(chunks: Chunk[]): Chunk[] {
   return chunks.map(chunk => ({
     ...chunk,
-    content: chunk.content ? normalizeText(chunk.content) : undefined
+    content: chunk.content ? normalizeText(chunk.content) : ''
   }));
 }

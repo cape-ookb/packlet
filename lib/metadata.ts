@@ -151,15 +151,22 @@ export function attachMetadata(chunks: Chunk[], options: ChunkOptions, fileTitle
     const estimatedTokens = Math.ceil(content.length / 3.8);
 
     return {
+      // Preserve existing chunk fields
+      ...chunk,
+
       // Core identifiers
       id: chunkId,
       parentId,
       prevId,
       nextId,
 
-      // Content fields
+      // Content fields (preserve existing or set new)
+      content: chunk.content || content.trim(),
       embedText: content.trim(), // Will be updated in embed text generation phase
       originalText: content.trim(),
+
+      // Token count (preserve existing or set new)
+      tokens: chunk.tokens || tokenCount,
 
       // Position tracking
       sourcePosition,
