@@ -65,8 +65,8 @@ Each chunk represents a semantically meaningful segment of content (typically fr
   - **`charStart`** (integer): Starting character position in source
   - **`charEnd`** (integer): Ending character position in source
   - **`sourceLength`** (integer): Total length of source document
-  - **`confidence`** (float): Match confidence. for example 1.0 = exact, 0.8 = partial, 0.0 = no match
   - Used for highlighting and precise content location
+  - Derived from AST position data: `start.offset`, `end.offset`, and original source length
 
 ### Metadata
 
