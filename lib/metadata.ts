@@ -46,7 +46,8 @@ function extractHeaderPath(chunk: Chunk): string[] {
     return existingHeaderPath;
   }
 
-  const heading = extractHeading(chunk.content);
+  const content = chunk.originalText || chunk.content || '';
+  const heading = extractHeading(content);
   return heading ? [heading] : [];
 }
 
@@ -57,7 +58,7 @@ function extractNodeTypes(chunk: Chunk): string[] {
   }
 
   const nodeTypes = new Set<string>();
-  const content = chunk.content;
+  const content = chunk.originalText || chunk.content || '';
 
   if (content.includes('#')) nodeTypes.add('heading');
   if (content.includes('```')) nodeTypes.add('code');
@@ -103,12 +104,12 @@ function calculateSourcePosition(chunkNumber: number, chunks: Chunk[]): { charSt
 
   // Calculate character positions based on chunk ordering
   for (let i = 0; i < chunks.length; i++) {
-    const chunkLength = chunks[i].content.length;
+    const chunkLength = (chunks[i].originalText || chunks[i].content || '').length;
     if (i === chunkNumber) {
       return {
         charStart,
         charEnd: charStart + chunkLength,
-        totalChars: chunks.reduce((sum, c) => sum + c.content.length, 0)
+        totalChars: chunks.reduce((sum, c) => sum + (c.originalText || c.content || '').length, 0)
       };
     }
     charStart += chunkLength;
@@ -133,12 +134,15 @@ export function attachMetadata(chunks: Chunk[], options: ChunkOptions, fileTitle
     const nextId = index < chunks.length - 1 ? generateChunkId(parentId, index + 1) : null;
 
     // Extract structural information
+    // Get content for processing (prefer existing content during pipeline)
+    const content = chunk.content || chunk.originalText || '';
+
     const headerPath = extractHeaderPath(chunk);
     const headerDepths = extractHeaderDepths(chunk);
     const headerSlugs = generateHeaderSlugs(headerPath);
     const nodeTypes = extractNodeTypes(chunk);
     const sourcePosition = calculateSourcePosition(index, chunks);
-    const tokenCount = countTokens(chunk.content);
+    const tokenCount = chunk.tokens || countTokens(content);
 
     // Build derived fields
     const headerBreadcrumb = headerPath.join(' > ');
@@ -146,7 +150,7 @@ export function attachMetadata(chunks: Chunk[], options: ChunkOptions, fileTitle
     const sectionSlug = headerSlugs.length > 0 ? headerSlugs[headerSlugs.length - 1] : '';
 
     // Calculate estimated tokens (rough character-based estimate)
-    const estimatedTokens = Math.ceil(chunk.content.length / 3.8);
+    const estimatedTokens = Math.ceil(content.length / 3.8);
 
     return {
       // Core identifiers
@@ -156,8 +160,8 @@ export function attachMetadata(chunks: Chunk[], options: ChunkOptions, fileTitle
       nextId,
 
       // Content fields
-      embedText: chunk.content.trim(), // Will be updated in embed text generation phase
-      originalText: chunk.content.trim(),
+      embedText: content.trim(), // Will be updated in embed text generation phase
+      originalText: content.trim(),
 
       // Position tracking
       sourcePosition,

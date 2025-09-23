@@ -23,7 +23,7 @@ const smallOptions: ChunkOptions = {
 describe('chunkMarkdown pipeline', () => {
   it('should process simple.md fixture', () => {
     const content = readFileSync(join(__dirname, 'fixtures/simple.md'), 'utf-8');
-    const result = chunkMarkdown(content, defaultOptions);
+    const result = chunkMarkdown(content, 'test-file', defaultOptions);
 
     expect(result.chunks).toBeDefined();
     expect(Array.isArray(result.chunks)).toBe(true);
@@ -35,7 +35,7 @@ describe('chunkMarkdown pipeline', () => {
 
   it('should process headings.md fixture', () => {
     const content = readFileSync(join(__dirname, 'fixtures/headings.md'), 'utf-8');
-    const result = chunkMarkdown(content, defaultOptions);
+    const result = chunkMarkdown(content, 'test-file', defaultOptions);
 
     expect(result.chunks).toBeDefined();
     expect(result.chunks.length).toBeGreaterThan(0);
@@ -46,7 +46,7 @@ describe('chunkMarkdown pipeline', () => {
 
   it('should process code-heavy.md fixture', () => {
     const content = readFileSync(join(__dirname, 'fixtures/code-heavy.md'), 'utf-8');
-    const result = chunkMarkdown(content, defaultOptions);
+    const result = chunkMarkdown(content, 'test-file', defaultOptions);
 
     expect(result.chunks).toBeDefined();
     expect(result.chunks.length).toBeGreaterThan(0);
@@ -57,7 +57,7 @@ describe('chunkMarkdown pipeline', () => {
 
   it('should process large-nodes.md fixture', () => {
     const content = readFileSync(join(__dirname, 'fixtures/large-nodes.md'), 'utf-8');
-    const result = chunkMarkdown(content, defaultOptions);
+    const result = chunkMarkdown(content, 'test-file', defaultOptions);
 
     expect(result.chunks).toBeDefined();
     expect(result.chunks.length).toBeGreaterThan(0);
@@ -68,7 +68,7 @@ describe('chunkMarkdown pipeline', () => {
 
   it('should process mixed-content.md fixture', () => {
     const content = readFileSync(join(__dirname, 'fixtures/mixed-content.md'), 'utf-8');
-    const result = chunkMarkdown(content, defaultOptions);
+    const result = chunkMarkdown(content, 'test-file', defaultOptions);
 
     expect(result.chunks).toBeDefined();
     expect(result.chunks.length).toBeGreaterThan(0);
@@ -91,7 +91,7 @@ describe('chunkMarkdown pipeline', () => {
 
   it('should process messy-content.md fixture', () => {
     const content = readFileSync(join(__dirname, 'fixtures/messy-content.md'), 'utf-8');
-    const result = chunkMarkdown(content, defaultOptions);
+    const result = chunkMarkdown(content, 'test-file', defaultOptions);
 
     expect(result.chunks).toBeDefined();
     expect(result.chunks.length).toBeGreaterThan(0);
@@ -101,7 +101,7 @@ describe('chunkMarkdown pipeline', () => {
 
   it('should process skeleton-250.md fixture', () => {
     const content = readFileSync(join(__dirname, 'fixtures/skeleton-250.md'), 'utf-8');
-    const result = chunkMarkdown(content, defaultOptions);
+    const result = chunkMarkdown(content, 'test-file', defaultOptions);
 
     expect(result.chunks).toBeDefined();
     expect(result.chunks.length).toBeGreaterThan(0);
@@ -129,7 +129,7 @@ describe('chunkMarkdown pipeline', () => {
 
   it('should preserve chunk metadata', () => {
     const content = readFileSync(join(__dirname, 'fixtures/headings.md'), 'utf-8');
-    const result = chunkMarkdown(content, defaultOptions);
+    const result = chunkMarkdown(content, 'test-file', defaultOptions);
 
     expect(result.chunks.length).toBeGreaterThan(0);
     result.chunks.forEach(chunk => {
@@ -142,7 +142,7 @@ describe('chunkMarkdown pipeline', () => {
 
   it('should maintain chunk token bounds', () => {
     const content = readFileSync(join(__dirname, 'fixtures/mixed-content.md'), 'utf-8');
-    const result = chunkMarkdown(content, defaultOptions);
+    const result = chunkMarkdown(content, 'test-file', defaultOptions);
 
     expect(result.chunks.length).toBeGreaterThan(0);
     result.chunks.forEach(chunk => {
@@ -156,7 +156,7 @@ describe('chunkMarkdown pipeline', () => {
 
     fixtures.forEach(fixture => {
       const content = readFileSync(join(__dirname, 'fixtures', fixture), 'utf-8');
-      const result = chunkMarkdown(content, defaultOptions);
+      const result = chunkMarkdown(content, 'test-file', defaultOptions);
 
       expect(result.stats.totalChunks).toBe(result.chunks.length);
       expect(result.stats.sourceLength).toBeGreaterThan(0);

@@ -48,13 +48,13 @@ function main() {
       strictMode: false
     };
 
+    // Prepare document name and metadata
+    const docName = basename(filename, extname(filename));
+
     console.log('Chunking document...');
     const startTime = Date.now();
     const result = chunkMarkdown(content, docName, options);
     const endTime = Date.now();
-
-    // Prepare document name and metadata
-    const docName = basename(filename, extname(filename));
     const contentType = 'doc'; // Could be made configurable: doc, api, guide, etc.
     const processedAt = new Date().toISOString();
     const processingTimeMs = endTime - startTime;
@@ -82,8 +82,8 @@ function main() {
         parentId: parentId,
         prevId: prevId,
         nextId: nextId,
-        embedText: chunk.originalText.trim(),
-        originalText: chunk.originalText.trim(),
+        embedText: (chunk.originalText || chunk.content || '').trim(),
+        originalText: (chunk.originalText || chunk.content || '').trim(),
         chunkNumber: index,
         contentType: contentType,
         heading: heading,
@@ -92,11 +92,11 @@ function main() {
         sourcePosition: {
           charStart: charStart,
           charEnd: Math.min(charEnd, content.length),
-          totalChars: chunk.originalText.length
+          totalChars: (chunk.originalText || chunk.content || '').length
         },
         tokenStats: {
-          tokens: chunk.tokenStats.tokens,
-          estimatedTokens: Math.ceil(chunk.originalText.length / 3.8)
+          tokens: chunk.tokenStats?.tokens || chunk.tokens || 0,
+          estimatedTokens: Math.ceil((chunk.originalText || chunk.content || '').length / 3.8)
         },
         metadata: {
           sourceFile: filename,

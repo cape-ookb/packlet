@@ -39,9 +39,10 @@ function getTrailingSentences(text: string, count: number): string {
 }
 
 function updateTokenCount(chunk: Chunk): Chunk {
+  const content = chunk.content || chunk.originalText || '';
   return {
     ...chunk,
-    tokens: countTokens(chunk.content)
+    tokens: countTokens(content)
   };
 }
 
@@ -54,12 +55,14 @@ function applyOverlapToChunk(
     return chunk;
   }
 
-  const overlap = getTrailingSentences(previousChunk.content, overlapSentences);
+  const previousContent = previousChunk.content || previousChunk.originalText || '';
+  const overlap = getTrailingSentences(previousContent, overlapSentences);
   if (!overlap) {
     return chunk;
   }
 
-  const newContent = `${overlap} ${chunk.content}`;
+  const currentContent = chunk.content || chunk.originalText || '';
+  const newContent = `${overlap} ${currentContent}`;
   const updatedChunk = {
     ...chunk,
     content: newContent
