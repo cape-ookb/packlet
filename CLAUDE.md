@@ -10,7 +10,6 @@ See `@README.md` for complete project overview, architecture, design principles,
 
 ### Development Workflow
 - No build tools required
-- All core functions should be pure (no side effects) and ≤25 lines
 - Use functional composition via `flow()` utility, not method chaining
 - Test individual modules by running them directly
 - Each function ideally under 25 lines, single responsibility
@@ -29,9 +28,20 @@ See `@README.md` for complete project overview, architecture, design principles,
 
 ### Code Standards
 - Filenames use `kebab-case.ext`
-- Functions: ≤3 parameters (prefer options object)
+
+#### Function Standards
+- All core functions should be pure (no side effects) and ≤25 lines
+- ≤3 parameters (prefer single typed options object)
 - Cyclomatic complexity ≤5
 - No I/O or timing in core functions (only in boundary adapters)
+- Small, Testable, Pure Functions
+- Single responsibility: Each function does exactly one conceptual thing (parse, measure, pack, overlap, normalize, or annotate).
+- Size cap: Aim ≤ 25 lines body; hard cap 40. If it grows, split it.
+- For loops should call a function inside them instead of inline code.
+- Determinism: Same inputs → same outputs. No hidden globals.
+- Composition: Multi-step tasks small functions; no “god” functions.
+- Unit tests per function (Vitest). Each has success and edge-case tests.
+
 
 ### Temporary Scripts
 - One-off scripts for generating test fixtures, data analysis, or debugging can be saved in `tmp/` directory
