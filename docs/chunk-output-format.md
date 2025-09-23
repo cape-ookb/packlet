@@ -170,16 +170,24 @@ This format is compatible with:
 
 ## Documentation Merge Task List
 
+### Context
+This task list guides the consolidation of two chunk format documentation files:
+- **Source (legacy)**: `docs/chunk-format-documentation.md` - older format specification with useful examples
+- **Target (current)**: `docs/chunk-output-format.md` (this file) - the canonical specification going forward
+- **Requirements source**: `docs/title-in-each-chunk.md` - contains implementation TODOs that define required fields
+
+The goal is to merge all valuable content from the legacy document into this one while ensuring consistency with the current implementation and planned enhancements.
+
 ### Tasks for Merging chunk-format-documentation.md into this Document
 
 #### Field Standardization Tasks
 
 - [ ] **Update field names throughout documentation**
-  - [ ] Change all references from `displayMarkdown` to `originalText`
-  - [ ] Change all references from `charOffsets` to `sourcePosition`
-  - [ ] Change `sourceLength` to `totalChars` within position object
-  - [ ] Replace deprecated `heading` field with `sectionTitle`
-  - [ ] Update `tokenCount` references to use `tokenStats.tokens`
+  - [ ] Change all references from `displayMarkdown` to `originalText` (stores processed chunk before context prepending)
+  - [ ] Change all references from `charOffsets` to `sourcePosition` (clearer name for position data)
+  - [ ] Change `sourceLength` to `totalChars` within position object (consistency with charStart/charEnd)
+  - [ ] Replace deprecated `heading` field with `sectionTitle` (per title-in-each-chunk.md line 184)
+  - [ ] Update `tokenCount` references to use `tokenStats.tokens` (object structure for token data)
 
 - [ ] **Standardize token limit documentation**
   - [ ] Remove outdated 625 token maximum references
@@ -190,10 +198,10 @@ This format is compatible with:
 #### Content Migration Tasks
 
 - [ ] **Merge useful content from chunk-format-documentation.md**
-  - [ ] Migrate concrete examples with actual values (lines 13-29)
-  - [ ] Incorporate detailed purpose descriptions for fields (lines 12-61)
-  - [ ] Add the "Chunking Strategy" context section (lines 82-93)
-  - [ ] Preserve AST position derivation note (line 69)
+  - [ ] Migrate concrete examples with actual values (e.g., `"doc:skeleton::ch4"` for ID format)
+  - [ ] Incorporate detailed purpose descriptions for fields (more detailed than current descriptions)
+  - [ ] Add the "Chunking Strategy" context section (but update token limits to current defaults)
+  - [ ] Preserve AST position derivation note: "Derived from AST position data: start.offset, end.offset"
 
 - [ ] **Add missing field documentation**
   - [ ] Document `nodeTypes` array if implementation requires it
@@ -203,15 +211,15 @@ This format is compatible with:
 #### Implementation Alignment Tasks
 
 - [ ] **Align with title-in-each-chunk.md requirements**
-  - [ ] Add all metadata fields from TODO list (lines 177-186):
-    - [ ] `fileTitle` (document-level title parameter)
-    - [ ] `headerBreadcrumb` (pre-joined with " > " separator)
-    - [ ] `headerDepths` (array of heading levels)
-    - [ ] `headerSlugs` (array of anchor IDs)
-    - [ ] `sectionSlug` (current section anchor)
-    - [ ] `sectionTitle` (current section heading)
-  - [ ] Document `breadcrumbMode` option (conditional/always/none)
-  - [ ] Add note about `sourcePosition` representing original text only
+  - [ ] Add all metadata fields from TODO list (title-in-each-chunk.md lines 177-186):
+    - [ ] `fileTitle` (required param from calling code, not derived from content)
+    - [ ] `headerBreadcrumb` (pre-joined `headerPath.join(" > ")`, never includes fileTitle)
+    - [ ] `headerDepths` (array of numbers 1-6 for each heading in headerPath)
+    - [ ] `headerSlugs` (URL-safe IDs using github-slugger for each heading)
+    - [ ] `sectionSlug` (last value from headerSlugs)
+    - [ ] `sectionTitle` (last value from headerPath, replaces `heading`)
+  - [ ] Document `breadcrumbMode` option: "conditional" (default) | "always" | "none"
+  - [ ] Add note: sourcePosition excludes breadcrumbs/normalizations (per line 151 title-in-each-chunk.md)
 
 #### Documentation Structure Tasks
 
@@ -229,10 +237,11 @@ This format is compatible with:
 #### Validation Tasks
 
 - [ ] **Verify consistency across documentation**
-  - [ ] Ensure all field names match implementation in `lib/types.ts`
-  - [ ] Cross-check with actual output from the chunking pipeline
+  - [ ] Ensure all field names match `EnhancedChunk` type in `lib/types.ts`
+  - [ ] Cross-check with actual output from the chunking pipeline (`lib/index.ts`)
   - [ ] Validate JSON structure examples are complete and accurate
-  - [ ] Confirm all TODO items from title-in-each-chunk.md are addressed
+  - [ ] Confirm all TODO items from title-in-each-chunk.md (lines 175-256) are addressed
+  - [ ] Check that field descriptions match implementation in `lib/metadata.ts`
 
 ### Next Steps
 
@@ -241,3 +250,10 @@ This format is compatible with:
 3. **Archive or deprecate** chunk-format-documentation.md once merge is complete
 4. **Update implementation** in lib/types.ts and related files to match the merged specification
 5. **Test** the implementation against the documented format
+
+### Key File Locations for Reference
+- Current implementation types: `lib/types.ts` (see `EnhancedChunk` type)
+- Metadata attachment: `lib/metadata.ts` (lines 119-150 for current implementation)
+- Default configuration: `lib/default-config.ts` (token limits and options)
+- Main pipeline: `lib/index.ts` (orchestration of all stages)
+- Implementation TODOs: `docs/title-in-each-chunk.md` (lines 175-256)
