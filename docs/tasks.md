@@ -20,17 +20,25 @@ This document outlines the comprehensive refactor needed to align the current im
 - [ ] Rename `displayMarkdown` → `originalText`
 - [ ] Rename `charOffsets` → `sourcePosition`
 - [ ] Rename `sourceLength` → `totalChars` (within sourcePosition object)
-- [ ] Rename `heading` → `sectionTitle`
-- [ ] Rename `headingTrail` → `headerPath` (if exists)
 - [ ] Update `tokenCount` → `tokenStats.tokens` object structure
-- [ ] Add missing required fields:
-  - [ ] `fileTitle: string`
-  - [ ] `headerBreadcrumb: string`
-  - [ ] `headerDepths: number[]`
-  - [ ] `headerSlugs: string[]`
-  - [ ] `sectionSlug: string`
+- [ ] Remove top-level structural fields and move to metadata object:
+  - [ ] Move `contentType` → `metadata.contentType`
+  - [ ] Move `heading` → `metadata.sectionTitle`
+  - [ ] Move `headingTrail` → `metadata.headerPath`
+- [ ] Add missing fields in metadata object:
+  - [ ] `metadata.fileTitle: string`
+  - [ ] `metadata.headerBreadcrumb: string`
+  - [ ] `metadata.headerDepths: number[]`
+  - [ ] `metadata.headerSlugs: string[]`
+  - [ ] `metadata.sectionSlug: string`
+  - [ ] `metadata.sourceFile: string`
+  - [ ] `metadata.nodeTypes: string[]`
+  - [ ] `metadata.processedAt: string`
+  - [ ] `metadata.chunkingOptions: object`
+- [ ] Add missing top-level fields:
   - [ ] `embedText: string`
   - [ ] `tokenStats: { tokens: number, estimatedTokens: number }`
+  - [ ] `pipeline: { version: string, processingTimeMs: number }`
 
 ### 1.2 Add ChunkOptions Configuration
 **File**: `lib/types.ts`, `lib/default-config.ts`
@@ -51,23 +59,33 @@ This document outlines the comprehensive refactor needed to align the current im
 
 **Tasks**:
 - [ ] Accept `fileTitle` as required parameter from calling code
-- [ ] Generate `headerBreadcrumb` as `headerPath.join(" > ")`
-- [ ] Build `headerDepths` array tracking depth of each heading
-- [ ] Generate `headerSlugs` array using github-slugger
-- [ ] Set `sectionSlug` as last item from `headerSlugs`
-- [ ] Set `sectionTitle` as last item from `headerPath`
+- [ ] Build metadata object with all structural fields:
+  - [ ] `metadata.contentType` from content type parameter
+  - [ ] `metadata.sourceFile` from original filename
+  - [ ] `metadata.fileTitle` from fileTitle parameter
+  - [ ] `metadata.headerPath` from header hierarchy
+  - [ ] `metadata.headerBreadcrumb` as `headerPath.join(" > ")`
+  - [ ] `metadata.headerDepths` array tracking depth of each heading
+  - [ ] `metadata.headerSlugs` array using github-slugger
+  - [ ] `metadata.sectionSlug` as last item from `headerSlugs`
+  - [ ] `metadata.sectionTitle` as last item from `headerPath`
+  - [ ] `metadata.nodeTypes` from AST node analysis
+  - [ ] `metadata.processedAt` as ISO8601 timestamp
+  - [ ] `metadata.chunkingOptions` from configuration
 - [ ] Update tokenStats to object format: `{ tokens: number, estimatedTokens: number }`
+- [ ] Add pipeline object: `{ version: string, processingTimeMs: number }`
 
 ### 2.2 Fix Header Path Building Logic
 **File**: `lib/flatten-ast.ts`
 **References**: `title-in-each-chunk.md:188-194`
 
 **Tasks**:
-- [ ] Ensure `headerPath` contains only heading text (no `#` symbols)
-- [ ] Keep `headerPath` separate from `fileTitle`
+- [ ] Ensure `metadata.headerPath` contains only heading text (no `#` symbols)
+- [ ] Keep `metadata.headerPath` separate from `metadata.fileTitle`
 - [ ] Handle multiple H1s correctly (first is root, later start new sections)
 - [ ] Handle edge case when no H1 present (start at first heading found)
 - [ ] Never mix `fileTitle` into `headerPath` array
+- [ ] Store all header-related data in metadata object for vector DB filtering
 
 ## Phase 3: Embed Text Generation (MEDIUM PRIORITY)
 
@@ -160,19 +178,29 @@ This document outlines the comprehensive refactor needed to align the current im
 ## Critical Implementation Notes
 
 **Key Breaking Changes**:
-1. `sourcePosition` excludes breadcrumb modifications (positions are source-only)
-2. `headerBreadcrumb` never includes `fileTitle` (separated for clarity)
-3. `fileTitle` is now a required parameter from calling code
-4. Token information moved to structured `tokenStats` object
+1. **Metadata restructure**: Most structural fields moved to `metadata` object for vector database filtering
+2. `sourcePosition` excludes breadcrumb modifications (positions are source-only)
+3. `metadata.headerBreadcrumb` never includes `metadata.fileTitle` (separated for clarity)
+4. `fileTitle` is now a required parameter from calling code
+5. Token information moved to structured `tokenStats` object
+6. Pipeline information separated from metadata in dedicated `pipeline` object
+7. `contentType` moved to `metadata.contentType` for filtering
 
 **Data Flow**:
-- Metadata fields are **always consistent** and **never modified**
+- Metadata object contains **all fields useful for vector database filtering**
+- Metadata fields are **always consistent** and **never modified** after creation
 - Context prepending only affects `embedText`, not metadata
 - `originalText` preserves exact formatting for display
 - `embedText` includes context breadcrumbs for search optimization
+- Pipeline information stored separately from metadata for clarity
 
 **Pipeline Flow**:
-`parseMarkdown` → `flattenAst` → `splitOversized` → `packNodes` → `addOverlap` → `normalizeChunks` → `attachMetadata` → `generateEmbedText` → `assertOrFilterInvalid`
+`parseMarkdown` → `flattenAst` → `splitOversized` → `packNodes` → `addOverlap` → `normalizeChunks` → `attachMetadata` → `generateEmbedText` → `addPipelineInfo` → `assertOrFilterInvalid`
+
+**Key Implementation Changes**:
+- `attachMetadata` now creates structured metadata object with all filtering fields
+- `generateEmbedText` reads from metadata but doesn't modify it
+- `addPipelineInfo` adds processing information separately from metadata
 
 ## Dependencies
 
@@ -182,8 +210,10 @@ This document outlines the comprehensive refactor needed to align the current im
 ## Success Criteria
 
 - [ ] All tests pass with ≥90% coverage
-- [ ] `EnhancedChunk` type matches specification exactly
+- [ ] `EnhancedChunk` type matches specification exactly with metadata object
 - [ ] Output format complies with `chunk-output-format.md`
 - [ ] Breadcrumb logic follows `title-in-each-chunk.md` rules
+- [ ] Metadata object contains all vector database filtering fields
+- [ ] Pipeline information separated from metadata
 - [ ] No breaking changes to core pipeline architecture
-- [ ] Backward compatibility maintained where feasible
+- [ ] Migration guide available for consumers

@@ -59,12 +59,9 @@ Each chunk file contains a single JSON object with the following structure:
     "estimatedTokens": number
   },
 
-  // Optional navigation
+  // Navigation
   "prevId": "doc:{docName}::ch{prevNumber}" | null,
   "nextId": "doc:{docName}::ch{nextNumber}" | null,
-
-  // Optional content analysis
-  "nodeTypes": ["paragraph", "list", "code"],
 
   // Pipeline processing information
   "pipeline": {
@@ -83,6 +80,7 @@ Each chunk file contains a single JSON object with the following structure:
     "headerDepths": [number],
     "headerSlugs": ["string"],
     "sectionSlug": "string",
+    "nodeTypes": ["paragraph", "list", "code"],
     "processedAt": "ISO8601",
     "chunkingOptions": object
   }
@@ -105,9 +103,6 @@ Each chunk represents a semantically meaningful segment of content (typically fr
 - **`chunkNumber`** *(required)*: Zero-based sequential position within the parent document
   - Example: `4` (indicates this is the 5th chunk in the document)
   - Used for ordering and reference
-- **`contentType`** *(required)*: Type of source content
-  - Example: `"doc"` for documentation, `"post"` for blog posts
-  - Enables content-type-specific processing and filtering
 
 ### Content Fields (Required)
 - **`originalText`** *(required)*: Original markdown content for human display and presentation
@@ -147,27 +142,6 @@ For a chunk from a document titled "API Documentation" in the "Authentication > 
 - `originalText`: Preserves exact formatting for user presentation
 - `embedText`: Adds contextual breadcrumb prefix for better search relevance
 
-### Structural Information (Required)
-- **`fileTitle`** *(required)*: Document-level title passed as a required parameter to the chunking function. The calling code is responsible for extracting this from frontmatter, first H1, filename, or any other source
-  - Example: `"API Documentation"`
-
-- **`sectionTitle`** *(required)*: The heading text of the current section (last value from `headerPath`). Most relevant heading found in the chunk. Empty string if no heading is found.
-  - Example: `"OAuth Setup"`
-
-- **`headerPath`** *(required)*: Array containing the hierarchical path of headings from the document root to the current section. Contains only heading text without markdown syntax. Provides full document context for the chunk's position.
-  - Example: `["Getting Started", "Authentication", "OAuth Setup"]`
-
-- **`headerBreadcrumb`** *(required)*: Pre-formatted display string created by joining `headerPath` with `" > "` separator. Never includes `fileTitle`. Used for contextual understanding and navigation.
-  - Example: `"Getting Started > Authentication > OAuth Setup"`
-
-- **`headerDepths`** *(required)*: Array of heading levels (1-6) corresponding to each entry in `headerPath`
-  - Example: `[1, 2, 3]` (H1, H2, H3 headings respectively)
-
-- **`headerSlugs`** *(required)*: Array of URL-safe anchor IDs corresponding to each heading in `headerPath`
-  - Example: `["getting-started", "authentication", "oauth-setup"]`
-
-- **`sectionSlug`** *(required)*: The URL-safe anchor ID for the current section
-  - Example: `"oauth-setup"` (last value from `headerSlugs`)
 
 ### Position and Token Data (Required)
 - **`sourcePosition`** *(required)*: Character-based position information representing positions in the **original source text only**
@@ -183,42 +157,60 @@ For a chunk from a document titled "API Documentation" in the "Authentication > 
 
 ## Optional Fields
 
-### Navigation (Optional)
-- **`prevId`** *(optional)*: ID of the previous chunk in sequence (null for first chunk)
+### Navigation
+- **`prevId`**: ID of the previous chunk in sequence (null for first chunk)
   - Example: `"doc:skeleton::ch3"`
   - Enables sequential navigation through document chunks
   - `null` for the first chunk in a document
-- **`nextId`** *(optional)*: ID of the next chunk in sequence (null for last chunk)
+- **`nextId`**: ID of the next chunk in sequence (null for last chunk)
   - Example: `"doc:skeleton::ch5"`
   - Enables sequential navigation through document chunks
   - `null` for the last chunk in a document
 
-### Content Analysis (Optional)
-- **`nodeTypes`** *(optional)*: Array of AST node type IDs that this chunk contains
-  - Example: `["paragraph", "list", "code", "table"]`
-  - Indicates the structural composition of the chunk content
-  - Useful for content-aware processing and filtering
 
-**Complete header example:**
-```json
-{
-  "fileTitle": "API Documentation",
-  "sectionTitle": "OAuth Setup",
-  "headerPath": ["Getting Started", "Authentication", "OAuth Setup"],
-  "headerBreadcrumb": "Getting Started > Authentication > OAuth Setup",
-  "headerDepths": [1, 2, 3],
-  "headerSlugs": ["getting-started", "authentication", "oauth-setup"],
-  "sectionSlug": "oauth-setup"
-}
-```
+### Pipeline Processing Information
+- **`pipeline`**: Information about the processing pipeline
+  - `version`: Version of the chunking pipeline
+  - `processingTimeMs`: Time taken to process this chunk in milliseconds
 
-### Processing Metadata (Optional)
-- **`metadata`** *(optional)*: Processing and provenance information
-  - `sourceFile`: Original filename that was processed (e.g., `"skeleton.txt"`)
+### Metadata for Vector Database Filtering
+- **`metadata`**: Structured information for vector database filtering and organization. This object contains all the fields that would be useful for filtering, querying, and organizing chunks in a vector database.
+  - `contentType`: Type of source content (e.g., "doc", "post", "code")
+  - `sourceFile`: Original filename that was processed (e.g., "skeleton.txt")
+  - `fileTitle`: Document-level title passed as a required parameter
+  - `sectionTitle`: The heading text of the current section (last value from headerPath)
+  - `headerPath`: Array containing the hierarchical path of headings
+  - `headerBreadcrumb`: Pre-formatted display string (headerPath joined with " > ")
+  - `headerDepths`: Array of heading levels (1-6) corresponding to each entry in headerPath
+  - `headerSlugs`: Array of URL-safe anchor IDs corresponding to each heading
+  - `sectionSlug`: The URL-safe anchor ID for the current section
+  - `nodeTypes`: Array of AST node type IDs that this chunk contains (e.g., ["paragraph", "list", "code", "table"])
   - `processedAt`: ISO8601 timestamp of when chunk was created
   - `chunkingOptions`: Configuration used for chunking
-  - `pipeline`: Version and performance information
-  - Additional fields vary by content type (title, date, tags, etc.)
+
+**Complete metadata example:**
+```json
+{
+  "metadata": {
+    "contentType": "doc",
+    "sourceFile": "api-documentation.md",
+    "fileTitle": "API Documentation",
+    "sectionTitle": "OAuth Setup",
+    "headerPath": ["Getting Started", "Authentication", "OAuth Setup"],
+    "headerBreadcrumb": "Getting Started > Authentication > OAuth Setup",
+    "headerDepths": [1, 2, 3],
+    "headerSlugs": ["getting-started", "authentication", "oauth-setup"],
+    "sectionSlug": "oauth-setup",
+    "nodeTypes": ["paragraph", "code", "list"],
+    "processedAt": "2024-01-15T10:30:00Z",
+    "chunkingOptions": {
+      "targetTokens": 400,
+      "maxTokens": 512,
+      "breadcrumbMode": "conditional"
+    }
+  }
+}
+```
 
 **Additional optional fields from legacy format:**
 - **`source`** *(optional)*: Source location information `{ filePath: string, startLine: number, endLine: number }`
@@ -266,22 +258,30 @@ If you're migrating from the legacy chunk format documented in `chunk-format-doc
 | `displayMarkdown` | `originalText` | Same purpose: formatted content for display |
 | `charOffsets` | `sourcePosition` | Object structure unchanged, clearer name |
 | `charOffsets.sourceLength` | `sourcePosition.totalChars` | Renamed for consistency |
-| `heading` | `sectionTitle` | Same purpose: current section heading text |
-| `headerHierarchy` | `headerBreadcrumb` | Same format: `" > "` separated string |
+| `heading` | `metadata.sectionTitle` | Now in metadata object for filtering |
+| `headerHierarchy` | `metadata.headerBreadcrumb` | Now in metadata object |
 | `tokenCount` | `tokenStats.tokens` | Now part of structured token information object |
+| `contentType` | `metadata.contentType` | Moved to metadata for vector DB filtering |
 
 **New required fields** (not in legacy format):
-- `fileTitle`: Document-level title (required parameter)
-- `headerDepths`: Array of heading levels [1-6]
-- `headerSlugs`: Array of URL-safe anchor IDs
-- `sectionSlug`: Current section's anchor ID
+- `metadata.fileTitle`: Document-level title (required parameter)
+- `metadata.headerPath`: Array of heading texts
+- `metadata.headerDepths`: Array of heading levels [1-6]
+- `metadata.headerSlugs`: Array of URL-safe anchor IDs
+- `metadata.sectionSlug`: Current section's anchor ID
+- `metadata.sourceFile`: Original filename
+- `metadata.processedAt`: Processing timestamp
+- `metadata.chunkingOptions`: Configuration used
 - `tokenStats.estimatedTokens`: Character-based token estimate
+- `pipeline`: Processing information (version, timing)
 
 **Breaking changes to be aware of:**
-1. `sourcePosition` excludes breadcrumb modifications (positions are source-only)
-2. `headerBreadcrumb` never includes `fileTitle` (separated for clarity)
-3. `fileTitle` is now a required parameter from calling code
-4. Token information moved to structured `tokenStats` object
+1. Most structural fields moved to `metadata` object for vector database filtering
+2. `sourcePosition` excludes breadcrumb modifications (positions are source-only)
+3. `metadata.headerBreadcrumb` never includes `fileTitle` (separated for clarity)
+4. `fileTitle` is now a required parameter from calling code
+5. Token information moved to structured `tokenStats` object
+6. Pipeline information separated from metadata
 
 ## Example Output
 
@@ -382,9 +382,11 @@ This format is compatible with:
 
 **MAIN IMPLEMENTATION TASKS**:
 1. Update `EnhancedChunk` type in `lib/types.ts` to match this spec exactly
-2. Update `lib/metadata.ts` to generate new field names and missing fields
+2. Update `lib/metadata.ts` to generate metadata object with all structural fields
 3. Add `fileTitle` parameter to main chunking function signature
 4. Implement breadcrumb generation logic (`embedText` vs `originalText`)
 5. Add `breadcrumbMode` option to `ChunkOptions`
+6. Move all filtering-relevant fields into metadata object
+7. Separate pipeline information from metadata
 
 **PIPELINE FLOW**: The current pipeline returns basic `Chunk[]` but should return `EnhancedChunk[]` matching this specification.
