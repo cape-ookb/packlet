@@ -78,10 +78,18 @@ Each chunk file contains a single JSON object with the following structure:
 ## Field Descriptions
 
 ### Core Identifiers
-- **`id`**: Unique identifier for this chunk (`doc:{docName}::ch{number}`)
-- **`parentId`**: Identifier for the parent document (`doc:{docName}`)
+- **`id`**: Unique identifier for this chunk in format `{contentType}:{docName}::ch{number}`
+  - Example: `"doc:skeleton::ch4"`
+  - Used for direct chunk retrieval and as embedding keys
+- **`parentId`**: Identifier for the parent document in format `{contentType}:{docName}`
+  - Example: `"doc:skeleton"`
+  - Links chunks back to their originating document
 - **`prevId`**: ID of the previous chunk in sequence (null for first chunk)
+  - Example: `"doc:skeleton::ch3"`
+  - Enables sequential navigation through document chunks
 - **`nextId`**: ID of the next chunk in sequence (null for last chunk)
+  - Example: `"doc:skeleton::ch5"`
+  - Enables sequential navigation through document chunks
 
 ### Content Fields
 
@@ -89,9 +97,10 @@ Each chunk file contains a single JSON object with the following structure:
 
 - **`content`** (internal): Used during pipeline processing. This is the working text that gets modified through various stages (normalization, overlap addition, etc.). This field is part of the basic `Chunk` type used internally but is not included in the final output.
 
-- **`originalText`**: The chunk's content after all processing steps (normalization, overlap) but before any context prepending. This preserves the processed chunk for display purposes without breadcrumbs.
+- **`originalText`**: The chunk's content after all processing steps (normalization, overlap) but before any context prepending. This preserves the processed chunk for display purposes without breadcrumbs. Preserves formatting, links, and markdown syntax. Used for presenting chunks to users in search results.
 
-- **`embedText`**: The final text that gets embedded/encoded in vector databases. This is `originalText` with potential breadcrumbs or other context prepended based on configuration. This is what actually gets vectorized for search.
+- **`embedText`**: The final text that gets embedded/encoded in vector databases. This is `originalText` with potential breadcrumbs or other context prepended based on configuration. This is what actually gets vectorized for search. Includes contextual prefix with document title and section hierarchy, cleaned of markdown formatting but preserves semantic meaning.
+  - Example: `"Title: skeleton.txt\n\n### Base\n\nControls the style of the..."`
 
 **Why all three?**
 - `content` allows flexible internal processing without affecting final output structure
@@ -99,25 +108,34 @@ Each chunk file contains a single JSON object with the following structure:
 - `embedText` optimizes for search with context while keeping display text clean
 
 Additional fields:
-- **`chunkNumber`**: Zero-based sequential number within the document
-- **`contentType`**: Always "doc" for documentation chunks
+- **`chunkNumber`**: Zero-based sequential position within the parent document
+  - Example: `4` (indicates this is the 5th chunk in the document)
+  - Used for ordering and reference
+- **`contentType`**: Type of source content
+  - Example: `"doc"` for documentation, `"post"` for blog posts
+  - Enables content-type-specific processing and filtering
 
 ### Structural Information
 - **`fileTitle`** (required): Document-level title passed as a required parameter to the chunking function. The calling code is responsible for extracting this from frontmatter, first H1, filename, or any other source
-- **`heading`**: Primary heading that applies to this chunk (deprecated - use `sectionTitle` instead)
-- **`headerPath`**: Array containing the hierarchical path of headings from the document root to the current section. Contains only heading text without markdown syntax
-- **`headerBreadcrumb`**: Pre-formatted display string created by joining `headerPath` with `" > "` separator. Never includes `fileTitle`
+- **`sectionTitle`**: The heading text of the current section (last value from `headerPath`). Most relevant heading found in the chunk. Empty string if no heading is found.
+- **`headerPath`**: Array containing the hierarchical path of headings from the document root to the current section. Contains only heading text without markdown syntax. Provides full document context for the chunk's position.
+  - Example: `["Typography", "Semantic Typography", "Base"]`
+- **`headerBreadcrumb`**: Pre-formatted display string created by joining `headerPath` with `" > "` separator. Never includes `fileTitle`. Used for contextual understanding and navigation.
 - **`headerDepths`**: Array of heading levels (1-6) corresponding to each entry in `headerPath`
 - **`headerSlugs`**: Array of URL-safe anchor IDs corresponding to each heading in `headerPath`
 - **`sectionSlug`**: The URL-safe anchor ID for the current section
-- **`sectionTitle`**: The heading text of the current section (last value from `headerPath`)
-- **`headerHierarchy`**: String representation of heading hierarchy (deprecated - use `headerBreadcrumb` instead)
+
+**Field name changes:**
+- **`heading`**: Primary heading that applies to this chunk (renamed to `sectionTitle`)
+- **`headerHierarchy`**: String representation of heading hierarchy (renamed to `headerBreadcrumb`)
 
 ### Position Data
 - **`sourcePosition`**: Character-based position information representing positions in the **original source text only** (not including breadcrumbs or normalizations)
   - `charStart`: Starting character position in source document
   - `charEnd`: Ending character position in source document
   - `totalChars`: Total character length of the original source document
+  - Used for highlighting and precise content location
+  - Derived from AST position data: `start.offset`, `end.offset`
 
 ### Token Information
 - **`tokenStats`**: Token counting information
@@ -126,10 +144,18 @@ Additional fields:
 
 ### Processing Metadata
 - **`metadata`**: Processing and provenance information
-  - `sourceFile`: Original filename that was processed
+  - `sourceFile`: Original filename that was processed (e.g., `"skeleton.txt"`)
   - `processedAt`: ISO8601 timestamp of when chunk was created
   - `chunkingOptions`: Configuration used for chunking
   - `pipeline`: Version and performance information
+  - Additional fields vary by content type (title, date, tags, etc.)
+
+**Additional fields from legacy format:**
+- **`nodeTypes`**: Array of AST node type IDs this chunk contains (`'paragraph'`, `'list'`, `'code'`, `'table'`)
+- **`source`**: Source location information `{ filePath: string, startLine: number, endLine: number }`
+
+**Field name changes:**
+- **`tokenCount`**: Single token count number (renamed to `tokenStats.tokens` object structure)
 
 ## Example Output
 
@@ -147,6 +173,20 @@ Each file contains the complete chunk data with proper linking:
 - `ch1`: `prevId: "doc:strategy::ch0", nextId: "doc:strategy::ch2"`
 - `ch2`: `prevId: "doc:strategy::ch1", nextId: "doc:strategy::ch3"`
 - `ch3`: `prevId: "doc:strategy::ch2", nextId: null`
+
+## Chunking Strategy
+
+### Token Limits
+> **Note**: For current token limit defaults, see `lib/default-config.ts`
+- **Target tokens**: ~400 average (configurable via `targetTokens`)
+- **Token range**: 64-512 strict range (configurable via `minTokens` and `maxTokens`)
+- **Overlap**: Configurable via `overlapSentences` parameter (default: 2 sentences) instead of token counts
+
+### Context Enhancement
+- Each chunk includes document title as prefix when needed
+- Header hierarchy provides section context
+- Previous/next linking enables document traversal
+- Character offsets allow precise source highlighting
 
 ## Usage with Vector Databases
 
@@ -180,20 +220,14 @@ The goal is to merge all valuable content from the legacy document into this one
 
 ### Tasks for Merging chunk-format-documentation.md into this Document
 
-#### Field Standardization Tasks
+#### Field Standardization Tasks ✅ COMPLETED
 
-- [ ] **Update field names throughout documentation**
-  - [ ] Change all references from `displayMarkdown` to `originalText` (stores processed chunk before context prepending)
-  - [ ] Change all references from `charOffsets` to `sourcePosition` (clearer name for position data)
-  - [ ] Change `sourceLength` to `totalChars` within position object (consistency with charStart/charEnd)
-  - [ ] Replace deprecated `heading` field with `sectionTitle` (per title-in-each-chunk.md line 184)
-  - [ ] Update `tokenCount` references to use `tokenStats.tokens` (object structure for token data)
-
-- [ ] **Standardize token limit documentation**
-  - [ ] Remove outdated 625 token maximum references
-  - [ ] Document current defaults: targetTokens=400, minTokens=64, maxTokens=512
-  - [ ] Add reference to `lib/default-config.ts` for configurable defaults
-  - [ ] Update overlap description to use `overlapSentences` instead of token counts
+All field standardization tasks have been completed:
+- ✅ Updated field names throughout documentation (`displayMarkdown` → `originalText`, `charOffsets` → `sourcePosition`, `sourceLength` → `totalChars`)
+- ✅ Replaced deprecated `heading` field with `sectionTitle` references
+- ✅ Updated `tokenCount` references to use `tokenStats.tokens` object structure
+- ✅ Standardized token limit documentation with current defaults
+- ✅ Updated overlap description to use `overlapSentences` instead of token counts
 
 #### Content Migration Tasks
 
