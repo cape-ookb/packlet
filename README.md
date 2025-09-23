@@ -16,7 +16,7 @@
 - 🔢 **Token-Aware**: Accurate token counting with tiktoken, not character approximations
 - 🔗 **Semantic Overlap**: Sentence-based context preservation between chunks
 - 📊 **Rich Metadata**: Heading breadcrumbs, token counts, and source positions
-- ⚡ **High Performance**: <10s processing for large documents (0.5MB+)
+- ⚡ **High Performance**: Fast processing, even for large documents
 - 🛡️ **Quality First**: Prevents low-quality chunks during creation, not post-filtering
 
 ## 🚀 Quick Start
@@ -62,7 +62,7 @@ Modular pipeline-based chunker following functional programming principles:
 ## 🎯 Target Metrics
 
 - **Token Range**: ~400-500 average tokens per chunk. 64-512 strict range.
-- **Processing Speed**: <10 seconds for large documents (0.5MB)
+- **Processing Speed**: Optimized for fast processing
 - **Quality**: 0 low-quality chunks in multi-chunk documents (small single-chunk documents are allowed)
 
 ## Flow Architecture
