@@ -73,6 +73,9 @@ The project includes markdown test fixtures in `tests/fixtures/` used for testin
 - `simple.md` - Basic markdown elements (headings, lists, code, tables)
 - `headings.md` - Complex heading hierarchy testing
 - `code-heavy.md` - Documents with extensive code blocks
+- `large-nodes.md` - Large content sections for testing token limit handling and buffer flushing
+- `small-nodes.md` - Small content sections for testing look-ahead merging behavior
+- `mixed-content.md` - Various node types (headings, paragraphs, code, lists) for comprehensive testing
 - Additional fixtures for specific testing scenarios
 
 ### Setup
