@@ -62,9 +62,10 @@ Each chunk represents a semantically meaningful segment of content (typically fr
 ### Position Tracking
 
 - **`charOffsets`** (object): Character position information within source document
+  > **Note**: In the current implementation (see `chunk-output-format.md`), this is renamed to `sourcePosition` for clarity
   - **`charStart`** (integer): Starting character position in source
   - **`charEnd`** (integer): Ending character position in source
-  - **`sourceLength`** (integer): Total length of source document
+  - **`sourceLength`** (integer): Total length of source document (renamed to `totalChars` in current implementation)
   - Used for highlighting and precise content location
   - Derived from AST position data: `start.offset`, `end.offset`, and original source length
 
@@ -82,9 +83,10 @@ Each chunk represents a semantically meaningful segment of content (typically fr
 ## Chunking Strategy
 
 ### Token Limits
-- **Maximum tokens per chunk**: 625 tokens (optimal for embedding models)
-- **Overlap between chunks**: 100 tokens (25-30% of total target) (ensures context continuity)
-- **Minimum chunk size**: 50 tokens (prevents tiny, low-value chunks)
+> **Note**: For current token limit defaults, see `lib/default-config.ts`
+- **Target tokens**: ~400-500 average (configurable)
+- **Token range**: 64-512 strict range (configurable)
+- **Overlap**: Configurable via `overlapSentences` parameter (default: 2 sentences)
 
 ### Context Enhancement
 - Each chunk includes document title as prefix

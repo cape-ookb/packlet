@@ -148,7 +148,7 @@ The `headerBreadcrumb` metadata field **never changes**. Context prepending only
 * **Metadata stays pure**: `headerBreadcrumb` is always `headerPath.join(" > ")` regardless of embedding context
 * **Separate embedding logic**: Context prepending happens in a separate function/module that reads metadata but doesn't modify it
 * **Clear data flow**: `metadata.headerBreadcrumb` → `embedText` generation → final chunk output
-* **Character offsets represent original text only**: The `charOffsets` in metadata represent positions in the original source document. They should NOT include:
+* **Character positions represent original text only**: The `sourcePosition` in metadata represent positions in the original source document. They should NOT include:
   - Breadcrumb prepending (which happens during output formatting)
   - Any normalization or cleaning changes
   - Header path additions

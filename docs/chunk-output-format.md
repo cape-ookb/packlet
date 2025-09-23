@@ -54,7 +54,7 @@ Each chunk file contains a single JSON object with the following structure:
   "headerDepths": [number],
   "headerSlugs": ["string"],
   "sectionSlug": "string",
-  "charOffsets": {
+  "sourcePosition": {
     "charStart": number,
     "charEnd": number,
     "totalChars": number
@@ -114,10 +114,10 @@ Additional fields:
 - **`headerHierarchy`**: String representation of heading hierarchy (deprecated - use `headerBreadcrumb` instead)
 
 ### Position Data
-- **`charOffsets`**: Character-based position information representing positions in the **original source text only** (not including breadcrumbs or normalizations)
+- **`sourcePosition`**: Character-based position information representing positions in the **original source text only** (not including breadcrumbs or normalizations)
   - `charStart`: Starting character position in source document
   - `charEnd`: Ending character position in source document
-  - `totalChars`: Total characters in this chunk
+  - `totalChars`: Total character length of the original source document
 
 ### Token Information
 - **`tokenStats`**: Token counting information
@@ -175,27 +175,27 @@ This format is compatible with:
 1. **`displayMarkdown` vs `originalText`**:
    - chunk-format-documentation.md uses `displayMarkdown` (line 38-40)
    - This document specifies `originalText` (line 92-93)
-   - **Question**: Should we standardize on `originalText` as specified in the current implementation?
+   - **Resolution**: Per title-in-each-chunk.md TODO (line 229), rename `displayMarkdown` to `originalText` in the implementation to store original chunk content before modifications
 
 2. **Token Limit Differences**:
    - chunk-format-documentation.md specifies max 625 tokens (line 85)
    - README.md mentions target ~400-500 average, 64-512 strict range (line 46)
-   - **Question**: Which token limits should be the canonical specification?
+   - **Resolution**: Use README.md specifications (target ~400-500 average, 64-512 strict range). See `lib/default-config.ts` for current defaults: targetTokens=400, minTokens=64, maxTokens=512
 
 3. **Metadata Structure**:
    - chunk-format-documentation.md has simpler metadata (source, fileName, timestamp) (lines 73-78)
    - This document has richer metadata with pipeline info and chunkingOptions (lines 66-74)
-   - **Question**: Should we maintain both simple and extended metadata formats?
+   - **Resolution**: Use the richer metadata structure from this document; the title-in-each-chunk.md TODOs specify adding multiple new metadata fields (fileTitle, headerBreadcrumb, headerDepths, headerSlugs, sectionSlug, sectionTitle)
 
 4. **Additional Fields in chunk-format-documentation.md**:
    - `nodeTypes` array (line 79) - not present in current spec
    - `tokenCount` as direct field (line 78) vs `tokenStats` object here
-   - **Question**: Are nodeTypes still relevant for the current implementation?
+   - **Resolution**: Use `tokenStats` object as specified here; nodeTypes can be omitted unless specifically needed
 
-5. **charOffsets Differences**:
-   - chunk-format-documentation.md uses `sourceLength` (line 68)
-   - This document uses `totalChars` (line 120)
-   - **Question**: Should we standardize on `totalChars`?
+5. **Field Naming Differences**:
+   - chunk-format-documentation.md uses `charOffsets` with `sourceLength` (lines 64-69)
+   - This document uses `sourcePosition` with `totalChars` (lines 116-120)
+   - **Resolution**: Use `sourcePosition` as the object name (clearer that it's about source document position) with `charStart`, `charEnd`, and `totalChars` fields for consistency
 
 ### Content to Potentially Merge:
 
@@ -203,5 +203,27 @@ This format is compatible with:
 - **Purpose descriptions** from chunk-format-documentation.md are more detailed for some fields
 - **Examples** from chunk-format-documentation.md provide concrete values that could enhance understanding
 
+### Implementation Alignment with title-in-each-chunk.md TODOs:
+
+Based on the TODO list in title-in-each-chunk.md (lines 175-256), the following changes are needed:
+
+1. **Type Definition Updates** (lines 227-242):
+   - Update `EnhancedChunk` type in lib/types.ts
+   - Rename `displayMarkdown` → `originalText`
+   - Keep `embedText` field for vector database content
+   - Add missing metadata fields: fileTitle, headerBreadcrumb, headerDepths, headerSlugs, sectionSlug, sectionTitle
+
+2. **Core Metadata Fields to Add** (lines 177-186):
+   - `fileTitle` - document-level title passed as parameter
+   - `headerBreadcrumb` - pre-joined string with " > " separator
+   - `headerDepths` - array tracking depth of each heading
+   - `headerSlugs` - array for anchor IDs
+   - `sectionSlug` - slug of current section
+   - `sectionTitle` - current section heading (replaces deprecated `heading` field)
+
+3. **Breadcrumb Mode Option** (lines 207-211):
+   - Add `breadcrumbMode?: "conditional" | "always" | "none"` to ChunkOptions
+   - Default to "conditional"
+
 ### Recommendation:
-Merge chunk-format-documentation.md into this document as it appears to be legacy, keeping the best of both while standardizing on the current implementation's field names.
+Merge chunk-format-documentation.md into this document, using the field names and structure defined here and in title-in-each-chunk.md TODOs. The legacy document provides useful examples and context that should be preserved.
