@@ -152,6 +152,7 @@ This conditional approach:
   - [ ] Add `headerSlugs` array for anchor IDs
   - [ ] Add `sectionSlug` as slug of current section
   - [ ] Add `sectionTitle` field for current section (last value from headerPath)
+  - [ ] Replace deprecated `heading` field with `sectionTitle` throughout codebase
 
 ### High Priority - Header Path Logic
 
