@@ -1,6 +1,8 @@
 # Title and Header Fields in Chunks
 
-This document defines the authoritative specification for how titles and headers are stored in chunk metadata and embedded in chunk text.
+This document defines the specification for how titles and headers are handled during chunk processing, particularly focusing on breadcrumb generation and context prepending.
+
+> **Note**: For the complete output format specification including all field definitions, see [`chunk-output-format.md`](./chunk-output-format.md).
 
 ## Overview: Metadata vs Embedded Text
 
@@ -9,58 +11,21 @@ This specification maintains a clear separation between:
 1. **Metadata Fields** - Pure structural data stored for programmatic access (never modified based on context)
 2. **Embedded Text** - The actual chunk content that may have context prepended for better comprehension
 
-### Key Content Fields
+The distinction between `originalText`, `embedText`, and internal `content` fields is detailed in [`chunk-output-format.md`](./chunk-output-format.md#content-fields).
 
-- **`originalText`**: The chunk's content as extracted from the source document, without any modifications or prepended context
-- **`embedText`**: The final text that gets embedded/encoded in vector databases, which may include prepended breadcrumbs or other context based on configuration
-- **`content`**: Used internally during pipeline processing for working with chunk text
+## Key Header-Related Fields
 
-## Metadata Fields
+The following header-related fields are defined in [`chunk-output-format.md`](./chunk-output-format.md) and are central to this specification:
 
-Store comprehensive header information in metadata for programmatic use and retrieval. These fields are **always consistent** and **never modified** based on embedding conditions:
+* **`fileTitle`** (required) – Document-level title passed as a parameter, kept separate from heading hierarchy
+* **`headerPath`** – Array of heading texts forming the hierarchical path
+* **`headerBreadcrumb`** – Pre-joined display string (`headerPath.join(" > ")`), never includes `fileTitle`
+* **`headerDepths`** – Array of heading levels (1-6) for each headerPath entry
+* **`headerSlugs`** – URL-safe anchor IDs for each heading
+* **`sectionSlug`** – Anchor ID for current section
+* **`sectionTitle`** – Text of current section heading
 
-### Required Fields
-
-* **`fileTitle`** `string` (required) – Document-level title passed as a required parameter to the chunking function. The calling code is responsible for extracting this from frontmatter, first H1, filename, or any other source. This represents the overall document and is kept separate from the heading hierarchy.
-
-* **`headerPath`** `string[]` – Array containing the hierarchical path of headings from the document root to the current section. Contains only the heading text without markdown syntax (`#` marks). Starts from the first heading in the document (usually H1) and includes all parent headings down to the current section.
-  - Example: `["API Documentation", "Authentication", "OAuth2 Setup"]`
-
-* **`headerBreadcrumb`** `string` – Pre-formatted display string created by joining `headerPath` with `" > "` separator. This is **always** just the header path and **never** includes `fileTitle`. Used for human-readable context in search results and navigation.
-  - Example: `"API Documentation > Authentication > OAuth2 Setup"`
-  - **Important**: This field is pure metadata and is never modified for embedding purposes
-
-* **`headerDepths`** `number[]` – Array of heading levels (1-6) corresponding to each entry in `headerPath`. Useful for understanding the document structure and hierarchy depth.
-  - Example: `[1, 2, 3]` for H1, H2, H3
-
-* **`headerSlugs`** `string[]` – Array of URL-safe anchor IDs corresponding to each heading in `headerPath`. Used for generating links and navigation within the document.
-  - Example: `["api-documentation", "authentication", "oauth2-setup"]`
-
-* **`sectionSlug`** `string` – The URL-safe anchor ID for the current section (typically the slug of the last `headerPath` entry). Used for direct linking to this specific chunk's section.
-
-* **`sectionTitle`** `string` – The heading text of the current section (last value from `headerPath`). Provides quick access to the immediate section context without array manipulation.
-
-### Example
-
-```json
-{
-  "fileTitle": "Individual Chunk File Output Format",
-  "headerPath": [
-    "Individual Chunk File Output Format",
-    "Field Descriptions",
-    "Token Information"
-  ],
-  "headerBreadcrumb": "Individual Chunk File Output Format > Field Descriptions > Token Information",
-  "headerDepths": [1, 2, 3],
-  "headerSlugs": [
-    "individual-chunk-file-output-format",
-    "field-descriptions",
-    "token-information"
-  ],
-  "sectionSlug": "token-information",
-  "sectionTitle": "Token Information"
-}
-```
+These fields are **always consistent** and **never modified** based on embedding conditions. See the full field descriptions in the output format documentation.
 
 ### Implementation Notes
 

@@ -32,12 +32,16 @@ Each chunk file contains a single JSON object with the following structure:
   "prevId": "doc:{docName}::ch{prevNumber}" | null,
   "nextId": "doc:{docName}::ch{nextNumber}" | null,
   "embedText": "string",
-  "displayMarkdown": "string",
+  "originalText": "string",
   "chunkNumber": number,
   "contentType": "doc",
-  "heading": "string",
+  "fileTitle": "string",
+  "sectionTitle": "string",
   "headerPath": ["string"],
-  "headerHierarchy": "string",
+  "headerBreadcrumb": "string",
+  "headerDepths": [number],
+  "headerSlugs": ["string"],
+  "sectionSlug": "string",
   "charOffsets": {
     "charStart": number,
     "charEnd": number,
@@ -68,18 +72,37 @@ Each chunk file contains a single JSON object with the following structure:
 - **`nextId`**: ID of the next chunk in sequence (null for last chunk)
 
 ### Content Fields
-- **`embedText`**: Clean text content optimized for embedding/search
-- **`displayMarkdown`**: Original markdown content with formatting preserved
+
+**Three distinct content fields serve different purposes:**
+
+- **`content`** (internal): Used during pipeline processing. This is the working text that gets modified through various stages (normalization, overlap addition, etc.). This field is part of the basic `Chunk` type used internally but is not included in the final output.
+
+- **`originalText`**: The chunk's content after all processing steps (normalization, overlap) but before any context prepending. This preserves the processed chunk for display purposes without breadcrumbs.
+
+- **`embedText`**: The final text that gets embedded/encoded in vector databases. This is `originalText` with potential breadcrumbs or other context prepended based on configuration. This is what actually gets vectorized for search.
+
+**Why all three?**
+- `content` allows flexible internal processing without affecting final output structure
+- `originalText` preserves the clean chunk for display/rendering
+- `embedText` optimizes for search with context while keeping display text clean
+
+Additional fields:
 - **`chunkNumber`**: Zero-based sequential number within the document
 - **`contentType`**: Always "doc" for documentation chunks
 
 ### Structural Information
-- **`heading`**: Primary heading that applies to this chunk
-- **`headerPath`**: Array of hierarchical headings leading to this chunk
-- **`headerHierarchy`**: String representation of heading hierarchy (e.g., "# Main > ## Sub > ### Detail")
+- **`fileTitle`** (required): Document-level title passed as a required parameter to the chunking function. The calling code is responsible for extracting this from frontmatter, first H1, filename, or any other source
+- **`heading`**: Primary heading that applies to this chunk (deprecated - use `sectionTitle` instead)
+- **`headerPath`**: Array containing the hierarchical path of headings from the document root to the current section. Contains only heading text without markdown syntax
+- **`headerBreadcrumb`**: Pre-formatted display string created by joining `headerPath` with `" > "` separator. Never includes `fileTitle`
+- **`headerDepths`**: Array of heading levels (1-6) corresponding to each entry in `headerPath`
+- **`headerSlugs`**: Array of URL-safe anchor IDs corresponding to each heading in `headerPath`
+- **`sectionSlug`**: The URL-safe anchor ID for the current section
+- **`sectionTitle`**: The heading text of the current section (last value from `headerPath`)
+- **`headerHierarchy`**: String representation of heading hierarchy (deprecated - use `headerBreadcrumb` instead)
 
 ### Position Data
-- **`charOffsets`**: Character-based position information
+- **`charOffsets`**: Character-based position information representing positions in the **original source text only** (not including breadcrumbs or normalizations)
   - `charStart`: Starting character position in source document
   - `charEnd`: Ending character position in source document
   - `totalChars`: Total characters in this chunk
@@ -116,11 +139,12 @@ Each file contains the complete chunk data with proper linking:
 ## Usage with Vector Databases
 
 This format is optimized for:
-- **Embedding**: Use `embedText` field for vector generation
-- **Display**: Use `displayMarkdown` for rendering results
+- **Embedding**: Use `embedText` field for vector generation (includes context breadcrumbs when needed)
+- **Display**: Use `originalText` for rendering results without modifications
 - **Navigation**: Use `prevId`/`nextId` for chunk traversal
-- **Context**: Use `headerPath` and `headerHierarchy` for semantic context
+- **Context**: Use `headerPath` and `headerBreadcrumb` for semantic context
 - **Filtering**: Use `metadata` fields for corpus organization
+- **Linking**: Use `sectionSlug` for direct navigation to sections
 
 ## Compatibility
 
