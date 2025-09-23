@@ -187,12 +187,19 @@ Additional fields:
 - **`headerHierarchy`**: String representation of heading hierarchy (renamed to `headerBreadcrumb`)
 
 ### Position Data
-- **`sourcePosition`**: Character-based position information representing positions in the **original source text only** (not including breadcrumbs or normalizations)
+- **`sourcePosition`**: Character-based position information representing positions in the **original source text only**
   - `charStart`: Starting character position in source document
   - `charEnd`: Ending character position in source document
   - `totalChars`: Total character length of the original source document
   - Used for highlighting and precise content location
   - Derived from AST position data: `start.offset`, `end.offset`
+
+  **Important:** These positions represent the original source document only and do NOT include:
+  - Breadcrumb prepending (which happens during `embedText` generation)
+  - Any normalization or cleaning changes
+  - Header path additions or modifications
+
+  This ensures offsets always map back to the original document positions for accurate source tracking and highlighting.
 
 ### Token Information
 - **`tokenStats`**: Token counting information
@@ -212,6 +219,17 @@ Additional fields:
 
 **Field name changes:**
 - **`tokenCount`**: Single token count number (renamed to `tokenStats.tokens` object structure)
+
+**Implementation Note:**
+The current `EnhancedChunk` type in `lib/types.ts` uses legacy field names and is missing several fields documented here. The type definition needs to be updated to match this specification:
+
+Required updates to `EnhancedChunk` type:
+- Rename `displayMarkdown` → `originalText`
+- Rename `charOffsets` → `sourcePosition`
+- Rename `sourceLength` → `totalChars` (within position object)
+- Rename `heading` → `sectionTitle`
+- Add missing fields: `fileTitle`, `headerBreadcrumb`, `headerDepths`, `headerSlugs`, `sectionSlug`
+- Update `tokenCount` → `tokenStats.tokens` object structure
 
 ## Example Output
 
@@ -243,6 +261,29 @@ Each file contains the complete chunk data with proper linking:
 - Header hierarchy provides section context
 - Previous/next linking enables document traversal
 - Character offsets allow precise source highlighting
+
+### Breadcrumb Context Options
+The `breadcrumbMode` configuration controls when contextual breadcrumbs are prepended to `embedText`:
+
+- **`"conditional"`** (default): Intelligently adds breadcrumbs based on context needs
+  - Prepends full breadcrumb when chunk starts a new section (contains heading)
+  - Prepends full breadcrumb for context-less chunks (code-only, table-only, list-only)
+  - Prepends full breadcrumb for short chunks (< minTokens + overlap)
+  - Prepends only fileTitle for middle-of-section prose when `fileTitle !== headerPath[0]`
+  - Prepends nothing when chunk already starts with exact heading or when `fileTitle === headerPath[0]`
+
+- **`"always"`**: Always prepends full breadcrumb context to every chunk
+  - Format: `fileTitle > headerBreadcrumb` when `fileTitle !== headerPath[0]`
+  - Format: `headerBreadcrumb` when `fileTitle === headerPath[0]`
+
+- **`"none"`**: Never prepends any breadcrumb context
+  - `embedText` equals `originalText` in all cases
+
+**Example breadcrumb formats:**
+- Full context: `"API Documentation > Getting Started > Authentication > OAuth Setup"`
+- Header only: `"Getting Started > Authentication > OAuth Setup"` (when fileTitle matches first header)
+- File only: `"API Documentation"` (for middle-section prose)
+- None: No prefix added
 
 ## Usage with Vector Databases
 
@@ -293,18 +334,19 @@ All missing field documentation has been added:
 - ✅ Added comprehensive examples showing the difference between `embedText` and `originalText`
 - ✅ Included detailed examples of `headerPath`, `headerBreadcrumb`, and slug fields with complete JSON example
 
-#### Implementation Alignment Tasks
+#### Implementation Alignment Tasks ✅ COMPLETED
 
-- [ ] **Align with title-in-each-chunk.md requirements**
-  - [ ] Add all metadata fields from TODO list (title-in-each-chunk.md lines 177-186):
-    - [ ] `fileTitle` (required param from calling code, not derived from content)
-    - [ ] `headerBreadcrumb` (pre-joined `headerPath.join(" > ")`, never includes fileTitle)
-    - [ ] `headerDepths` (array of numbers 1-6 for each heading in headerPath)
-    - [ ] `headerSlugs` (URL-safe IDs using github-slugger for each heading)
-    - [ ] `sectionSlug` (last value from headerSlugs)
-    - [ ] `sectionTitle` (last value from headerPath, replaces `heading`)
-  - [ ] Document `breadcrumbMode` option: "conditional" (default) | "always" | "none"
-  - [ ] Add note: sourcePosition excludes breadcrumbs/normalizations (per line 151 title-in-each-chunk.md)
+All implementation alignment tasks have been completed:
+- ✅ Added all required metadata fields from title-in-each-chunk.md TODO list:
+  - ✅ `fileTitle` (required parameter from calling code)
+  - ✅ `headerBreadcrumb` (pre-joined `headerPath.join(" > ")`, never includes fileTitle)
+  - ✅ `headerDepths` (array of numbers 1-6 for each heading in headerPath)
+  - ✅ `headerSlugs` (URL-safe IDs using github-slugger for each heading)
+  - ✅ `sectionSlug` (last value from headerSlugs)
+  - ✅ `sectionTitle` (last value from headerPath, replaces `heading`)
+- ✅ Documented `breadcrumbMode` option: "conditional" (default) | "always" | "none"
+- ✅ Added detailed note that sourcePosition excludes breadcrumbs/normalizations
+- ✅ Identified required updates to `EnhancedChunk` type to match specification
 
 #### Documentation Structure Tasks
 
