@@ -119,6 +119,22 @@ Each chunk represents a semantically meaningful segment of content (typically fr
 - `originalText` preserves the clean chunk for display/rendering
 - `embedText` optimizes for search with context while keeping display text clean
 
+**Example showing the difference:**
+
+For a chunk from a document titled "API Documentation" in the "Authentication > OAuth Setup" section:
+
+```javascript
+// originalText - clean markdown for display
+"### OAuth Setup\n\nConfigure your OAuth provider:\n\n```javascript\nconst config = {\n  clientId: 'your-client-id',\n  redirectUri: 'https://example.com/callback'\n};\n```"
+
+// embedText - enhanced for search with context
+"API Documentation > Authentication > OAuth Setup\n\n### OAuth Setup\n\nConfigure your OAuth provider:\n\n```javascript\nconst config = {\n  clientId: 'your-client-id',\n  redirectUri: 'https://example.com/callback'\n};\n```"
+```
+
+**Key differences:**
+- `originalText`: Preserves exact formatting for user presentation
+- `embedText`: Adds contextual breadcrumb prefix for better search relevance
+
 Additional fields:
 - **`chunkNumber`**: Zero-based sequential position within the parent document
   - Example: `4` (indicates this is the 5th chunk in the document)
@@ -126,16 +142,45 @@ Additional fields:
 - **`contentType`**: Type of source content
   - Example: `"doc"` for documentation, `"post"` for blog posts
   - Enables content-type-specific processing and filtering
+- **`nodeTypes`**: Array of AST node type IDs that this chunk contains
+  - Example: `["paragraph", "list", "code", "table"]`
+  - Indicates the structural composition of the chunk content
+  - Useful for content-aware processing and filtering
 
 ### Structural Information
 - **`fileTitle`** (required): Document-level title passed as a required parameter to the chunking function. The calling code is responsible for extracting this from frontmatter, first H1, filename, or any other source
+  - Example: `"API Documentation"`
+
 - **`sectionTitle`**: The heading text of the current section (last value from `headerPath`). Most relevant heading found in the chunk. Empty string if no heading is found.
+  - Example: `"OAuth Setup"`
+
 - **`headerPath`**: Array containing the hierarchical path of headings from the document root to the current section. Contains only heading text without markdown syntax. Provides full document context for the chunk's position.
-  - Example: `["Typography", "Semantic Typography", "Base"]`
+  - Example: `["Getting Started", "Authentication", "OAuth Setup"]`
+
 - **`headerBreadcrumb`**: Pre-formatted display string created by joining `headerPath` with `" > "` separator. Never includes `fileTitle`. Used for contextual understanding and navigation.
+  - Example: `"Getting Started > Authentication > OAuth Setup"`
+
 - **`headerDepths`**: Array of heading levels (1-6) corresponding to each entry in `headerPath`
+  - Example: `[1, 2, 3]` (H1, H2, H3 headings respectively)
+
 - **`headerSlugs`**: Array of URL-safe anchor IDs corresponding to each heading in `headerPath`
+  - Example: `["getting-started", "authentication", "oauth-setup"]`
+
 - **`sectionSlug`**: The URL-safe anchor ID for the current section
+  - Example: `"oauth-setup"` (last value from `headerSlugs`)
+
+**Complete header example:**
+```json
+{
+  "fileTitle": "API Documentation",
+  "sectionTitle": "OAuth Setup",
+  "headerPath": ["Getting Started", "Authentication", "OAuth Setup"],
+  "headerBreadcrumb": "Getting Started > Authentication > OAuth Setup",
+  "headerDepths": [1, 2, 3],
+  "headerSlugs": ["getting-started", "authentication", "oauth-setup"],
+  "sectionSlug": "oauth-setup"
+}
+```
 
 **Field name changes:**
 - **`heading`**: Primary heading that applies to this chunk (renamed to `sectionTitle`)
@@ -163,7 +208,6 @@ Additional fields:
   - Additional fields vary by content type (title, date, tags, etc.)
 
 **Additional fields from legacy format:**
-- **`nodeTypes`**: Array of AST node type IDs this chunk contains (`'paragraph'`, `'list'`, `'code'`, `'table'`)
 - **`source`**: Source location information `{ filePath: string, startLine: number, endLine: number }`
 
 **Field name changes:**
@@ -242,10 +286,12 @@ All content migration tasks have been completed:
 - ✅ Added the "Chunking Strategy" context section with updated token limits to current defaults
 - ✅ Preserved AST position derivation note: "Derived from AST position data: start.offset, end.offset"
 
-- [ ] **Add missing field documentation**
-  - [ ] Document `nodeTypes` array if implementation requires it
-  - [ ] Add examples showing the difference between `embedText` and `originalText`
-  - [ ] Include examples of `headerPath`, `headerBreadcrumb`, and slug fields
+#### Missing Field Documentation ✅ COMPLETED
+
+All missing field documentation has been added:
+- ✅ Documented `nodeTypes` array with examples and use cases
+- ✅ Added comprehensive examples showing the difference between `embedText` and `originalText`
+- ✅ Included detailed examples of `headerPath`, `headerBreadcrumb`, and slug fields with complete JSON example
 
 #### Implementation Alignment Tasks
 
