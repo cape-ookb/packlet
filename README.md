@@ -68,6 +68,13 @@ Each stage transforms the data and passes it to the next stage. Functions are pu
 - Node.js ≥18.0.0
 - pnpm ≥8.0.0
 
+### Test Fixtures
+The project includes markdown test fixtures in `tests/fixtures/` used for testing various chunking scenarios:
+- `simple.md` - Basic markdown elements (headings, lists, code, tables)
+- `headings.md` - Complex heading hierarchy testing
+- `code-heavy.md` - Documents with extensive code blocks
+- Additional fixtures for specific testing scenarios
+
 ### Setup
 ```bash
 # Install dependencies
