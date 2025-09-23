@@ -19,11 +19,11 @@ Modular pipeline-based chunker following functional programming principles:
 - **`parse-markdown.ts`** - Parse markdown to AST
 - **`flatten-ast.ts`** - Extract nodes from AST (references docs/flatten-ast.md for algorithm details)
 - **`split-node.ts`** - Recursive splitting of oversized nodes
-- **`packer.ts`** - Intelligent buffering with look-ahead merge
+- **`packer.ts`** - Intelligent buffering with look-ahead merge and small chunk prevention
 - **`overlap.ts`** - Sentence-based context overlap between chunks
 - **`normalize.ts`** - Text cleanup preserving code blocks
 - **`metadata.ts`** - Attach chunk metadata (headings, paths, etc.)
-- **`guardrails.ts`** - Quality validation and filtering
+- **`guardrails.ts`** - Quality validation and monitoring (no longer filters chunks)
 - **`stats.ts`** - Performance metrics and analysis
 - **`tokenizer.ts`** - Token counting (tiktoken with fallback)
 - **`utils.ts`** - Flow composition utilities
@@ -37,7 +37,7 @@ Modular pipeline-based chunker following functional programming principles:
 1. **Hierarchical Splitting** - Split by structure (headings → paragraphs → sentences) before arbitrary cuts
 2. **Token-Aware Sizing** - Use tiktoken for accurate token measurement, not character counts
 3. **Sentence-Based Overlap** - Maintains semantic continuity better than token boundaries
-4. **Quality-First** - Prevent low-quality chunks during creation, not through post-filtering. Single-chunk documents (entire file fits in one chunk) are exempt from minTokens to avoid penalizing small documents.
+4. **Quality-First** - Prevent low-quality chunks during creation through intelligent packing, not post-filtering
 5. **Small Pure Functions** - Each function ≤25 lines, single responsibility, no side effects where possible
 6. **Flow Composition** - Pipeline uses functional composition, not method chaining
 

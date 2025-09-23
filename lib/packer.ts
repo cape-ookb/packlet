@@ -79,6 +79,13 @@ function processNode(
   options: ChunkOptions,
   wouldBeSingleChunk: boolean
 ): void {
+  // If this would be a single-chunk document, just accumulate everything
+  if (wouldBeSingleChunk) {
+    buffer.push(node);
+    return; // Don't flush anything - let flushFinalBuffer handle it
+  }
+
+  // For multi-chunk documents, use normal logic
   if (!canAddNode(buffer, node, options.maxTokens)) {
     flushBuffer(buffer, chunks);
   }
@@ -88,12 +95,11 @@ function processNode(
   if (!shouldLookAhead(buffer, nextNode, options)) {
     const currentTokens = countTokens(combineNodes(buffer));
 
-    // Only flush if we meet minTokens OR this would be a single chunk document
-    if (currentTokens >= options.minTokens || (wouldBeSingleChunk && !nextNode)) {
+    // In multi-chunk documents, only flush if we meet minTokens
+    if (currentTokens >= options.minTokens) {
       flushBuffer(buffer, chunks);
     }
-    // If we're below minTokens and this would be multi-chunk, keep accumulating
-    // (don't flush small chunks in multi-chunk documents)
+    // If below minTokens, keep accumulating to avoid small chunks
   }
 }
 
@@ -105,7 +111,7 @@ function flushFinalBuffer(buffer: FlatNode[], chunks: Chunk[], options: ChunkOpt
       // Allow: single chunk documents OR chunks that meet minTokens
       chunks.push(createChunk(buffer));
     } else {
-      // Multi-chunk document with small final chunk - merge with previous chunk if possible
+      // Multi-chunk document with small final chunk - always merge with previous chunk
       if (chunks.length > 0) {
         const lastChunk = chunks[chunks.length - 1];
         const lastChunkContent = lastChunk.originalText || lastChunk.content || '';
@@ -113,19 +119,15 @@ function flushFinalBuffer(buffer: FlatNode[], chunks: Chunk[], options: ChunkOpt
         const mergedContent = lastChunkContent + '\n\n' + bufferContent;
         const mergedTokens = countTokens(mergedContent);
 
-        if (mergedTokens <= options.maxTokens) {
-          // Merge with previous chunk
-          chunks[chunks.length - 1] = {
-            ...lastChunk,
-            content: mergedContent,
-            tokens: mergedTokens
-          };
-        } else {
-          // Can't merge, create separate chunk (edge case)
-          chunks.push(createChunk(buffer));
-        }
+        // Always merge small final chunks, even if it exceeds maxTokens slightly
+        // This prevents having tiny orphaned chunks at the end
+        chunks[chunks.length - 1] = {
+          ...lastChunk,
+          content: mergedContent,
+          tokens: mergedTokens
+        };
       } else {
-        // Shouldn't happen, but fallback
+        // Shouldn't happen, but fallback - create the chunk anyway
         chunks.push(createChunk(buffer));
       }
     }

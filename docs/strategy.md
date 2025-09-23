@@ -47,15 +47,16 @@ This document defines the ideal chunking approach for creating high-quality, sem
    * Use AST nodes to avoid splitting inside code blocks, tables, or lists.
 
 7. **Guardrails on Chunk Quality**
-   * Merge very short chunks (except titles, which attach to their first child).
-   * Prevent low-quality chunks at creation time, not through post-filtering
-   * Never exceed the token limit.
-   * Define minimum meaningful chunk size (e.g., ~200–300 tokens)
+   * Prevent low-quality chunks during creation through intelligent packing, not post-filtering
+   * Single-chunk documents: Allow any size (entire small file = valid chunk)
+   * Multi-chunk documents: Merge small final chunks with previous chunks to prevent orphaned small chunks
+   * May slightly exceed maxTokens to avoid creating tiny chunks (quality over strict limits)
+   * Define minimum meaningful chunk size (e.g., 64+ tokens for multi-chunk documents)
 
 8. **Performance**
    * Complete chunking in seconds, not minutes
    * **Speed**: Complete chunking of a large docs (0.5MB total) in < 10 seconds
-   * **Quality**: Produce 0 low-quality chunks. 1 maximum for edge cases.
+   * **Quality**: Produce 0 low-quality chunks in multi-chunk documents (small single-chunk documents are allowed)
    * **Memory**: Process documents incrementally, not all in memory
 
 9. **Normalization**
@@ -72,16 +73,41 @@ This document defines the ideal chunking approach for creating high-quality, sem
 5. Extract nodes in hierarchical order
 6. Measure token length of each node
 7. If node exceeds max tokens, apply recursive splitting logic (split by paragraph → sentence → hard cut)
-7. Accumulate nodes into chunks until near max token limit
-8. If a chunk is too small, merge it with the next node
-9. If a single node exceeds max tokens, split it with finer rules or hard-cut as a last resort
-10. Flush chunk when token limit is reached
-11. Add overlap sentences from previous chunk
-12. Normalize text and preserve code blocks intact
-13. Attach metadata such as heading trail and node type
-14. Enforce guardrails on very short or oversized chunks
-15. Compute actual chunk stats (count, min/avg/median/max tokens) and compare to the estimate
-16. Flag deviations beyond tolerance and emit summary metrics and timing alongside the chunks
+7. Determine if entire document would fit in single chunk (prevention strategy decision)
+8. For single-chunk documents: Accumulate all nodes into one chunk regardless of size
+9. For multi-chunk documents: Accumulate nodes with small chunk prevention logic
+10. If a chunk would be too small in multi-chunk mode, keep accumulating or merge with previous chunk
+11. If a single node exceeds max tokens, split it with finer rules or hard-cut as a last resort
+12. Flush chunk when token limit is reached (only if meets minimum or is single-chunk)
+13. Add overlap sentences from previous chunk
+14. Normalize text and preserve code blocks intact
+15. Attach metadata such as heading trail and node type
+16. Validate chunk quality and report issues (no filtering)
+17. Compute actual chunk stats (count, min/avg/median/max tokens) and compare to the estimate
+18. Flag deviations beyond tolerance and emit summary metrics and timing alongside the chunks
+
+## Small Chunk Prevention Strategy
+
+Our approach prevents low-quality chunks during creation rather than filtering them afterward:
+
+### Single-Chunk Documents
+- **Definition**: Entire document fits within `maxTokens`
+- **Strategy**: Allow any size chunk (even if below `minTokens`)
+- **Rationale**: Small documents shouldn't be penalized for being small
+
+### Multi-Chunk Documents
+- **Definition**: Document requires splitting due to size
+- **Strategy**: Prevent chunks below `minTokens` through intelligent merging
+- **Implementation**:
+  - Keep accumulating nodes if current chunk would be too small
+  - Merge small final chunks with previous chunks (may exceed `maxTokens` slightly)
+  - Quality over strict token limits
+
+### Benefits
+- No orphaned tiny chunks in large documents
+- Preserves small documents as valid single chunks
+- Maintains semantic coherence by preferring slightly larger chunks over fragmented tiny ones
+- Clear quality guarantee: 0 small chunks in multi-chunk scenarios
 
 ### Throw (Fail Fast)
 * Best during early development.
