@@ -1,8 +1,6 @@
-<div align="center">
+<img src="logo-small.png" align="right" width="200" alt="packlet logo">
 
 # 📦 packlet
-
-![Logo](logo-small.png)
 
 **Token-aware Markdown chunker with intelligent splitting and semantic preservation**
 
@@ -11,8 +9,6 @@
 [![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
 
 *mdast-driven hierarchy • recursive splitting • look-ahead packing • optional overlap • rich metadata*
-
-</div>
 
 ## ✨ Features
 
