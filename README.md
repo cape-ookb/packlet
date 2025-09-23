@@ -81,6 +81,8 @@ The project includes markdown test fixtures in `tests/fixtures/` used for testin
 - `mixed-content.md` - Various node types (headings, paragraphs, code, lists) for comprehensive testing
 - Additional fixtures for specific testing scenarios
 
+**⚠️ IMPORTANT:** Always use fixture files for tests instead of inline markdown strings. See `docs/testing-guidelines.md` for details.
+
 ### Setup
 ```bash
 # Install dependencies
@@ -117,3 +119,4 @@ This project uses **pnpm** for dependency management. All commands should use `p
 - **`docs/flatten-ast.md`** - Detailed AST flattening algorithm
 - **`docs/chunk-output-format.md`** - Complete specification for individual chunk file output format with comprehensive field definitions, examples, and migration notes
 - **`docs/title-in-each-chunk.md`** - Specification for title and header handling, breadcrumb generation, and context prepending
+- **`docs/testing-guidelines.md`** - ⚠️ **MUST READ**: Testing best practices and fixture usage requirements

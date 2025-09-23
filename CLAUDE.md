@@ -25,6 +25,23 @@ See `README.md` for complete project overview, architecture, design principles, 
 - Use Vitest for unit testing
 - Functions should be individually testable
 - See `README.md` for how to run tests
+- See `docs/testing-guidelines.md` for detailed requirements.
+
+#### IMPORTANT: Use Fixture Files for Test Data
+- **ALWAYS use fixture files** (`tests/fixtures/$.md`) instead of inline markdown strings in tests
+- **WHY**: Fixtures are reusable, maintainable, and reflect real-world documents
+- **HOW**: Load fixtures using `readFileSync(join(__dirname, 'fixtures', 'filename.md'), 'utf-8')`
+- **CREATE NEW FIXTURES** when testing specific scenarios (e.g., `special-characters.md`, `duplicate-headings.md`)
+- **EXCEPTION**: Only use inline strings for minimal unit tests that test a single isolated function
+- **EXAMPLES**:
+  ```typescript
+  // ✅ GOOD - Using fixtures
+  const content = readFileSync(join(__dirname, 'fixtures', 'simple.md'), 'utf-8');
+  const result = chunkMarkdown(content, 'simple.md', options);
+
+  // ❌ BAD - Inline markdown in integration tests
+  const doc = `# Title\n\nContent here...`;  // Don't do this for integration tests!
+  ```
 
 ### Code Standards
 - Filenames use `kebab-case.ext`

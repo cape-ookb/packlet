@@ -42,11 +42,11 @@ This document outlines the comprehensive refactor needed to align the current im
 - [x] Rename `charOffsets` → `sourcePosition`
 - [x] Rename `sourceLength` → `totalChars` (within sourcePosition object)
 - [x] Update `tokenCount` → `tokenStats.tokens` object structure
-- [ ] Remove top-level structural fields and move to metadata object:
+- [x] Remove top-level structural fields and move to metadata object:
   - [x] Move `contentType` → `metadata.contentType`
   - [x] Move `heading` → `metadata.sectionTitle`
   - [x] Move `headingTrail` → `metadata.headerPath`
-- [ ] Add missing fields in metadata object:
+- [x] Add missing fields in metadata object:
   - [x] `metadata.fileTitle: string`
   - [x] `metadata.headerBreadcrumb: string`
   - [x] `metadata.headerDepths: number[]`
@@ -56,7 +56,7 @@ This document outlines the comprehensive refactor needed to align the current im
   - [x] `metadata.nodeTypes: string[]`
   - [x] `metadata.processedAt: string`
   - [x] `metadata.chunkingOptions: object`
-- [ ] Add missing top-level fields:
+- [x] Add missing top-level fields:
   - [x] `embedText: string`
   - [x] `tokenStats: { tokens: number, estimatedTokens: number }`
   - [x] `pipeline: { version: string, processingTimeMs: number }`
@@ -80,7 +80,7 @@ This document outlines the comprehensive refactor needed to align the current im
 
 **Tasks**:
 - [x] Accept `fileTitle` as required parameter from calling code
-- [ ] Build metadata object with all structural fields:
+- [x] Build metadata object with all structural fields:
   - [x] `metadata.contentType` from content type parameter
   - [x] `metadata.sourceFile` from original filename
   - [x] `metadata.fileTitle` from fileTitle parameter
@@ -140,20 +140,20 @@ This document outlines the comprehensive refactor needed to align the current im
 **References**: `title-in-each-chunk.md:214-218`
 
 **Tasks**:
-- [ ] Add `fileTitle: string` as required parameter
-- [ ] Pass `fileTitle` through pipeline to metadata stage
+- [x] Add `fileTitle: string` as required parameter
+- [x] Pass `fileTitle` through pipeline to metadata stage
 - [x] Updated return type to unified `Chunk[]` with enhanced fields
-- [ ] Integrate embed text generation step
-- [ ] Document that calling code handles frontmatter/title extraction
+- [x] Integrate embed text generation step
+- [x] Document that calling code handles frontmatter/title extraction
 
 ### 4.2 Add Slug Generation Dependency
 **References**: `title-in-each-chunk.md:219-224`
 
 **Tasks**:
-- [ ] Install `github-slugger` dependency
-- [ ] Generate slugs for each heading in `headerPath`
-- [ ] Handle slug collisions (github-slugger auto-appends numbers)
-- [ ] Store in `headerSlugs` array with `sectionSlug` as last item
+- [x] Install `github-slugger` dependency
+- [x] Generate slugs for each heading in `headerPath`
+- [x] Handle slug collisions (github-slugger auto-appends numbers)
+- [x] Store in `headerSlugs` array with `sectionSlug` as last item
 
 ## Phase 5: Testing & Validation (LOW PRIORITY)
 

@@ -14,6 +14,15 @@ import { ChunkOptions, Chunk } from "./types";
 import { FlatNode } from "./flatten-ast";
 import { withDefaults } from "./default-config";
 
+/**
+ * Chunks a markdown document into semantically coherent pieces optimized for vector search.
+ *
+ * @param doc - The markdown content to chunk
+ * @param fileTitle - The title/name of the source file (used for metadata and breadcrumbs)
+ *                   Note: Calling code should handle frontmatter extraction and title normalization
+ * @param opts - Chunking configuration options
+ * @returns Object containing processed chunks and performance statistics
+ */
 export function chunkMarkdown(doc: string, fileTitle: string, opts: ChunkOptions): { chunks: Chunk[]; stats: any } {
 	const startTime = performance.now();
 	const options = withDefaults(opts);

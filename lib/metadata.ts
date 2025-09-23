@@ -87,13 +87,50 @@ function extractHeaderDepths(chunk: Chunk): number[] {
   return headerPath.map((_, index) => index + 1);
 }
 
+function cleanMarkdownFromHeading(heading: string): string {
+  return heading
+    // Remove # symbols
+    .replace(/^#+\s*/, '')
+    // Remove markdown links [text](url) -> text
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    // Remove inline code `text` -> text
+    .replace(/`([^`]+)`/g, '$1')
+    // Remove bold **text** -> text
+    .replace(/\*\*([^*]+)\*\*/g, '$1')
+    // Remove italic *text* -> text
+    .replace(/\*([^*]+)\*/g, '$1')
+    // Remove strikethrough ~~text~~ -> text
+    .replace(/~~([^~]+)~~/g, '$1')
+    .trim();
+}
+
+// Global slugger instance and cache to maintain state across all chunks
+let globalSlugger = new GithubSlugger();
+let slugCache = new Map<string, string>();
+
+export function resetSlugger(): void {
+  globalSlugger = new GithubSlugger();
+  slugCache.clear();
+}
+
 function generateHeaderSlugs(headerPath: string[]): string[] {
-  const slugger = new GithubSlugger();
-  return headerPath.map(heading => {
-    // Remove markdown # symbols if present
-    const cleanHeading = heading.replace(/^#+\s*/, '');
-    return slugger.slug(cleanHeading);
-  });
+  const result: string[] = [];
+
+  for (const heading of headerPath) {
+    const cleanHeading = cleanMarkdownFromHeading(heading);
+
+    // Check cache first - if we've seen this exact heading text before, use the same slug
+    if (slugCache.has(cleanHeading)) {
+      result.push(slugCache.get(cleanHeading)!);
+    } else {
+      // Generate new slug and cache it
+      const slug = globalSlugger.slug(cleanHeading);
+      slugCache.set(cleanHeading, slug);
+      result.push(slug);
+    }
+  }
+
+  return result;
 }
 
 function calculateSourcePosition(chunkNumber: number, chunks: Chunk[]): { charStart: number; charEnd: number; totalChars: number } {
@@ -119,6 +156,9 @@ function calculateSourcePosition(chunkNumber: number, chunks: Chunk[]): { charSt
 }
 
 export function attachMetadata(chunks: Chunk[], options: ChunkOptions, fileTitle?: string): Chunk[] {
+  // Reset slugger for each document to ensure consistent slug generation
+  resetSlugger();
+
   const contentType = 'doc'; // Default content type
   const sourceFile = 'processed-content.md'; // Default source file name
   const parentId = `${contentType}:${sourceFile}`;
