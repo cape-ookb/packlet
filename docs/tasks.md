@@ -5,8 +5,23 @@ This document outlines the comprehensive refactor needed to align the current im
 ## Dev Process
 
 - Work on one task at a time.
-- Once complete check off tasks in any and all docs.
+- **IMPORTANT: Once complete, check off tasks in any and all docs by changing `[ ]` to `[x]`.**
+- **ALWAYS mark tasks as complete immediately after finishing them - don't batch multiple completions.**
 - Ask before continuing onto the next task.
+
+## Task Completion Instructions
+
+**Before marking a task complete:**
+1. Verify the functionality works as specified
+2. Run relevant tests to ensure nothing breaks
+3. Check that the implementation matches the requirements in the referenced documentation
+4. Update this file by changing `- [ ]` to `- [x]` for completed tasks
+
+**When marking tasks complete:**
+- Mark individual sub-tasks as `[x]` when done
+- Mark the parent task/section as complete only when ALL sub-tasks are done
+- Be specific - if only part of a task is done, only mark that specific part
+- If you discover a task needs to be split into smaller parts, update the task list accordingly
 
 ## Overview
 
@@ -86,12 +101,12 @@ This document outlines the comprehensive refactor needed to align the current im
 **References**: `title-in-each-chunk.md:188-194`
 
 **Tasks**:
-- [ ] Ensure `metadata.headerPath` contains only heading text (no `#` symbols)
-- [ ] Keep `metadata.headerPath` separate from `metadata.fileTitle`
-- [ ] Handle multiple H1s correctly (first is root, later start new sections)
-- [ ] Handle edge case when no H1 present (start at first heading found)
-- [ ] Never mix `fileTitle` into `headerPath` array
-- [ ] Store all header-related data in metadata object for vector DB filtering
+- [x] Ensure `metadata.headerPath` contains only heading text (no `#` symbols)
+- [x] Keep `metadata.headerPath` separate from `metadata.fileTitle`
+- [x] Handle multiple H1s correctly (first is root, later start new sections)
+- [x] Handle edge case when no H1 present (start at first heading found)
+- [x] Never mix `fileTitle` into `headerPath` array
+- [x] Store all header-related data in metadata object for vector DB filtering
 
 ## Phase 3: Embed Text Generation (MEDIUM PRIORITY)
 
@@ -100,15 +115,15 @@ This document outlines the comprehensive refactor needed to align the current im
 **References**: `title-in-each-chunk.md:197-206`
 
 **Tasks**:
-- [ ] Create function that reads metadata but doesn't modify it
-- [ ] Implement detection logic:
-  - [ ] Chunk starts new section (contains heading node)
-  - [ ] Context-less chunks (code-only, table-only, list-only)
-  - [ ] Short chunks (< minTokens + overlap)
-- [ ] Build `fullBreadcrumb` when `fileTitle !== headerPath[0]`
-- [ ] Add deduplication (don't add if chunk starts with exact heading)
-- [ ] Implement 160-char truncation with middle ellipsis
-- [ ] Generate `embedText` field based on `breadcrumbMode` setting
+- [x] Create function that reads metadata but doesn't modify it
+- [x] Implement detection logic:
+  - [x] Chunk starts new section (contains heading node)
+  - [x] Context-less chunks (code-only, table-only, list-only)
+  - [x] Short chunks (< minTokens + overlap)
+- [x] Build `fullBreadcrumb` when `fileTitle !== headerPath[0]`
+- [x] Add deduplication (don't add if chunk starts with exact heading)
+- [x] Implement 160-char truncation with middle ellipsis
+- [x] Generate `embedText` field based on `breadcrumbMode` setting
 
 ### 3.2 Implement Breadcrumb Mode Logic
 **References**: `title-in-each-chunk.md:207-211`

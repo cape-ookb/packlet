@@ -101,15 +101,25 @@ function processBlockquote(context: ProcessingContext): FlatNode {
 }
 
 function updateHeadingTrail(text: string, depth: number, headingTrail: string[], headingDepths: number[]): void {
+  // Find position to insert/update based on depth
+  let insertPosition = 0;
+
+  // Find the position where this depth should go
+  for (let i = 0; i < headingDepths.length; i++) {
+    if (headingDepths[i] >= depth) {
+      insertPosition = i;
+      break;
+    }
+    insertPosition = i + 1;
+  }
+
   // Remove all headings at this depth and deeper
-  headingTrail.splice(depth - 1);
-  headingDepths.splice(depth - 1);
-  // Set the heading at this depth (ensuring no gaps in array)
-  headingTrail[depth - 1] = text;
-  headingDepths[depth - 1] = depth;
-  // Ensure arrays are properly sized without gaps
-  headingTrail.length = depth;
-  headingDepths.length = depth;
+  headingTrail.splice(insertPosition);
+  headingDepths.splice(insertPosition);
+
+  // Add the new heading
+  headingTrail.push(text);
+  headingDepths.push(depth);
 }
 
 // Flatten AST into linear sequence of nodes

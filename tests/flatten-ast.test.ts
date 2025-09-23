@@ -277,4 +277,57 @@ Final content.`;
     // Verify total count matches expected
     expect(flatNodes).toHaveLength(21);
   });
+
+  it('should handle heading depth gaps without sparse arrays', () => {
+    const input = `# Main Title
+
+Content under main.
+
+### Deep Level (H3 without H2)
+
+Deep content.
+
+## Now H2
+
+H2 content.
+
+#### Very Deep (H4)
+
+H4 content.`;
+
+    const ast = parseMarkdown(input);
+    const flatNodes = flattenAst(ast);
+
+    const headings = flatNodes.filter(node => node.type === 'heading');
+
+    // Check that headingTrail arrays don't contain undefined values
+    headings.forEach((heading, index) => {
+      console.log(`Heading ${index}: "${heading.text}"`);
+      console.log(`  Trail: [${heading.headingTrail.map(h => `"${h}"`).join(', ')}]`);
+      console.log(`  Depths: [${heading.headingDepths.join(', ')}]`);
+
+      // No undefined values in headingTrail
+      expect(heading.headingTrail.every(item => item !== undefined)).toBe(true);
+      // No sparse entries in headingDepths
+      expect(heading.headingDepths.every(depth => typeof depth === 'number')).toBe(true);
+      // Arrays should have same length
+      expect(heading.headingTrail.length).toBe(heading.headingDepths.length);
+    });
+
+    // Specific checks for the structure
+    expect(headings[0].headingTrail).toEqual(['Main Title']);
+    expect(headings[0].headingDepths).toEqual([1]);
+
+    // H3 after H1 should only show current path, not fill gaps
+    expect(headings[1].headingTrail).toEqual(['Main Title', 'Deep Level (H3 without H2)']);
+    expect(headings[1].headingDepths).toEqual([1, 3]);
+
+    // H2 after H3 should reset properly
+    expect(headings[2].headingTrail).toEqual(['Main Title', 'Now H2']);
+    expect(headings[2].headingDepths).toEqual([1, 2]);
+
+    // H4 after H2 should show path
+    expect(headings[3].headingTrail).toEqual(['Main Title', 'Now H2', 'Very Deep (H4)']);
+    expect(headings[3].headingDepths).toEqual([1, 2, 4]);
+  });
 });
