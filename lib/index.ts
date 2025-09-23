@@ -13,7 +13,7 @@ import { ChunkOptions, Chunk } from "./types";
 import { FlatNode } from "./flatten-ast";
 import { withDefaults } from "./default-config";
 
-export function chunkMarkdown(doc: string, opts: ChunkOptions): { chunks: Chunk[]; stats: any } {
+export function chunkMarkdown(doc: string, fileTitle: string, opts: ChunkOptions): { chunks: Chunk[]; stats: any } {
 	const startTime = performance.now();
 	const options = withDefaults(opts);
 
@@ -24,7 +24,7 @@ export function chunkMarkdown(doc: string, opts: ChunkOptions): { chunks: Chunk[
 		(nodes: FlatNode[]) => packNodes(nodes, options),
 		(chunks: Chunk[]) => addOverlap(chunks, options),
 		normalizeChunks,
-		(chunks: Chunk[]) => attachMetadata(chunks, options),
+		(chunks: Chunk[]) => attachMetadata(chunks, options, fileTitle),
 		(chunks: Chunk[]) => assertOrFilterInvalid(chunks, options),
 	);
 

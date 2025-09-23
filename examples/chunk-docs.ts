@@ -83,13 +83,13 @@ function main() {
         prevId: prevId,
         nextId: nextId,
         embedText: chunk.content.trim(),
-        displayMarkdown: chunk.content.trim(),
+        originalText: chunk.content.trim(),
         chunkNumber: index,
         contentType: contentType,
         heading: heading,
         headerPath: headerPath,
         headerHierarchy: headerHierarchy,
-        charOffsets: {
+        sourcePosition: {
           charStart: charStart,
           charEnd: Math.min(charEnd, content.length),
           totalChars: chunk.content.length

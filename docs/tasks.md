@@ -5,7 +5,7 @@ This document outlines the comprehensive refactor needed to align the current im
 ## Dev Process
 
 - Work on one task at a time.
-- Once complete check off tasks.
+- Once complete check off tasks in any and all docs.
 - Ask before continuing onto the next task.
 
 ## Overview
@@ -23,36 +23,36 @@ This document outlines the comprehensive refactor needed to align the current im
 - `title-in-each-chunk.md:231-242` (Type Definition Updates Required)
 
 **Tasks**:
-- [ ] Rename `displayMarkdown` → `originalText`
-- [ ] Rename `charOffsets` → `sourcePosition`
-- [ ] Rename `sourceLength` → `totalChars` (within sourcePosition object)
-- [ ] Update `tokenCount` → `tokenStats.tokens` object structure
+- [x] Rename `displayMarkdown` → `originalText`
+- [x] Rename `charOffsets` → `sourcePosition`
+- [x] Rename `sourceLength` → `totalChars` (within sourcePosition object)
+- [x] Update `tokenCount` → `tokenStats.tokens` object structure
 - [ ] Remove top-level structural fields and move to metadata object:
-  - [ ] Move `contentType` → `metadata.contentType`
-  - [ ] Move `heading` → `metadata.sectionTitle`
-  - [ ] Move `headingTrail` → `metadata.headerPath`
+  - [x] Move `contentType` → `metadata.contentType`
+  - [x] Move `heading` → `metadata.sectionTitle`
+  - [x] Move `headingTrail` → `metadata.headerPath`
 - [ ] Add missing fields in metadata object:
-  - [ ] `metadata.fileTitle: string`
-  - [ ] `metadata.headerBreadcrumb: string`
-  - [ ] `metadata.headerDepths: number[]`
-  - [ ] `metadata.headerSlugs: string[]`
-  - [ ] `metadata.sectionSlug: string`
-  - [ ] `metadata.sourceFile: string`
-  - [ ] `metadata.nodeTypes: string[]`
-  - [ ] `metadata.processedAt: string`
-  - [ ] `metadata.chunkingOptions: object`
+  - [x] `metadata.fileTitle: string`
+  - [x] `metadata.headerBreadcrumb: string`
+  - [x] `metadata.headerDepths: number[]`
+  - [x] `metadata.headerSlugs: string[]`
+  - [x] `metadata.sectionSlug: string`
+  - [x] `metadata.sourceFile: string`
+  - [x] `metadata.nodeTypes: string[]`
+  - [x] `metadata.processedAt: string`
+  - [x] `metadata.chunkingOptions: object`
 - [ ] Add missing top-level fields:
-  - [ ] `embedText: string`
-  - [ ] `tokenStats: { tokens: number, estimatedTokens: number }`
-  - [ ] `pipeline: { version: string, processingTimeMs: number }`
+  - [x] `embedText: string`
+  - [x] `tokenStats: { tokens: number, estimatedTokens: number }`
+  - [x] `pipeline: { version: string, processingTimeMs: number }`
 
 ### 1.2 Add ChunkOptions Configuration
 **File**: `lib/types.ts`, `lib/default-config.ts`
 **References**: `title-in-each-chunk.md:207-211`
 
 **Tasks**:
-- [ ] Add `breadcrumbMode?: "conditional" | "always" | "none"` to ChunkOptions
-- [ ] Set default to "conditional" in default config
+- [x] Add `breadcrumbMode?: "conditional" | "always" | "none"` to ChunkOptions
+- [x] Set default to "conditional" in default config
 - [ ] Add `fileTitle: string` parameter requirement to main function signature
 
 ## Phase 2: Metadata Generation Updates (HIGH PRIORITY)

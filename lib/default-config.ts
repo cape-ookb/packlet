@@ -7,4 +7,5 @@ export const withDefaults = (o: ChunkOptions): ChunkOptions => ({
 	overlapSentences: o.overlapSentences ?? 2,
 	strictMode: o.strictMode ?? true,
 	targetTokens: o.targetTokens ?? 400,
+	breadcrumbMode: o.breadcrumbMode ?? "conditional",
 });

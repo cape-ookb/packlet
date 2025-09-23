@@ -72,7 +72,7 @@ function createTimestamp(): string {
   return new Date().toISOString();
 }
 
-function calculateCharOffsets(chunkNumber: number, chunks: Chunk[]): { charStart: number; charEnd: number; sourceLength: number } {
+function calculateSourcePosition(chunkNumber: number, chunks: Chunk[]): { charStart: number; charEnd: number; totalChars: number } {
   let charStart = 0;
   let totalLength = 0;
 
@@ -83,7 +83,7 @@ function calculateCharOffsets(chunkNumber: number, chunks: Chunk[]): { charStart
       return {
         charStart,
         charEnd: charStart + chunkLength,
-        sourceLength: chunks.reduce((sum, c) => sum + c.content.length, 0)
+        totalChars: chunks.reduce((sum, c) => sum + c.content.length, 0)
       };
     }
     charStart += chunkLength;
@@ -91,7 +91,7 @@ function calculateCharOffsets(chunkNumber: number, chunks: Chunk[]): { charStart
   }
 
   // Fallback if chunk not found
-  return { charStart: 0, charEnd: 0, sourceLength: totalLength };
+  return { charStart: 0, charEnd: 0, totalChars: totalLength };
 }
 
 export function attachMetadata(chunks: Chunk[], _options: ChunkOptions): Chunk[] {
@@ -109,7 +109,7 @@ export function attachMetadata(chunks: Chunk[], _options: ChunkOptions): Chunk[]
     const heading = extractHeading(chunk.content);
     const headerPath = extractHeaderPath(chunk);
     const nodeTypes = extractNodeTypes(chunk);
-    const charOffsets = calculateCharOffsets(index, chunks);
+    const sourcePosition = calculateSourcePosition(index, chunks);
     const tokenCount = countTokens(chunk.content);
 
     return {
@@ -139,7 +139,7 @@ export function attachMetadata(chunks: Chunk[], _options: ChunkOptions): Chunk[]
         timestamp,
 
         // Position tracking
-        charOffsets,
+        sourcePosition,
 
         // Additional metadata
         hasCode: nodeTypes.includes('code'),
