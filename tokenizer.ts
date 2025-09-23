@@ -16,8 +16,33 @@
  * - Exact counting important for production to avoid exceeding limits
  */
 
-// Token counting functionality
+import { getEncoding } from 'js-tiktoken';
+
+let encoder: ReturnType<typeof getEncoding> | null = null;
+
+function getEncoder() {
+  if (!encoder) {
+    try {
+      encoder = getEncoding('cl100k_base'); // GPT-4 encoding
+    } catch (error) {
+      console.warn('Failed to initialize tiktoken encoder:', error);
+      encoder = null;
+    }
+  }
+  return encoder;
+}
+
 export function countTokens(text: string): number {
-  // TODO: Use tiktoken or fast heuristic for token counting
-  return Math.max(1, Math.floor(text.length / 3.8));
+  const enc = getEncoder();
+
+  if (enc) {
+    try {
+      return enc.encode(text).length;
+    } catch (error) {
+      console.warn('Failed to encode text with tiktoken, falling back to heuristic:', error);
+    }
+  }
+
+  // Fallback heuristic: ~3.8 characters per token for English text
+  return text.length === 0 ? 0 : Math.max(1, Math.floor(text.length / 3.8));
 }
