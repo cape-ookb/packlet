@@ -31,17 +31,8 @@ export function chunkMarkdown(doc: string, opts: ChunkOptions): { chunks: Chunk[
 
 	const chunks = pipeline(doc);
 	const endTime = performance.now();
-	const processingTimeMs = Math.round(endTime - startTime);
 
-	const stats = computeStats(chunks, options, countTokens);
+	const stats = computeStats(chunks, options, countTokens, startTime, endTime);
 
-	// Add timing information to stats
-	return {
-		chunks,
-		stats: {
-			...stats,
-			processingTimeMs,
-			processingTime: `${processingTimeMs}ms`
-		}
-	};
+	return { chunks, stats };
 }
