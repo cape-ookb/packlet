@@ -6,6 +6,7 @@ import { packNodes } from "./packer";
 import { addOverlap } from "./overlap";
 import { normalizeChunks } from "./normalize";
 import { attachMetadata } from "./metadata";
+import { addEmbedText } from "./embed-text";
 import { assertOrFilterInvalid } from "./guardrails";
 import { computeStats } from "./stats";
 import { flow } from "./utils";
@@ -25,6 +26,7 @@ export function chunkMarkdown(doc: string, fileTitle: string, opts: ChunkOptions
 		(chunks: Chunk[]) => addOverlap(chunks, options),
 		normalizeChunks,
 		(chunks: Chunk[]) => attachMetadata(chunks, options, fileTitle),
+		(chunks: Chunk[]) => addEmbedText(chunks, options.breadcrumbMode, options.minTokens),
 		(chunks: Chunk[]) => assertOrFilterInvalid(chunks, options),
 	);
 

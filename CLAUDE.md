@@ -32,6 +32,9 @@ See `README.md` for complete project overview, architecture, design principles, 
 #### Function Standards
 - All core functions should be pure (no side effects) and ≤25 lines
 - ≤3 parameters (prefer single typed options object)
+  - **When to use objects**: If you have 3+ related parameters or 2+ parameters that are commonly passed together
+  - **Examples**: `ProcessingContext { headingTrail, headingDepths, node }` instead of 3 separate params
+  - **Benefits**: Easier to extend, cleaner signatures, better type safety
 - Cyclomatic complexity ≤5
 - No I/O or timing in core functions (only in boundary adapters)
 - Small, Testable, Pure Functions

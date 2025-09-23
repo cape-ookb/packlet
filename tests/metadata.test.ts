@@ -23,11 +23,11 @@ describe('attachMetadata', () => {
       createChunk('Third chunk content')
     ];
 
-    const result = attachMetadata(chunks, mockOptions, countTokens);
+    const result = attachMetadata(chunks, mockOptions, 'test-document');
 
-    expect(result[0].metadata?.id).toBe('doc:chunker-output::ch0');
-    expect(result[1].metadata?.id).toBe('doc:chunker-output::ch1');
-    expect(result[2].metadata?.id).toBe('doc:chunker-output::ch2');
+    expect(result[0].id).toBe('doc:processed-content.md::ch0');
+    expect(result[1].id).toBe('doc:processed-content.md::ch1');
+    expect(result[2].id).toBe('doc:processed-content.md::ch2');
   });
 
   it('should attach prev/next ID links correctly', () => {
@@ -37,19 +37,19 @@ describe('attachMetadata', () => {
       createChunk('Third chunk')
     ];
 
-    const result = attachMetadata(chunks, mockOptions, countTokens);
+    const result = attachMetadata(chunks, mockOptions, 'test-document');
 
     // First chunk
-    expect(result[0].metadata?.prevId).toBeNull();
-    expect(result[0].metadata?.nextId).toBe('doc:chunker-output::ch1');
+    expect(result[0].prevId).toBeNull();
+    expect(result[0].nextId).toBe('doc:processed-content.md::ch1');
 
     // Middle chunk
-    expect(result[1].metadata?.prevId).toBe('doc:chunker-output::ch0');
-    expect(result[1].metadata?.nextId).toBe('doc:chunker-output::ch2');
+    expect(result[1].prevId).toBe('doc:processed-content.md::ch0');
+    expect(result[1].nextId).toBe('doc:processed-content.md::ch2');
 
     // Last chunk
-    expect(result[2].metadata?.prevId).toBe('doc:chunker-output::ch1');
-    expect(result[2].metadata?.nextId).toBeNull();
+    expect(result[2].prevId).toBe('doc:processed-content.md::ch1');
+    expect(result[2].nextId).toBeNull();
   });
 
   it('should extract and attach heading information', () => {
@@ -59,11 +59,11 @@ describe('attachMetadata', () => {
       createChunk('Content without heading')
     ];
 
-    const result = attachMetadata(chunks, mockOptions, countTokens);
+    const result = attachMetadata(chunks, mockOptions, 'test-document');
 
-    expect(result[0].metadata?.heading).toBe('# Main Title');
-    expect(result[1].metadata?.heading).toBe('## Subtitle');
-    expect(result[2].metadata?.heading).toBe('');
+    expect(result[0].metadata?.sectionTitle).toBe('# Main Title');
+    expect(result[1].metadata?.sectionTitle).toBe('## Subtitle');
+    expect(result[2].metadata?.sectionTitle).toBe('');
   });
 
   it('should detect and categorize node types correctly', () => {
@@ -75,7 +75,7 @@ describe('attachMetadata', () => {
       createChunk('> This is a blockquote\n\nRegular text')
     ];
 
-    const result = attachMetadata(chunks, mockOptions, countTokens);
+    const result = attachMetadata(chunks, mockOptions, 'test-document');
 
     expect(result[0].metadata?.nodeTypes).toContain('heading');
     expect(result[0].metadata?.nodeTypes).toContain('paragraph');
@@ -97,11 +97,10 @@ describe('attachMetadata', () => {
     const content = 'This is a test sentence with multiple words for token counting.';
     const chunks = [createChunk(content)];
 
-    const result = attachMetadata(chunks, mockOptions, countTokens);
+    const result = attachMetadata(chunks, mockOptions, 'test-document');
 
     const expectedTokens = countTokens(content);
-    expect(result[0].tokens).toBe(expectedTokens);
-    expect(result[0].metadata?.tokenCount).toBe(expectedTokens);
+    expect(result[0].tokenStats?.tokens).toBe(expectedTokens);
   });
 
   it('should calculate character offsets correctly', () => {
@@ -111,40 +110,39 @@ describe('attachMetadata', () => {
       createChunk('Third')    // 11-16
     ];
 
-    const result = attachMetadata(chunks, mockOptions, countTokens);
+    const result = attachMetadata(chunks, mockOptions, 'test-document');
 
-    expect(result[0].metadata?.charOffsets).toEqual({
+    expect(result[0].sourcePosition).toEqual({
       charStart: 0,
       charEnd: 5,
-      sourceLength: 16
+      totalChars: 16
     });
 
-    expect(result[1].metadata?.charOffsets).toEqual({
+    expect(result[1].sourcePosition).toEqual({
       charStart: 5,
       charEnd: 11,
-      sourceLength: 16
+      totalChars: 16
     });
 
-    expect(result[2].metadata?.charOffsets).toEqual({
+    expect(result[2].sourcePosition).toEqual({
       charStart: 11,
       charEnd: 16,
-      sourceLength: 16
+      totalChars: 16
     });
   });
 
   it('should attach core metadata fields', () => {
     const chunks = [createChunk('Test content')];
 
-    const result = attachMetadata(chunks, mockOptions, countTokens);
+    const result = attachMetadata(chunks, mockOptions, 'test-document');
     const metadata = result[0].metadata!;
 
-    expect(metadata.parentId).toBe('doc:chunker-output');
-    expect(metadata.chunkNumber).toBe(0);
+    expect(result[0].parentId).toBe('doc:processed-content.md');
+    expect(result[0].chunkNumber).toBe(0);
     expect(metadata.contentType).toBe('doc');
-    expect(metadata.source).toBe('chunker-output');
-    expect(metadata.fileName).toBe('processed-content.md');
-    expect(typeof metadata.timestamp).toBe('string');
-    expect(metadata.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+    expect(metadata.sourceFile).toBe('processed-content.md');
+    expect(typeof metadata.processedAt).toBe('string');
+    expect(metadata.processedAt).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
   });
 
   it('should attach convenience flags for content analysis', () => {
@@ -154,19 +152,19 @@ describe('attachMetadata', () => {
       createChunk('Just regular paragraph text')
     ];
 
-    const result = attachMetadata(chunks, mockOptions, countTokens);
+    const result = attachMetadata(chunks, mockOptions, 'test-document');
 
-    expect(result[0].metadata?.hasCode).toBe(true);
-    expect(result[0].metadata?.hasHeadings).toBe(true);
-    expect(result[0].metadata?.hasLists).toBe(false);
+    expect(result[0].metadata?.nodeTypes).toContain('code');
+    expect(result[0].metadata?.nodeTypes).toContain('heading');
+    expect(result[0].metadata?.nodeTypes).not.toContain('list-item');
 
-    expect(result[1].metadata?.hasCode).toBe(false);
-    expect(result[1].metadata?.hasHeadings).toBe(false);
-    expect(result[1].metadata?.hasLists).toBe(true);
+    expect(result[1].metadata?.nodeTypes).not.toContain('code');
+    expect(result[1].metadata?.nodeTypes).not.toContain('heading');
+    expect(result[1].metadata?.nodeTypes).toContain('list-item');
 
-    expect(result[2].metadata?.hasCode).toBe(false);
-    expect(result[2].metadata?.hasHeadings).toBe(false);
-    expect(result[2].metadata?.hasLists).toBe(false);
+    expect(result[2].metadata?.nodeTypes).not.toContain('code');
+    expect(result[2].metadata?.nodeTypes).not.toContain('heading');
+    expect(result[2].metadata?.nodeTypes).not.toContain('list-item');
   });
 
   it('should preserve existing metadata while adding new fields', () => {
@@ -178,38 +176,36 @@ describe('attachMetadata', () => {
 
     const chunks = [createChunk('# New Heading\n\nContent', existingMetadata)];
 
-    const result = attachMetadata(chunks, mockOptions, countTokens);
+    const result = attachMetadata(chunks, mockOptions, 'test-document');
     const metadata = result[0].metadata!;
 
     expect(metadata.customField).toBe('custom value');
     expect(metadata.nodeTypes).toEqual(['custom-type']); // Should preserve existing
     expect(metadata.headerPath).toEqual(['Existing', 'Trail']); // Should preserve existing
-    expect(metadata.id).toBe('doc:chunker-output::ch0'); // Should add new fields
+    expect(result[0].id).toBe('doc:processed-content.md::ch0'); // Should add new fields
   });
 
   it('should handle empty chunks gracefully', () => {
     const chunks = [createChunk('')];
 
-    const result = attachMetadata(chunks, mockOptions, countTokens);
+    const result = attachMetadata(chunks, mockOptions, 'test-document');
     const metadata = result[0].metadata!;
 
-    expect(metadata.id).toBe('doc:chunker-output::ch0');
-    expect(metadata.heading).toBe('');
+    expect(result[0].id).toBe('doc:processed-content.md::ch0');
+    expect(metadata.sectionTitle).toBe('');
     expect(metadata.nodeTypes).toEqual(['paragraph']); // Default to paragraph
-    expect(metadata.tokenCount).toBe(0);
-    expect(metadata.contentLength).toBe(0);
   });
 
   it('should handle single chunk correctly', () => {
     const chunks = [createChunk('Single chunk content')];
 
-    const result = attachMetadata(chunks, mockOptions, countTokens);
+    const result = attachMetadata(chunks, mockOptions, 'test-document');
     const metadata = result[0].metadata!;
 
-    expect(metadata.id).toBe('doc:chunker-output::ch0');
-    expect(metadata.prevId).toBeNull();
-    expect(metadata.nextId).toBeNull();
-    expect(metadata.chunkNumber).toBe(0);
+    expect(result[0].id).toBe('doc:processed-content.md::ch0');
+    expect(result[0].prevId).toBeNull();
+    expect(result[0].nextId).toBeNull();
+    expect(result[0].chunkNumber).toBe(0);
   });
 
   it('should attach content length metadata', () => {
@@ -221,10 +217,10 @@ describe('attachMetadata', () => {
       createChunk(longContent)
     ];
 
-    const result = attachMetadata(chunks, mockOptions, countTokens);
+    const result = attachMetadata(chunks, mockOptions, 'test-document');
 
-    expect(result[0].metadata?.contentLength).toBe(shortContent.length);
-    expect(result[1].metadata?.contentLength).toBe(longContent.length);
+    expect(result[0].originalText?.length).toBe(shortContent.length);
+    expect(result[1].originalText?.length).toBe(longContent.length);
   });
 
   it('should handle complex mixed content', () => {
@@ -253,7 +249,7 @@ api.authenticate(token);
 
     const chunks = [createChunk(complexContent)];
 
-    const result = attachMetadata(chunks, mockOptions, countTokens);
+    const result = attachMetadata(chunks, mockOptions, 'test-document');
     const metadata = result[0].metadata!;
 
     expect(metadata.nodeTypes).toContain('heading');
@@ -263,10 +259,10 @@ api.authenticate(token);
     expect(metadata.nodeTypes).toContain('blockquote');
     expect(metadata.nodeTypes).toContain('paragraph');
 
-    expect(metadata.hasCode).toBe(true);
-    expect(metadata.hasHeadings).toBe(true);
-    expect(metadata.hasLists).toBe(true);
+    expect(metadata.nodeTypes).toContain('code');
+    expect(metadata.nodeTypes).toContain('heading');
+    expect(metadata.nodeTypes).toContain('list-item');
 
-    expect(metadata.heading).toBe('# API Documentation');
+    expect(metadata.sectionTitle).toBe('# API Documentation');
   });
 });

@@ -29,6 +29,7 @@ export type FlatNode = {
   type: 'heading' | 'paragraph' | 'code' | 'list-item' | 'table' | 'blockquote';
   text: string;
   headingTrail: string[];
+  headingDepths: number[];
   tokenCount: number;
   depth?: number;
   lang?: string;
@@ -46,104 +47,98 @@ function extractText(node: any): string {
   return '';
 }
 
-function processHeading(node: any, headingTrail: string[]): FlatNode {
-  const headingText = extractText(node);
-  updateHeadingTrail(headingText, node.depth, headingTrail);
-  return {
-    type: 'heading',
-    text: headingText,
-    headingTrail: [...headingTrail],
-    tokenCount: countTokens(headingText),
-    depth: node.depth,
-    position: node.position
-  };
-}
+type ProcessingContext = {
+  headingTrail: string[];
+  headingDepths: number[];
+  node: any;
+};
 
-function processParagraph(node: any, headingTrail: string[]): FlatNode {
-  const text = extractText(node);
+function createFlatNode(
+  type: FlatNode['type'],
+  text: string,
+  context: ProcessingContext,
+  additionalFields: Partial<FlatNode> = {}
+): FlatNode {
   return {
-    type: 'paragraph',
-    text: text,
-    headingTrail: [...headingTrail],
+    type,
+    text,
+    headingTrail: [...context.headingTrail],
+    headingDepths: [...context.headingDepths],
     tokenCount: countTokens(text),
-    position: node.position
+    position: context.node.position,
+    ...additionalFields
   };
 }
 
-function processCode(node: any, headingTrail: string[]): FlatNode {
-  const text = node.value || '';
-  return {
-    type: 'code',
-    text: text,
-    headingTrail: [...headingTrail],
-    tokenCount: countTokens(text),
-    lang: node.lang,
-    position: node.position
-  };
+function processHeading(context: ProcessingContext): FlatNode {
+  const headingText = extractText(context.node);
+  updateHeadingTrail(headingText, context.node.depth, context.headingTrail, context.headingDepths);
+  return createFlatNode('heading', headingText, context, {
+    depth: context.node.depth
+  });
 }
 
-function processListItem(node: any, headingTrail: string[]): FlatNode {
-  const text = extractText(node);
-  return {
-    type: 'list-item',
-    text: text,
-    headingTrail: [...headingTrail],
-    tokenCount: countTokens(text),
-    position: node.position
-  };
+function processParagraph(context: ProcessingContext): FlatNode {
+  return createFlatNode('paragraph', extractText(context.node), context);
 }
 
-function processTable(node: any, headingTrail: string[]): FlatNode {
-  const text = extractText(node);
-  return {
-    type: 'table',
-    text: text,
-    headingTrail: [...headingTrail],
-    tokenCount: countTokens(text),
-    position: node.position
-  };
+function processCode(context: ProcessingContext): FlatNode {
+  return createFlatNode('code', context.node.value || '', context, {
+    lang: context.node.lang
+  });
 }
 
-function processBlockquote(node: any, headingTrail: string[]): FlatNode {
-  const text = extractText(node);
-  return {
-    type: 'blockquote',
-    text: text,
-    headingTrail: [...headingTrail],
-    tokenCount: countTokens(text),
-    position: node.position
-  };
+function processListItem(context: ProcessingContext): FlatNode {
+  return createFlatNode('list-item', extractText(context.node), context);
 }
 
-function updateHeadingTrail(text: string, depth: number, headingTrail: string[]): void {
+function processTable(context: ProcessingContext): FlatNode {
+  return createFlatNode('table', extractText(context.node), context);
+}
+
+function processBlockquote(context: ProcessingContext): FlatNode {
+  return createFlatNode('blockquote', extractText(context.node), context);
+}
+
+function updateHeadingTrail(text: string, depth: number, headingTrail: string[], headingDepths: number[]): void {
+  // Remove all headings at this depth and deeper
   headingTrail.splice(depth - 1);
+  headingDepths.splice(depth - 1);
+  // Set the heading at this depth (ensuring no gaps in array)
   headingTrail[depth - 1] = text;
+  headingDepths[depth - 1] = depth;
+  // Ensure arrays are properly sized without gaps
+  headingTrail.length = depth;
+  headingDepths.length = depth;
 }
 
 // Flatten AST into linear sequence of nodes
 export function flattenAst(ast: any): FlatNode[] {
   const result: FlatNode[] = [];
   const headingTrail: string[] = [];
+  const headingDepths: number[] = [];
 
   function traverse(node: any): void {
+    const context: ProcessingContext = { headingTrail, headingDepths, node };
+
     switch (node.type) {
       case 'heading':
-        result.push(processHeading(node, headingTrail));
+        result.push(processHeading(context));
         break;
       case 'paragraph':
-        result.push(processParagraph(node, headingTrail));
+        result.push(processParagraph(context));
         break;
       case 'code':
-        result.push(processCode(node, headingTrail));
+        result.push(processCode(context));
         break;
       case 'listItem':
-        result.push(processListItem(node, headingTrail));
+        result.push(processListItem(context));
         break;
       case 'table':
-        result.push(processTable(node, headingTrail));
+        result.push(processTable(context));
         break;
       case 'blockquote':
-        result.push(processBlockquote(node, headingTrail));
+        result.push(processBlockquote(context));
         break;
       default:
         if (node.children) {

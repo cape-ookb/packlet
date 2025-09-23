@@ -16,6 +16,7 @@ describe('flattenAst', () => {
       type: 'heading',
       text: 'Hello',
       headingTrail: ['Hello'],
+      headingDepths: [1],
       tokenCount: expect.any(Number),
       depth: 1,
       position: expect.any(Object)
@@ -25,6 +26,7 @@ describe('flattenAst', () => {
       type: 'paragraph',
       text: 'This is a paragraph.',
       headingTrail: ['Hello'],
+      headingDepths: [1],
       tokenCount: expect.any(Number),
       position: expect.any(Object)
     });
@@ -39,21 +41,27 @@ describe('flattenAst', () => {
 
     // Main heading
     expect(flatNodes[0].headingTrail).toEqual(['Main']);
+    expect(flatNodes[0].headingDepths).toEqual([1]);
 
     // Intro paragraph under Main
     expect(flatNodes[1].headingTrail).toEqual(['Main']);
+    expect(flatNodes[1].headingDepths).toEqual([1]);
 
     // Section heading
     expect(flatNodes[2].headingTrail).toEqual(['Main', 'Section']);
+    expect(flatNodes[2].headingDepths).toEqual([1, 2]);
 
     // Section content under Main > Section
     expect(flatNodes[3].headingTrail).toEqual(['Main', 'Section']);
+    expect(flatNodes[3].headingDepths).toEqual([1, 2]);
 
     // Subsection heading
     expect(flatNodes[4].headingTrail).toEqual(['Main', 'Section', 'Subsection']);
+    expect(flatNodes[4].headingDepths).toEqual([1, 2, 3]);
 
     // Subsection content
     expect(flatNodes[5].headingTrail).toEqual(['Main', 'Section', 'Subsection']);
+    expect(flatNodes[5].headingDepths).toEqual([1, 2, 3]);
   });
 
   it('should handle code blocks with language', () => {
@@ -67,6 +75,7 @@ describe('flattenAst', () => {
       type: 'code',
       text: 'const x = 1;',
       headingTrail: ['Code Example'],
+      headingDepths: [1],
       tokenCount: expect.any(Number),
       lang: 'javascript',
       position: expect.any(Object)

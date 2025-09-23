@@ -75,18 +75,16 @@ function createTimestamp(): string {
 }
 
 function extractHeaderDepths(chunk: Chunk): number[] {
-  // Extract depths from headingTrail metadata if available
+  // Use preserved depth information from packer if available
   const existingDepths = chunk.metadata?.headerDepths || [];
   if (Array.isArray(existingDepths) && existingDepths.length > 0) {
     return existingDepths;
   }
 
-  // Fallback: try to extract from content
+  // Fallback: derive depths from headerPath structure
+  // This assumes proper hierarchical structure starting from depth 1
   const headerPath = extractHeaderPath(chunk);
-  return headerPath.map(heading => {
-    const match = heading.match(/^#{1,6}/);
-    return match ? match[0].length : 1;
-  });
+  return headerPath.map((_, index) => index + 1);
 }
 
 function generateHeaderSlugs(headerPath: string[]): string[] {
@@ -186,6 +184,9 @@ export function attachMetadata(chunks: Chunk[], options: ChunkOptions, fileTitle
 
       // Metadata object (for vector database filtering)
       metadata: {
+        // Preserve existing metadata
+        ...chunk.metadata,
+        // Override with new computed metadata
         contentType,
         sectionTitle,
         headerPath,

@@ -47,13 +47,19 @@ function shouldLookAhead(currentNodes: FlatNode[], nextNode: FlatNode | undefine
 
 function createChunk(nodes: FlatNode[]): Chunk {
   const content = combineNodes(nodes);
+
+  // Use the headingTrail and headingDepths from the first node, which represents the hierarchical context
+  const headingTrail = nodes[0]?.headingTrail || [];
+  const headerDepths = nodes[0]?.headingDepths || [];
+
   return {
     content,
     tokens: countTokens(content),
     metadata: {
       nodeCount: nodes.length,
       types: Array.from(new Set(nodes.map(n => n.type))),
-      headingTrail: nodes[0]?.headingTrail || []
+      headingTrail,
+      headerDepths
     }
   };
 }
