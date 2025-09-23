@@ -39,14 +39,17 @@ Each chunk file contains a single JSON object with the following structure:
 
 ```json
 {
+  // Required core identifiers
   "id": "doc:{docName}::ch{chunkNumber}",
   "parentId": "doc:{docName}",
-  "prevId": "doc:{docName}::ch{prevNumber}" | null,
-  "nextId": "doc:{docName}::ch{nextNumber}" | null,
-  "embedText": "string",
-  "originalText": "string",
   "chunkNumber": number,
   "contentType": "doc",
+
+  // Required content fields
+  "embedText": "string",
+  "originalText": "string",
+
+  // Required structural information
   "fileTitle": "string",
   "sectionTitle": "string",
   "headerPath": ["string"],
@@ -54,6 +57,8 @@ Each chunk file contains a single JSON object with the following structure:
   "headerDepths": [number],
   "headerSlugs": ["string"],
   "sectionSlug": "string",
+
+  // Required position and token data
   "sourcePosition": {
     "charStart": number,
     "charEnd": number,
@@ -63,6 +68,15 @@ Each chunk file contains a single JSON object with the following structure:
     "tokens": number,
     "estimatedTokens": number
   },
+
+  // Optional navigation
+  "prevId": "doc:{docName}::ch{prevNumber}" | null,
+  "nextId": "doc:{docName}::ch{nextNumber}" | null,
+
+  // Optional content analysis
+  "nodeTypes": ["paragraph", "list", "code"],
+
+  // Optional processing metadata
   "metadata": {
     "sourceFile": "string",
     "processedAt": "ISO8601",
@@ -343,51 +357,10 @@ This format is compatible with:
 
 ---
 
-## Documentation Merge Task List
-
-### Context
-This task list guides the consolidation of two chunk format documentation files:
-- **Source (legacy)**: `docs/chunk-format-documentation.md` - older format specification with useful examples
-- **Target (current)**: `docs/chunk-output-format.md` (this file) - the canonical specification going forward
-- **Requirements source**: `docs/title-in-each-chunk.md` - contains implementation TODOs that define required fields
-
-The goal is to merge all valuable content from the legacy document into this one while ensuring consistency with the current implementation and planned enhancements.
-
-### Tasks for Merging chunk-format-documentation.md into this Document
-
-#### Field Standardization Tasks ✅ COMPLETED
-
-#### Content Migration Tasks ✅ COMPLETED
-
-#### Missing Field Documentation ✅ COMPLETED
-
-#### Implementation Alignment Tasks ✅ COMPLETED
-
-#### Documentation Structure Tasks ✅ COMPLETED
-
-#### Cross-Reference Updates ✅ COMPLETED
-
-All cross-reference updates have been completed:
-- ✅ Updated README.md to reference only this merged document with enhanced description
-- ✅ Marked chunk-format-documentation.md as deprecated
-- ✅ Added clear deprecation notice to chunk-format-documentation.md pointing to this document
-
-#### Validation Tasks
-
-- [ ] **Verify consistency across documentation**
-  - [ ] Ensure all field names match `EnhancedChunk` type in `lib/types.ts`
-  - [ ] Cross-check with actual output from the chunking pipeline (`lib/index.ts`)
-  - [ ] Validate JSON structure examples are complete and accurate
-  - [ ] Confirm all TODO items from title-in-each-chunk.md (lines 175-256) are addressed
-  - [ ] Check that field descriptions match implementation in `lib/metadata.ts`
-
 ### Next Steps
 
-1. **Review and prioritize** the task list above
-2. **Execute tasks** systematically, checking off completed items
-3. **Archive or deprecate** chunk-format-documentation.md once merge is complete
-4. **Update implementation** in lib/types.ts and related files to match the merged specification
-5. **Test** the implementation against the documented format
+1. **Update implementation** in lib/types.ts and related files to match the merged specification
+2. **Test** the implementation against the documented format
 
 ### Key File Locations for Reference
 - Current implementation types: `lib/types.ts` (see `EnhancedChunk` type)
@@ -395,3 +368,23 @@ All cross-reference updates have been completed:
 - Default configuration: `lib/default-config.ts` (token limits and options)
 - Main pipeline: `lib/index.ts` (orchestration of all stages)
 - Implementation TODOs: `docs/title-in-each-chunk.md` (lines 175-256)
+
+### Critical Implementation Context for Next Phase
+
+**CURRENT STATE**: The specification in this document represents the target state, but the actual implementation in the codebase still uses legacy field names and is missing many fields.
+
+**KEY MISMATCHES TO FIX**:
+1. `EnhancedChunk` type uses `displayMarkdown` → should be `originalText`
+2. `EnhancedChunk` type uses `charOffsets` → should be `sourcePosition`
+3. `EnhancedChunk` type uses `heading` → should be `sectionTitle`
+4. Current implementation uses `headingTrail` → should be `headerPath`
+5. Missing fields: `fileTitle`, `headerBreadcrumb`, `headerDepths`, `headerSlugs`, `sectionSlug`, `tokenStats` object
+
+**MAIN IMPLEMENTATION TASKS**:
+1. Update `EnhancedChunk` type in `lib/types.ts` to match this spec exactly
+2. Update `lib/metadata.ts` to generate new field names and missing fields
+3. Add `fileTitle` parameter to main chunking function signature
+4. Implement breadcrumb generation logic (`embedText` vs `originalText`)
+5. Add `breadcrumbMode` option to `ChunkOptions`
+
+**PIPELINE FLOW**: The current pipeline returns basic `Chunk[]` but should return `EnhancedChunk[]` matching this specification.
