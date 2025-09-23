@@ -75,6 +75,9 @@ Each chunk represents a semantically meaningful segment of content (typically fr
   - **`fileName`** (string): Original filename (e.g., `"skeleton.txt"`)
   - **`timestamp`** (string): Processing timestamp in ISO format
   - Additional fields vary by content type (title, date, tags, etc.)
+- tokenCount: number
+- nodeTypes: array of type ids this chunk contains ('paragraph, 'list', 'code', 'table')
+- source: { filePath: string, startLine: number, endLine: number }
 
 ## Chunking Strategy
 
