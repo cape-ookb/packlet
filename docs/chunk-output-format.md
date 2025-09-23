@@ -232,29 +232,29 @@ This ensures offsets always map back to the original document positions for accu
 
 ## Implementation Status
 
-### Current Pipeline Status
-**Pipeline Flow**: `parseMarkdown` → `flattenAst` → `splitOversized` → `packNodes` → `addOverlap` → `normalizeChunks` → `attachMetadata` → `assertOrFilterInvalid`
+### ✅ Fully Implemented
+**Pipeline Flow**: `parseMarkdown` → `flattenAst` → `splitOversized` → `packNodes` → `addOverlap` → `normalizeChunks` → `attachMetadata` → `generateEmbedText` → `assertOrFilterInvalid`
 
 **Key Implementation Files**:
-- `lib/index.ts`: Main pipeline orchestration
-- `lib/metadata.ts`: Metadata attachment (needs updates per this spec)
-- `lib/types.ts`: Type definitions (has `Chunk` and partial `EnhancedChunk`)
-- `lib/packer.ts`: Creates initial chunks with `content` field
+- `lib/index.ts`: Main pipeline orchestration with enhanced chunk output
+- `lib/metadata.ts`: Complete metadata attachment with all enhanced fields
+- `lib/types.ts`: Updated `Chunk` type definition matching this specification
+- `lib/embed-text.ts`: Conditional breadcrumb generation system
+- `lib/packer.ts`: Enhanced chunk creation with metadata preservation
 
-**Implementation Gap**: Currently using basic `Chunk` type with untyped metadata. `EnhancedChunk` exists but needs updates to match this spec.
+**✅ Implementation Complete**: All enhanced fields and metadata structure implemented according to this specification.
 
-### Required Type Updates
+### ✅ Type Definition Compliance
 
-**Implementation Note:**
-The current `EnhancedChunk` type in `lib/types.ts` uses legacy field names and is missing several fields documented here. The type definition needs to be updated to match this specification:
+**Implementation Status:** The `Chunk` type in `lib/types.ts` has been fully updated to match this specification:
 
-Required updates to `EnhancedChunk` type:
-- Rename `displayMarkdown` → `originalText`
-- Rename `charOffsets` → `sourcePosition`
-- Rename `sourceLength` → `totalChars` (within position object)
-- Rename `heading` → `sectionTitle`
-- Add missing fields: `fileTitle`, `headerBreadcrumb`, `headerDepths`, `headerSlugs`, `sectionSlug`
-- Update `tokenCount` → `tokenStats.tokens` object structure
+✅ **Completed Updates**:
+- ✅ Enhanced metadata object with all filtering fields
+- ✅ Structured `tokenStats` object replacing legacy `tokenCount`
+- ✅ Pipeline information in dedicated `pipeline` object
+- ✅ Complete source position tracking in `sourcePosition`
+- ✅ All header-related fields: `headerPath`, `headerDepths`, `headerSlugs`, `sectionSlug`
+- ✅ Content fields: `originalText`, `embedText` with conditional breadcrumbs
 
 ### Migration Notes for Existing Systems
 
@@ -374,26 +374,20 @@ This format is compatible with:
 - Metadata attachment: `lib/metadata.ts` (lines 119-150 for current implementation)
 - Default configuration: `lib/default-config.ts` (token limits and options)
 - Main pipeline: `lib/index.ts` (orchestration of all stages)
-- Implementation TODOs: `docs/title-in-each-chunk.md` (lines 175-256)
+- Implementation reference: `docs/title-in-each-chunk.md` (fully implemented breadcrumb system)
 
-### Critical Implementation Context for Next Phase
+### ✅ Implementation Complete
 
-**CURRENT STATE**: The specification in this document represents the target state, but the actual implementation in the codebase still uses legacy field names and is missing many fields.
+**CURRENT STATE**: The specification in this document has been fully implemented. The chunker now produces enhanced chunks matching this exact specification.
 
-**KEY MISMATCHES TO FIX**:
-1. `EnhancedChunk` type uses `displayMarkdown` → should be `originalText`
-2. `EnhancedChunk` type uses `charOffsets` → should be `sourcePosition`
-3. `EnhancedChunk` type uses `heading` → should be `sectionTitle`
-4. Current implementation uses `headingTrail` → should be `headerPath`
-5. Missing fields: `fileTitle`, `headerBreadcrumb`, `headerDepths`, `headerSlugs`, `sectionSlug`, `tokenStats` object
+**✅ ALL TASKS COMPLETED**:
+1. ✅ Updated `Chunk` type in `lib/types.ts` to match this spec exactly
+2. ✅ Updated `lib/metadata.ts` to generate metadata object with all structural fields
+3. ✅ Added `fileTitle` parameter to main chunking function signature
+4. ✅ Implemented breadcrumb generation logic (`embedText` vs `originalText`)
+5. ✅ Added `breadcrumbMode` option to `ChunkOptions`
+6. ✅ Moved all filtering-relevant fields into metadata object
+7. ✅ Separated pipeline information from metadata
+8. ✅ Added comprehensive test coverage for all functionality
 
-**MAIN IMPLEMENTATION TASKS**:
-1. Update `EnhancedChunk` type in `lib/types.ts` to match this spec exactly
-2. Update `lib/metadata.ts` to generate metadata object with all structural fields
-3. Add `fileTitle` parameter to main chunking function signature
-4. Implement breadcrumb generation logic (`embedText` vs `originalText`)
-5. Add `breadcrumbMode` option to `ChunkOptions`
-6. Move all filtering-relevant fields into metadata object
-7. Separate pipeline information from metadata
-
-**PIPELINE FLOW**: The current pipeline returns basic `Chunk[]` but should return `EnhancedChunk[]` matching this specification.
+**PIPELINE FLOW**: The current pipeline returns fully enhanced `Chunk[]` matching this specification exactly.
