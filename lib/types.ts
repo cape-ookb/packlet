@@ -5,6 +5,7 @@ export type ChunkOptions = {
 	overlapSentences: number; // e.g., 1..3
 	strictMode?: boolean;
 	targetTokens?: number; // for estimates
+	breadcrumbMode?: "conditional" | "always" | "none";
 };
 
 // AST types for markdown parsing
@@ -33,7 +34,7 @@ export type Chunk = {
 	metadata?: Record<string, any>;
 };
 
-// Enhanced chunk type matching ../docs/chunk-format-documentation.md
+// Enhanced chunk type matching ../docs/chunk-output-format.md
 export type EnhancedChunk = {
 	// Core identifiers
 	id: string;
@@ -43,28 +44,44 @@ export type EnhancedChunk = {
 
 	// Content fields
 	embedText: string;
-	displayMarkdown: string;
+	originalText: string;
+
+	// Position tracking
+	sourcePosition: {
+		charStart: number;
+		charEnd: number;
+		totalChars: number;
+	};
+
+	// Token information
+	tokenStats: {
+		tokens: number;
+		estimatedTokens: number;
+	};
+
+	// Pipeline information
+	pipeline: {
+		version: string;
+		processingTimeMs: number;
+	};
 
 	// Structural information
 	chunkNumber: number;
-	contentType: string;
-	heading: string;
-	headerPath: string[];
 
-	// Position tracking
-	charOffsets: {
-		charStart: number;
-		charEnd: number;
-		sourceLength: number;
-	};
-
-	// Metadata
+	// Metadata object (for vector database filtering)
 	metadata: {
-		source: string;
-		fileName: string;
-		timestamp: string;
+		contentType: string;
+		sectionTitle: string;
+		headerPath: string[];
+		fileTitle: string;
+		headerBreadcrumb: string;
+		headerDepths: number[];
+		headerSlugs: string[];
+		sectionSlug: string;
+		sourceFile: string;
 		nodeTypes: string[];
-		tokenCount: number;
+		processedAt: string;
+		chunkingOptions: object;
 		[key: string]: any;
 	};
 };
