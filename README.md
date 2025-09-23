@@ -1,5 +1,7 @@
 # packlet - Document Chunking System
 
+![Logo](logo-small.png)
+
 Token-aware Markdown chunker: mdast-driven hierarchy, recursive splitting, look-ahead packing, optional overlap, rich metadata & guardrails.
 
 ## About
