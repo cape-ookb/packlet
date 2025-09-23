@@ -146,4 +146,4 @@ This project uses **pnpm** for dependency management. All commands should use `p
 - **`docs/flatten-ast.md`** - Detailed AST flattening algorithm
 - **`docs/chunk-output-format.md`** - Complete specification for individual chunk file output format with comprehensive field definitions, examples, and migration notes
 - **`docs/title-in-each-chunk.md`** - Specification for title and header handling, breadcrumb generation, and context prepending
-- **`docs/testing-guidelines.md`** - ⚠️ **MUST READ**: Testing best practices and fixture usage requirements
+- **`docs/testing-guidelines.md`** - ⚠️ Testing best practices and fixture usage requirements
