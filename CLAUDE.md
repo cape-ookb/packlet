@@ -1,15 +1,14 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to AI LLM code helpers like Claude when working with code in this repository.
 
 ## Project Overview
 
 See `README.md` for complete project overview, architecture, design principles, and development commands.
 
-## Claude Code Specific Guidance
+## Code Specific Guidance
 
 ### Development Workflow
-- No build tools required
 - Use functional composition via `flow()` utility, not method chaining
 - Test individual modules by running them directly
 - Each function ideally under 25 lines, single responsibility
