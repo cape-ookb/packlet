@@ -118,7 +118,7 @@ function createEmptyStats(): Omit<ChunkStats, 'processingTimeMs' | 'processingTi
   };
 }
 
-export function computeStats(chunks: Chunk[], options: ChunkOptions, _countTokens: Function, startTime?: number, endTime?: number): ChunkStats {
+export function computeStats(chunks: Chunk[], options: ChunkOptions, startTime?: number, endTime?: number): ChunkStats {
   if (chunks.length === 0) {
     const processingTimeMs = (startTime !== undefined && endTime !== undefined)
       ? Math.round(endTime - startTime)

@@ -13,6 +13,7 @@ Store comprehensive header information in metadata for programmatic use and retr
 * **`headerHierarchy`** `string` – Pre-joined breadcrumb using `" > "` separator
 * **`headerSlugs`** `string[]` – Anchor IDs for linking
 * **`sectionId`** `string` – Current section's ID (slug of last `headerPath` entry)
+* **`heading`** string - Current section (last value from `headerPath`)
 
 ### Example
 
@@ -84,7 +85,8 @@ Use a conditional approach to balance context preservation with token efficiency
 
 * **No H1 present**: `headerPath` starts at first heading found; still prepend `fileTitle`
 * **Multiple H1s**: First H1 is document root; later H1s start new top-level sections
-* **Frontmatter title**: When `fileTitle` does not match section title; don't modify `headerPath`
+* **Frontmatter title**: Use as `fileTitle` only; don't modify `headerPath`. Used in `fullBreadcrumb`.
+* If there are no headings at all: use fileTitle as section title, do not add to `headerPath` or `headerHierarchy`. Those are always derived only from headerPath, never from fileTitle.
 
 ## Rationale
 

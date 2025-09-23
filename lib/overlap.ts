@@ -23,6 +23,7 @@
  */
 
 import { Chunk, ChunkOptions } from './types';
+import { countTokens } from './tokenizer';
 
 function extractSentences(text: string): string[] {
   const sentences = text.split(/(?<=[.!?])\s+/).filter(s => s.trim().length > 0);
@@ -37,7 +38,7 @@ function getTrailingSentences(text: string, count: number): string {
   return trailingSentences.join(' ');
 }
 
-function updateTokenCount(chunk: Chunk, countTokens: Function): Chunk {
+function updateTokenCount(chunk: Chunk): Chunk {
   return {
     ...chunk,
     tokens: countTokens(chunk.content)
@@ -47,8 +48,7 @@ function updateTokenCount(chunk: Chunk, countTokens: Function): Chunk {
 function applyOverlapToChunk(
   chunk: Chunk,
   previousChunk: Chunk | null,
-  overlapSentences: number,
-  countTokens: Function
+  overlapSentences: number
 ): Chunk {
   if (!previousChunk || overlapSentences <= 0) {
     return chunk;
@@ -65,10 +65,10 @@ function applyOverlapToChunk(
     content: newContent
   };
 
-  return updateTokenCount(updatedChunk, countTokens);
+  return updateTokenCount(updatedChunk);
 }
 
-export function addOverlap(chunks: Chunk[], options: ChunkOptions, countTokens: Function): Chunk[] {
+export function addOverlap(chunks: Chunk[], options: ChunkOptions): Chunk[] {
   if (chunks.length <= 1) {
     return chunks;
   }
@@ -78,7 +78,7 @@ export function addOverlap(chunks: Chunk[], options: ChunkOptions, countTokens: 
   for (let i = 1; i < chunks.length; i++) {
     const chunk = chunks[i];
     const previousChunk = chunks[i - 1];
-    const overlappedChunk = applyOverlapToChunk(chunk, previousChunk, options.overlapSentences, countTokens);
+    const overlappedChunk = applyOverlapToChunk(chunk, previousChunk, options.overlapSentences);
     result.push(overlappedChunk);
   }
 

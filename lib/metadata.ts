@@ -22,6 +22,7 @@
  */
 
 import { Chunk, ChunkOptions } from './types';
+import { countTokens } from './tokenizer';
 
 function generateChunkId(parentId: string, chunkNumber: number): string {
   return `${parentId}::ch${chunkNumber}`;
@@ -93,7 +94,7 @@ function calculateCharOffsets(chunkNumber: number, chunks: Chunk[]): { charStart
   return { charStart: 0, charEnd: 0, sourceLength: totalLength };
 }
 
-export function attachMetadata(chunks: Chunk[], _options: ChunkOptions, countTokens: Function): Chunk[] {
+export function attachMetadata(chunks: Chunk[], _options: ChunkOptions): Chunk[] {
   const contentType = 'doc'; // Default content type
   const source = 'chunker-output';
   const fileName = 'processed-content.md';

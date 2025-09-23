@@ -21,6 +21,7 @@
 
 import { FlatNode } from './flatten-ast';
 import { ChunkOptions } from './types';
+import { countTokens } from './tokenizer';
 
 function splitByParagraphs(text: string): string[] {
   return text.split('\n\n').filter(p => p.trim().length > 0);
@@ -35,7 +36,7 @@ function splitByLines(text: string): string[] {
   return text.split('\n').filter(line => line.trim().length > 0);
 }
 
-function processWord(word: string, currentChunk: string, chunks: string[], maxTokens: number, countTokens: Function): string {
+function processWord(word: string, currentChunk: string, chunks: string[], maxTokens: number): string {
   const testChunk = currentChunk ? `${currentChunk} ${word}` : word;
 
   if (countTokens(testChunk) <= maxTokens) {
@@ -51,13 +52,13 @@ function processWord(word: string, currentChunk: string, chunks: string[], maxTo
   return '';
 }
 
-function hardCutAtWords(text: string, maxTokens: number, countTokens: Function): string[] {
+function hardCutAtWords(text: string, maxTokens: number): string[] {
   const words = text.split(/\s+/);
   const chunks: string[] = [];
   let currentChunk = '';
 
   for (const word of words) {
-    currentChunk = processWord(word, currentChunk, chunks, maxTokens, countTokens);
+    currentChunk = processWord(word, currentChunk, chunks, maxTokens);
   }
 
   if (currentChunk) {
@@ -74,17 +75,17 @@ function createSplitNode(node: FlatNode, part: string): FlatNode {
   };
 }
 
-function processPart(node: FlatNode, part: string, maxTokens: number, countTokens: Function): FlatNode[] {
+function processPart(node: FlatNode, part: string, maxTokens: number): FlatNode[] {
   const newNode = createSplitNode(node, part);
 
   if (countTokens(newNode.text) <= maxTokens) {
     return [newNode];
   }
 
-  return splitNode(newNode, maxTokens, countTokens);
+  return splitNode(newNode, maxTokens);
 }
 
-function splitNode(node: FlatNode, maxTokens: number, countTokens: Function): FlatNode[] {
+function splitNode(node: FlatNode, maxTokens: number): FlatNode[] {
   if (countTokens(node.text) <= maxTokens) {
     return [node];
   }
@@ -93,14 +94,14 @@ function splitNode(node: FlatNode, maxTokens: number, countTokens: Function): Fl
     () => splitByParagraphs(node.text),
     () => splitBySentences(node.text),
     () => splitByLines(node.text),
-    () => hardCutAtWords(node.text, maxTokens, countTokens)
+    () => hardCutAtWords(node.text, maxTokens)
   ];
 
   for (const splitStrategy of strategies) {
     const parts = splitStrategy();
     if (parts.length > 1) {
       const splitNodes = parts.flatMap(part =>
-        processPart(node, part, maxTokens, countTokens)
+        processPart(node, part, maxTokens)
       );
       return splitNodes.filter(n => n.text.length > 0);
     }
@@ -109,12 +110,12 @@ function splitNode(node: FlatNode, maxTokens: number, countTokens: Function): Fl
   return [node];
 }
 
-export function splitOversized(nodes: FlatNode[], options: ChunkOptions, countTokens: Function): FlatNode[] {
+export function splitOversized(nodes: FlatNode[], options: ChunkOptions): FlatNode[] {
   const result: FlatNode[] = [];
 
   for (const node of nodes) {
     if (countTokens(node.text) > options.maxTokens) {
-      result.push(...splitNode(node, options.maxTokens, countTokens));
+      result.push(...splitNode(node, options.maxTokens));
     } else {
       result.push(node);
     }

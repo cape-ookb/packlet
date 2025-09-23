@@ -8,11 +8,10 @@ import { normalizeChunks } from "./normalize";
 import { attachMetadata } from "./metadata";
 import { assertOrFilterInvalid } from "./guardrails";
 import { computeStats } from "./stats";
-import { countTokens } from "./tokenizer";
 import { flow } from "./utils";
 import { ChunkOptions, Chunk } from "./types";
 import { FlatNode } from "./flatten-ast";
-import { withDefaults } from "./helper";
+import { withDefaults } from "./default-config";
 
 export function chunkMarkdown(doc: string, opts: ChunkOptions): { chunks: Chunk[]; stats: any } {
 	const startTime = performance.now();
@@ -21,18 +20,18 @@ export function chunkMarkdown(doc: string, opts: ChunkOptions): { chunks: Chunk[
 	const pipeline = flow(
 		parseMarkdown,
 		flattenAst,
-		(nodes: FlatNode[]) => splitOversized(nodes, options, countTokens),
-		(nodes: FlatNode[]) => packNodes(nodes, options, countTokens),
-		(chunks: Chunk[]) => addOverlap(chunks, options, countTokens),
+		(nodes: FlatNode[]) => splitOversized(nodes, options),
+		(nodes: FlatNode[]) => packNodes(nodes, options),
+		(chunks: Chunk[]) => addOverlap(chunks, options),
 		normalizeChunks,
-		(chunks: Chunk[]) => attachMetadata(chunks, options, countTokens),
+		(chunks: Chunk[]) => attachMetadata(chunks, options),
 		(chunks: Chunk[]) => assertOrFilterInvalid(chunks, options),
 	);
 
 	const chunks = pipeline(doc);
 	const endTime = performance.now();
 
-	const stats = computeStats(chunks, options, countTokens, startTime, endTime);
+	const stats = computeStats(chunks, options, startTime, endTime);
 
 	return { chunks, stats };
 }
