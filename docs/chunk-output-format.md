@@ -43,20 +43,10 @@ Each chunk file contains a single JSON object with the following structure:
   "id": "doc:{docName}::ch{chunkNumber}",
   "parentId": "doc:{docName}",
   "chunkNumber": number,
-  "contentType": "doc",
 
   // Required content fields
   "embedText": "string",
   "originalText": "string",
-
-  // Required structural information
-  "fileTitle": "string",
-  "sectionTitle": "string",
-  "headerPath": ["string"],
-  "headerBreadcrumb": "string",
-  "headerDepths": [number],
-  "headerSlugs": ["string"],
-  "sectionSlug": "string",
 
   // Required position and token data
   "sourcePosition": {
@@ -76,15 +66,25 @@ Each chunk file contains a single JSON object with the following structure:
   // Optional content analysis
   "nodeTypes": ["paragraph", "list", "code"],
 
-  // Optional processing metadata
+  // Pipeline processing information
+  "pipeline": {
+    "version": "string",
+    "processingTimeMs": number
+  },
+
+  // Metadata for vector database filtering and organization
   "metadata": {
+    "contentType": "doc",
     "sourceFile": "string",
+    "fileTitle": "string",
+    "sectionTitle": "string",
+    "headerPath": ["string"],
+    "headerBreadcrumb": "string",
+    "headerDepths": [number],
+    "headerSlugs": ["string"],
+    "sectionSlug": "string",
     "processedAt": "ISO8601",
-    "chunkingOptions": object,
-    "pipeline": {
-      "version": "string",
-      "processingTimeMs": number
-    }
+    "chunkingOptions": object
   }
 }
 ```
