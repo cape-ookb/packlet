@@ -25,6 +25,6 @@ I think we should move away from the default LangChain `RecursiveCharacterTextSp
 * **Dual indexing.** Store both section-level and packed chunks, retrieve k from each, then re-rank.
 * **Rich metadata.** Keep headings, symbol names, or page numbers alongside text.
 * **Normalization.** Dedent code blocks, collapse whitespace, preserve fenced blocks.
-* **Quality guardrails.** Drop very short chunks unless they’re titles; otherwise attach them to their first child.
+* **Quality guardrails.** Attach very short nodes to first child. Especially  titles.
 
 See the Python reference ./chunker.py implementation so you can see the details, but keep in mind we just need the logic ported into JS.

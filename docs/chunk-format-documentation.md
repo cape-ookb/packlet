@@ -80,7 +80,7 @@ Each chunk represents a semantically meaningful segment of content (typically fr
 
 ### Token Limits
 - **Maximum tokens per chunk**: 625 tokens (optimal for embedding models)
-- **Overlap between chunks**: 100 tokens (ensures context continuity)
+- **Overlap between chunks**: 100 tokens (25-30% of total target) (ensures context continuity)
 - **Minimum chunk size**: 50 tokens (prevents tiny, low-value chunks)
 
 ### Context Enhancement
