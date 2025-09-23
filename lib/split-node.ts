@@ -69,16 +69,18 @@ function hardCutAtWords(text: string, maxTokens: number): string[] {
 }
 
 function createSplitNode(node: FlatNode, part: string): FlatNode {
+  const text = part.trim();
   return {
     ...node,
-    text: part.trim()
+    text: text,
+    tokenCount: countTokens(text)
   };
 }
 
 function processPart(node: FlatNode, part: string, maxTokens: number): FlatNode[] {
   const newNode = createSplitNode(node, part);
 
-  if (countTokens(newNode.text) <= maxTokens) {
+  if (newNode.tokenCount <= maxTokens) {
     return [newNode];
   }
 
@@ -86,7 +88,7 @@ function processPart(node: FlatNode, part: string, maxTokens: number): FlatNode[
 }
 
 function splitNode(node: FlatNode, maxTokens: number): FlatNode[] {
-  if (countTokens(node.text) <= maxTokens) {
+  if (node.tokenCount <= maxTokens) {
     return [node];
   }
 
@@ -114,7 +116,7 @@ export function splitOversized(nodes: FlatNode[], options: ChunkOptions): FlatNo
   const result: FlatNode[] = [];
 
   for (const node of nodes) {
-    if (countTokens(node.text) > options.maxTokens) {
+    if (node.tokenCount > options.maxTokens) {
       result.push(...splitNode(node, options.maxTokens));
     } else {
       result.push(node);

@@ -5,6 +5,7 @@
     "headingTrail": [
       "Main Documentation"
     ],
+    "tokenCount": 2,
     "depth": 1,
     "position": {
       "start": {
@@ -23,6 +24,7 @@
     "headingTrail": [
       "Main Documentation"
     ],
+    "tokenCount": 12,
     "position": {
       "start": {
         "line": 3,
@@ -41,6 +43,7 @@
       "Main Documentation",
       "Getting Started"
     ],
+    "tokenCount": 2,
     "depth": 2,
     "position": {
       "start": {
@@ -60,6 +63,7 @@
       "Main Documentation",
       "Getting Started"
     ],
+    "tokenCount": 10,
     "position": {
       "start": {
         "line": 7,
@@ -79,6 +83,7 @@
       "Getting Started",
       "Installation"
     ],
+    "tokenCount": 1,
     "depth": 3,
     "position": {
       "start": {
@@ -99,6 +104,7 @@
       "Getting Started",
       "Installation"
     ],
+    "tokenCount": 5,
     "position": {
       "start": {
         "line": 11,
@@ -118,6 +124,7 @@
       "Getting Started",
       "Installation"
     ],
+    "tokenCount": 4,
     "lang": "bash",
     "position": {
       "start": {
@@ -138,6 +145,7 @@
       "Getting Started",
       "Configuration"
     ],
+    "tokenCount": 1,
     "depth": 3,
     "position": {
       "start": {
@@ -158,6 +166,7 @@
       "Getting Started",
       "Configuration"
     ],
+    "tokenCount": 7,
     "position": {
       "start": {
         "line": 19,
@@ -177,6 +186,7 @@
       "Getting Started",
       "Configuration"
     ],
+    "tokenCount": 19,
     "lang": "javascript",
     "position": {
       "start": {
@@ -196,6 +206,7 @@
       "Main Documentation",
       "Features"
     ],
+    "tokenCount": 1,
     "depth": 2,
     "position": {
       "start": {
@@ -215,6 +226,7 @@
       "Main Documentation",
       "Features"
     ],
+    "tokenCount": 7,
     "position": {
       "start": {
         "line": 30,
@@ -233,6 +245,7 @@
       "Main Documentation",
       "Features"
     ],
+    "tokenCount": 2,
     "position": {
       "start": {
         "line": 32,
@@ -251,6 +264,7 @@
       "Main Documentation",
       "Features"
     ],
+    "tokenCount": 2,
     "position": {
       "start": {
         "line": 33,
@@ -269,6 +283,7 @@
       "Main Documentation",
       "Features"
     ],
+    "tokenCount": 4,
     "position": {
       "start": {
         "line": 34,
@@ -288,6 +303,7 @@
       "Features",
       "Performance"
     ],
+    "tokenCount": 1,
     "depth": 3,
     "position": {
       "start": {
@@ -308,6 +324,7 @@
       "Features",
       "Performance"
     ],
+    "tokenCount": 7,
     "position": {
       "start": {
         "line": 38,
@@ -327,6 +344,7 @@
       "Features",
       "Performance"
     ],
+    "tokenCount": 14,
     "position": {
       "start": {
         "line": 40,
@@ -346,6 +364,7 @@
       "Features",
       "Performance"
     ],
+    "tokenCount": 9,
     "position": {
       "start": {
         "line": 45,
@@ -364,6 +383,7 @@
       "Main Documentation",
       "Conclusion"
     ],
+    "tokenCount": 1,
     "depth": 2,
     "position": {
       "start": {
@@ -383,6 +403,7 @@
       "Main Documentation",
       "Conclusion"
     ],
+    "tokenCount": 6,
     "position": {
       "start": {
         "line": 49,

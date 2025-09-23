@@ -3,14 +3,15 @@
  *
  * Walks AST and extracts nodes (headings, paragraphs, code, lists, tables).
  *
- * Returns array of `{ type, text, headingTrail, position }`.
- * Pure transformation, no token logic.
+ * Returns array of `{ type, text, headingTrail, tokenCount, position }`.
+ * Includes token counting during flattening for efficiency.
  *
  * See ../docs/flatten-ast.md for detailed algorithm documentation and examples.
  *
  * Responsibilities:
  * - Traverse the AST tree depth-first
  * - Extract text content from each node
+ * - Count tokens for each node during extraction
  * - Maintain heading trail (e.g., ["Introduction", "Setup", "Installation"])
  * - Preserve node type and position information
  * - Return flat array while preserving hierarchical context
@@ -22,10 +23,13 @@
  * - Performance considerations
  */
 
+import { countTokens } from './tokenizer';
+
 export type FlatNode = {
   type: 'heading' | 'paragraph' | 'code' | 'list-item' | 'table' | 'blockquote';
   text: string;
   headingTrail: string[];
+  tokenCount: number;
   depth?: number;
   lang?: string;
   position?: {
@@ -49,53 +53,64 @@ function processHeading(node: any, headingTrail: string[]): FlatNode {
     type: 'heading',
     text: headingText,
     headingTrail: [...headingTrail],
+    tokenCount: countTokens(headingText),
     depth: node.depth,
     position: node.position
   };
 }
 
 function processParagraph(node: any, headingTrail: string[]): FlatNode {
+  const text = extractText(node);
   return {
     type: 'paragraph',
-    text: extractText(node),
+    text: text,
     headingTrail: [...headingTrail],
+    tokenCount: countTokens(text),
     position: node.position
   };
 }
 
 function processCode(node: any, headingTrail: string[]): FlatNode {
+  const text = node.value || '';
   return {
     type: 'code',
-    text: node.value || '',
+    text: text,
     headingTrail: [...headingTrail],
+    tokenCount: countTokens(text),
     lang: node.lang,
     position: node.position
   };
 }
 
 function processListItem(node: any, headingTrail: string[]): FlatNode {
+  const text = extractText(node);
   return {
     type: 'list-item',
-    text: extractText(node),
+    text: text,
     headingTrail: [...headingTrail],
+    tokenCount: countTokens(text),
     position: node.position
   };
 }
 
 function processTable(node: any, headingTrail: string[]): FlatNode {
+  const text = extractText(node);
   return {
     type: 'table',
-    text: extractText(node),
+    text: text,
     headingTrail: [...headingTrail],
+    tokenCount: countTokens(text),
     position: node.position
   };
 }
 
 function processBlockquote(node: any, headingTrail: string[]): FlatNode {
+  const text = extractText(node);
   return {
     type: 'blockquote',
-    text: extractText(node),
+    text: text,
     headingTrail: [...headingTrail],
+    tokenCount: countTokens(text),
     position: node.position
   };
 }

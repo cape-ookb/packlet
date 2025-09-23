@@ -16,6 +16,7 @@ describe('flattenAst', () => {
       type: 'heading',
       text: 'Hello',
       headingTrail: ['Hello'],
+      tokenCount: expect.any(Number),
       depth: 1,
       position: expect.any(Object)
     });
@@ -24,6 +25,7 @@ describe('flattenAst', () => {
       type: 'paragraph',
       text: 'This is a paragraph.',
       headingTrail: ['Hello'],
+      tokenCount: expect.any(Number),
       position: expect.any(Object)
     });
   });
@@ -65,6 +67,7 @@ describe('flattenAst', () => {
       type: 'code',
       text: 'const x = 1;',
       headingTrail: ['Code Example'],
+      tokenCount: expect.any(Number),
       lang: 'javascript',
       position: expect.any(Object)
     });

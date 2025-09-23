@@ -17,7 +17,8 @@ describe('splitOversized', () => {
   const createTestNode = (text: string, type: FlatNode['type'] = 'paragraph'): FlatNode => ({
     type,
     text,
-    headingTrail: ['Test']
+    headingTrail: ['Test'],
+    tokenCount: countTokens(text)
   });
 
   const loadFixtureNodes = (filename: string): FlatNode[] => {
@@ -30,7 +31,7 @@ describe('splitOversized', () => {
     const smallText = 'This is a short paragraph that fits within the token limit.';
     const nodes = [createTestNode(smallText)];
 
-    const result = splitOversized(nodes, mockOptions, countTokens);
+    const result = splitOversized(nodes, mockOptions);
 
     expect(result).toHaveLength(1);
     expect(result[0].text).toBe(smallText);
@@ -40,7 +41,7 @@ describe('splitOversized', () => {
   it('should split oversized nodes by paragraph breaks', () => {
     const nodes = loadFixtureNodes('large-nodes.md');
 
-    const result = splitOversized(nodes, mockOptions, countTokens);
+    const result = splitOversized(nodes, mockOptions);
 
     // Should maintain or increase node count (split if needed)
     expect(result.length).toBeGreaterThanOrEqual(nodes.length);
@@ -60,7 +61,7 @@ describe('splitOversized', () => {
 
     const nodes = [createTestNode(longSentences)];
 
-    const result = splitOversized(nodes, mockOptions, countTokens);
+    const result = splitOversized(nodes, mockOptions);
 
     expect(result.length).toBeGreaterThan(1);
     result.forEach(node => {
@@ -76,7 +77,7 @@ Line four with comprehensive additional content that maintains the pattern of ex
 
     const nodes = [createTestNode(longLines)];
 
-    const result = splitOversized(nodes, mockOptions, countTokens);
+    const result = splitOversized(nodes, mockOptions);
 
     expect(result.length).toBeGreaterThan(1);
     result.forEach(node => {
@@ -91,7 +92,7 @@ Line four with comprehensive additional content that maintains the pattern of ex
 
     const nodes = [createTestNode(longText)];
 
-    const result = splitOversized(nodes, mockOptions, countTokens);
+    const result = splitOversized(nodes, mockOptions);
 
     expect(result.length).toBeGreaterThan(1);
     result.forEach(node => {
@@ -109,6 +110,7 @@ This is another exceptionally detailed and elaborate paragraph that continues th
       type: 'paragraph',
       text: longText,
       headingTrail: ['Chapter 1', 'Section A'],
+      tokenCount: countTokens(longText),
       depth: 2,
       position: {
         start: { line: 1, column: 1, offset: 0 },
@@ -116,7 +118,7 @@ This is another exceptionally detailed and elaborate paragraph that continues th
       }
     };
 
-    const result = splitOversized([testNode], mockOptions, countTokens);
+    const result = splitOversized([testNode], mockOptions);
 
     expect(result.length).toBeGreaterThan(1);
     result.forEach(node => {
@@ -141,7 +143,7 @@ Another paragraph within the second node that incorporates substantial additiona
       createTestNode(longText2)
     ];
 
-    const result = splitOversized(nodes, mockOptions, countTokens);
+    const result = splitOversized(nodes, mockOptions);
 
     expect(result.length).toBeGreaterThan(2);
     result.forEach(node => {
@@ -153,7 +155,7 @@ Another paragraph within the second node that incorporates substantial additiona
   it('should handle different node types', () => {
     const nodes = loadFixtureNodes('mixed-content.md');
 
-    const result = splitOversized(nodes, mockOptions, countTokens);
+    const result = splitOversized(nodes, mockOptions);
 
     result.forEach(node => {
       expect(countTokens(node.text)).toBeLessThanOrEqual(mockOptions.maxTokens);
@@ -167,7 +169,7 @@ Another paragraph within the second node that incorporates substantial additiona
   it('should handle small nodes that do not need splitting', () => {
     const nodes = loadFixtureNodes('small-nodes.md');
 
-    const result = splitOversized(nodes, mockOptions, countTokens);
+    const result = splitOversized(nodes, mockOptions);
 
     // Small nodes should not need splitting
     expect(result.length).toBe(nodes.length);
@@ -183,7 +185,7 @@ Another paragraph within the second node that incorporates substantial additiona
       createTestNode('   '),
     ];
 
-    const result = splitOversized(nodes, mockOptions, countTokens);
+    const result = splitOversized(nodes, mockOptions);
 
     expect(result.length).toBeLessThanOrEqual(3);
     result.forEach(node => {
@@ -197,7 +199,7 @@ Another paragraph within the second node that incorporates substantial additiona
 
     const nodes = [createTestNode(hugeParagraph)];
 
-    const result = splitOversized(nodes, mockOptions, countTokens);
+    const result = splitOversized(nodes, mockOptions);
 
     expect(result.length).toBeGreaterThan(1);
     result.forEach(node => {

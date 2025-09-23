@@ -25,6 +25,7 @@ See `README.md` for complete project overview, architecture, design principles, 
 - Each function needs success and edge-case tests
 - Use Vitest for unit testing
 - Functions should be individually testable
+- See `README.md` for how to run tests
 
 ### Code Standards
 - Filenames use `kebab-case.ext`
