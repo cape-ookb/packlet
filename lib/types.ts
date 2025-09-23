@@ -65,6 +65,9 @@ export type Chunk = {
 	// Structural information (populated by metadata stage)
 	chunkNumber?: number;
 
+	// Chunking configuration used to generate this chunk (populated by metadata stage)
+	chunkingOptions?: object;
+
 	// Metadata object (for vector database filtering, populated by metadata stage)
 	metadata?: {
 		contentType?: string;
@@ -78,7 +81,6 @@ export type Chunk = {
 		sourceFile?: string;
 		nodeTypes?: string[];
 		processedAt?: string;
-		chunkingOptions?: object;
 		[key: string]: any;
 	};
 };

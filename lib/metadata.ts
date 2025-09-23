@@ -181,6 +181,9 @@ export function attachMetadata(chunks: Chunk[], options: ChunkOptions, fileTitle
       // Structural information
       chunkNumber: index,
 
+      // Chunking configuration used to generate this chunk
+      chunkingOptions: options,
+
       // Metadata object (for vector database filtering)
       metadata: {
         contentType,
@@ -193,8 +196,7 @@ export function attachMetadata(chunks: Chunk[], options: ChunkOptions, fileTitle
         sectionSlug,
         sourceFile,
         nodeTypes,
-        processedAt,
-        chunkingOptions: options
+        processedAt
       }
     };
   });

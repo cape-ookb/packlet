@@ -109,7 +109,7 @@ describe('chunkMarkdown pipeline', () => {
   });
 
   it('should handle empty content', () => {
-    const result = chunkMarkdown('', defaultOptions);
+    const result = chunkMarkdown('', 'test-file', defaultOptions);
 
     expect(result.chunks).toBeDefined();
     expect(result.chunks.length).toBe(0);
@@ -162,7 +162,7 @@ describe('chunkMarkdown pipeline', () => {
       expect(result.stats.sourceLength).toBeGreaterThan(0);
 
       if (result.chunks.length > 0) {
-        const calculatedTotal = result.chunks.reduce((sum, chunk) => sum + chunk.tokens, 0);
+        const calculatedTotal = result.chunks.reduce((sum, chunk) => sum + (chunk.tokenStats?.tokens || chunk.tokens || 0), 0);
         expect(result.stats.totalTokens).toBe(calculatedTotal);
       }
     });

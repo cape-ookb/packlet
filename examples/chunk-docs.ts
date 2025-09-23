@@ -63,49 +63,13 @@ function main() {
     const chunkFiles: string[] = [];
 
     result.chunks.forEach((chunk, index) => {
-      const chunkId = `${contentType}:${docName}::ch${index}`;
-      const parentId = `${contentType}:${docName}`;
-      const prevId = index > 0 ? `${contentType}:${docName}::ch${index - 1}` : null;
-      const nextId = index < result.chunks.length - 1 ? `${contentType}:${docName}::ch${index + 1}` : null;
-
-      // Calculate character offsets (approximate)
-      const charStart = index * Math.floor(content.length / result.chunks.length);
-      const charEnd = (index + 1) * Math.floor(content.length / result.chunks.length);
-
-      // Extract heading information from chunk metadata
-      const heading = chunk.metadata?.heading || '';
-      const headerPath = chunk.metadata?.headerPath || [];
-      const headerHierarchy = headerPath.join(' > ');
-
+      // Use the enhanced chunk data that comes from attachMetadata
       const chunkData = {
-        id: chunkId,
-        parentId: parentId,
-        prevId: prevId,
-        nextId: nextId,
-        embedText: (chunk.originalText || chunk.content || '').trim(),
-        originalText: (chunk.originalText || chunk.content || '').trim(),
-        chunkNumber: index,
-        contentType: contentType,
-        heading: heading,
-        headerPath: headerPath,
-        headerHierarchy: headerHierarchy,
-        sourcePosition: {
-          charStart: charStart,
-          charEnd: Math.min(charEnd, content.length),
-          totalChars: (chunk.originalText || chunk.content || '').length
-        },
-        tokenStats: {
-          tokens: chunk.tokenStats?.tokens || chunk.tokens || 0,
-          estimatedTokens: Math.ceil((chunk.originalText || chunk.content || '').length / 3.8)
-        },
+        ...chunk,
+        // Override some example-specific metadata
         metadata: {
-          sourceFile: filename,
-          processedAt: processedAt,
-          chunkingOptions: options,
-          pipeline: {
-            version: '1.0.0',
-            processingTimeMs: processingTimeMs
-          }
+          ...chunk.metadata,
+          sourceFile: filename, // Use actual filename instead of default
         }
       };
 

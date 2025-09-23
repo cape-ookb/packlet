@@ -64,22 +64,22 @@ This document outlines the comprehensive refactor needed to align the current im
 - `title-in-each-chunk.md:177-186` (Add missing metadata fields)
 
 **Tasks**:
-- [ ] Accept `fileTitle` as required parameter from calling code
+- [x] Accept `fileTitle` as required parameter from calling code
 - [ ] Build metadata object with all structural fields:
-  - [ ] `metadata.contentType` from content type parameter
-  - [ ] `metadata.sourceFile` from original filename
-  - [ ] `metadata.fileTitle` from fileTitle parameter
-  - [ ] `metadata.headerPath` from header hierarchy
-  - [ ] `metadata.headerBreadcrumb` as `headerPath.join(" > ")`
-  - [ ] `metadata.headerDepths` array tracking depth of each heading
-  - [ ] `metadata.headerSlugs` array using github-slugger
-  - [ ] `metadata.sectionSlug` as last item from `headerSlugs`
-  - [ ] `metadata.sectionTitle` as last item from `headerPath`
-  - [ ] `metadata.nodeTypes` from AST node analysis
-  - [ ] `metadata.processedAt` as ISO8601 timestamp
-  - [ ] `metadata.chunkingOptions` from configuration
-- [ ] Update tokenStats to object format: `{ tokens: number, estimatedTokens: number }`
-- [ ] Add pipeline object: `{ version: string, processingTimeMs: number }`
+  - [x] `metadata.contentType` from content type parameter
+  - [x] `metadata.sourceFile` from original filename
+  - [x] `metadata.fileTitle` from fileTitle parameter
+  - [x] `metadata.headerPath` from header hierarchy
+  - [x] `metadata.headerBreadcrumb` as `headerPath.join(" > ")`
+  - [x] `metadata.headerDepths` array tracking depth of each heading
+  - [x] `metadata.headerSlugs` array using github-slugger
+  - [x] `metadata.sectionSlug` as last item from `headerSlugs`
+  - [x] `metadata.sectionTitle` as last item from `headerPath`
+  - [x] `metadata.nodeTypes` from AST node analysis
+  - [x] `metadata.processedAt` as ISO8601 timestamp
+  - [x] `chunkingOptions` moved to top-level (not in metadata)
+- [x] Update tokenStats to object format: `{ tokens: number, estimatedTokens: number }`
+- [x] Add pipeline object: `{ version: string, processingTimeMs: number }`
 
 ### 2.2 Fix Header Path Building Logic
 **File**: `lib/flatten-ast.ts`

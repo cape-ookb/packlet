@@ -69,6 +69,14 @@ Each chunk file contains a single JSON object with the following structure:
     "processingTimeMs": number
   },
 
+  // Chunking configuration used to generate this chunk
+  "chunkingOptions": {
+    "minTokens": number,
+    "maxTokens": number,
+    "overlapSentences": number,
+    "breadcrumbMode": "conditional" | "always" | "none"
+  },
+
   // Metadata for vector database filtering and organization
   "metadata": {
     "contentType": "doc",
@@ -81,8 +89,7 @@ Each chunk file contains a single JSON object with the following structure:
     "headerSlugs": ["string"],
     "sectionSlug": "string",
     "nodeTypes": ["paragraph", "list", "code"],
-    "processedAt": "ISO8601",
-    "chunkingOptions": object
+    "processedAt": "ISO8601"
   }
 }
 ```
