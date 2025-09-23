@@ -10,22 +10,38 @@ import { assertOrFilterInvalid } from "./guardrails";
 import { computeStats } from "./stats";
 import { countTokens } from "./tokenizer";
 import { flow } from "./utils";
-import type { ChunkOptions, Chunk[] } from "./types";
+import { ChunkOptions, Chunk } from "./types";
+import { FlatNode } from "./flatten-ast";
+import { withDefaults } from "./helper";
 
 export function chunkMarkdown(doc: string, opts: ChunkOptions): { chunks: Chunk[]; stats: any } {
+	const startTime = performance.now();
 	const options = withDefaults(opts);
+
 	const pipeline = flow(
 		parseMarkdown,
 		flattenAst,
-		(nodes) => splitOversized(nodes, options, countTokens),
-		(nodes) => packNodes(nodes, options, countTokens),
-		(chunks) => addOverlap(chunks, options, countTokens),
+		(nodes: FlatNode[]) => splitOversized(nodes, options, countTokens),
+		(nodes: FlatNode[]) => packNodes(nodes, options, countTokens),
+		(chunks: Chunk[]) => addOverlap(chunks, options, countTokens),
 		normalizeChunks,
-		(chunks) => attachMetadata(chunks, options, countTokens),
-		(chunks) => assertOrFilterInvalid(chunks, options),
+		(chunks: Chunk[]) => attachMetadata(chunks, options, countTokens),
+		(chunks: Chunk[]) => assertOrFilterInvalid(chunks, options),
 	);
 
 	const chunks = pipeline(doc);
+	const endTime = performance.now();
+	const processingTimeMs = Math.round(endTime - startTime);
+
 	const stats = computeStats(chunks, options, countTokens);
-	return { chunks, stats };
+
+	// Add timing information to stats
+	return {
+		chunks,
+		stats: {
+			...stats,
+			processingTimeMs,
+			processingTime: `${processingTimeMs}ms`
+		}
+	};
 }

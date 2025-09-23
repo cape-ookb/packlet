@@ -49,7 +49,7 @@ describe('parseMarkdown', () => {
 
     expect(ast.children[0].type).toBe('list');
     expect(ast.children[0].children).toHaveLength(3);
-    expect(ast.children[0].children[1].children[1].type).toBe('list'); // nested list
+    expect(ast.children[0].children?.[1].children?.[1].type).toBe('list'); // nested list
   });
 
   it('should handle empty input', () => {
