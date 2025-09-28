@@ -49,7 +49,8 @@ function updateTokenCount(chunk: Chunk): Chunk {
 function applyOverlapToChunk(
   chunk: Chunk,
   previousChunk: Chunk | null,
-  overlapSentences: number
+  overlapSentences: number,
+  maxTokens?: number
 ): Chunk {
   if (!previousChunk || overlapSentences <= 0) {
     return chunk;
@@ -63,6 +64,17 @@ function applyOverlapToChunk(
 
   const currentContent = chunk.content || chunk.originalText || '';
   const newContent = `${overlap} ${currentContent}`;
+
+  // Check if adding overlap would exceed maxTokens
+  if (maxTokens) {
+    const newTokenCount = countTokens(newContent);
+    if (newTokenCount > maxTokens) {
+      // If adding overlap would exceed maxTokens, return chunk without overlap
+      console.warn(`[Overlap] Skipping overlap for chunk - would exceed maxTokens (${newTokenCount} > ${maxTokens})`);
+      return chunk;
+    }
+  }
+
   const updatedChunk = {
     ...chunk,
     content: newContent
@@ -81,7 +93,7 @@ export function addOverlap(chunks: Chunk[], options: ChunkOptions): Chunk[] {
   for (let i = 1; i < chunks.length; i++) {
     const chunk = chunks[i];
     const previousChunk = chunks[i - 1];
-    const overlappedChunk = applyOverlapToChunk(chunk, previousChunk, options.overlapSentences);
+    const overlappedChunk = applyOverlapToChunk(chunk, previousChunk, options.overlapSentences, options.maxTokens);
     result.push(overlappedChunk);
   }
 

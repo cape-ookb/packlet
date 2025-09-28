@@ -12,7 +12,7 @@
 
 ## ✨ Features
 
-- 🎯 **Smart Chunking**: Hierarchical splitting by structure (headings → paragraphs → sentences)
+- 🎯 **Smart Chunking**: Hierarchical splitting (headings → paragraphs → sentences) that preserves semantic units, using the heading hierarchy as primary boundaries.
 - 🔢 **Token-Aware**: Accurate token counting with tiktoken, not character approximations
 - 🔗 **Semantic Overlap**: Sentence-based context preservation between chunks
 - 📊 **Rich Metadata**: Heading breadcrumbs, token counts, and source positions

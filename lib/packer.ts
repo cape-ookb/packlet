@@ -41,8 +41,29 @@ function shouldLookAhead(currentNodes: FlatNode[], nextNode: FlatNode | undefine
   const currentText = combineNodes(currentNodes);
   const currentTokens = countTokens(currentText);
 
-  return currentTokens < options.minTokens &&
-         canAddNode(currentNodes, nextNode, options.maxTokens);
+  // Always look ahead if below minTokens
+  if (currentTokens < options.minTokens) {
+    return canAddNode(currentNodes, nextNode, options.maxTokens);
+  }
+
+  // Also look ahead if we're below target and adding the next node would get us closer to target
+  const targetTokens = options.targetTokens || options.maxTokens * 0.8;
+  if (currentTokens < targetTokens && canAddNode(currentNodes, nextNode, options.maxTokens)) {
+    const potentialTokens = countTokens(combineNodes([...currentNodes, nextNode]));
+
+    // Safety check: don't look ahead if it would make us significantly exceed target
+    if (potentialTokens > targetTokens * 1.3) {
+      return false;
+    }
+
+    const currentDistance = Math.abs(currentTokens - targetTokens);
+    const potentialDistance = Math.abs(potentialTokens - targetTokens);
+
+    // Look ahead if it gets us closer to target
+    return potentialDistance < currentDistance;
+  }
+
+  return false;
 }
 
 function createChunk(nodes: FlatNode[]): Chunk {
@@ -85,19 +106,37 @@ function processNode(
     return; // Don't flush anything - let flushFinalBuffer handle it
   }
 
-  // For multi-chunk documents, use normal logic
+  // For multi-chunk documents, check if adding this node would exceed maxTokens
   if (!canAddNode(buffer, node, options.maxTokens)) {
     flushBuffer(buffer, chunks);
   }
 
   buffer.push(node);
 
-  if (!shouldLookAhead(buffer, nextNode, options)) {
-    const currentTokens = countTokens(combineNodes(buffer));
+  // Check if we should flush the current buffer
+  const currentTokens = countTokens(combineNodes(buffer));
 
-    // In multi-chunk documents, only flush if we meet minTokens
+  // Always flush if we're at or near maxTokens, regardless of target optimization
+  if (currentTokens >= options.maxTokens * 0.9) {
+    flushBuffer(buffer, chunks);
+    return;
+  }
+
+  // For smaller chunks, use target-aware logic
+  if (!shouldLookAhead(buffer, nextNode, options)) {
+    // In multi-chunk documents, flush if we meet minTokens AND either:
+    // 1. We're at or above target tokens, OR
+    // 2. We don't have a next node to consider, OR
+    // 3. Adding the next node wouldn't improve our distance to target
     if (currentTokens >= options.minTokens) {
-      flushBuffer(buffer, chunks);
+      const targetTokens = options.targetTokens || options.maxTokens * 0.8;
+      const shouldFlush = currentTokens >= targetTokens ||
+                         !nextNode ||
+                         !canAddNode(buffer, nextNode, options.maxTokens);
+
+      if (shouldFlush) {
+        flushBuffer(buffer, chunks);
+      }
     }
     // If below minTokens, keep accumulating to avoid small chunks
   }
@@ -119,13 +158,17 @@ function flushFinalBuffer(buffer: FlatNode[], chunks: Chunk[], options: ChunkOpt
         const mergedContent = lastChunkContent + '\n\n' + bufferContent;
         const mergedTokens = countTokens(mergedContent);
 
-        // Always merge small final chunks, even if it exceeds maxTokens slightly
-        // This prevents having tiny orphaned chunks at the end
-        chunks[chunks.length - 1] = {
-          ...lastChunk,
-          content: mergedContent,
-          tokens: mergedTokens
-        };
+        // Merge small final chunks, but respect maxTokens hard limit
+        if (mergedTokens <= options.maxTokens) {
+          chunks[chunks.length - 1] = {
+            ...lastChunk,
+            content: mergedContent,
+            tokens: mergedTokens
+          };
+        } else {
+          // If merging would exceed maxTokens, create separate chunk
+          chunks.push(createChunk(buffer));
+        }
       } else {
         // Shouldn't happen, but fallback - create the chunk anyway
         chunks.push(createChunk(buffer));
