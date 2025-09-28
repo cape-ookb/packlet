@@ -21,7 +21,9 @@ export type { ProcessingContext } from "./processing-context";
 export { initializeProcessing } from "./initialize";
 export {
 	runFullPipeline as runPipelineSteps,
+	runAnalyzePipeline,
 	parseMarkdownStep,
+	analyzeAstStep,
 	flattenAstStep,
 	splitOversizedStep,
 	packNodesStep,

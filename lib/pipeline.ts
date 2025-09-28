@@ -6,6 +6,7 @@
  */
 
 import { parseMarkdown } from "./parse-markdown";
+import { analyzeAst } from "./analyze-ast";
 import { flattenAst } from "./flatten-ast";
 import { splitOversized } from "./split-node";
 import { packNodes } from "./packer";
@@ -31,6 +32,17 @@ export function parseMarkdownStep(context: ProcessingContext): ProcessingContext
 	return {
 		...context,
 		ast: parseMarkdown(context.source.content)
+	};
+}
+
+// Analyze AST structure
+export function analyzeAstStep(context: ProcessingContext): ProcessingContext {
+	if (!context.ast) {
+		throw new Error('AST not available for analysis');
+	}
+	return {
+		...context,
+		structure: analyzeAst(context.ast)
 	};
 }
 
@@ -172,16 +184,17 @@ export function stopTimerStep(context: ProcessingContext): ProcessingContext {
  * Pipeline stages:
  * 1. Initialize processing context
  * 2. Parse markdown to AST
- * 3. Flatten AST to linear nodes
- * 4. Split oversized nodes
- * 5. Pack nodes into chunks
- * 6. Add overlap between chunks
- * 7. Normalize text
- * 8. Attach metadata
- * 9. Add embed text
- * 10. Validate chunks
- * 11. Compute statistics
- * 12. Stop timer and finalize
+ * 3. Analyze AST structure
+ * 4. Flatten AST to linear nodes
+ * 5. Split oversized nodes
+ * 6. Pack nodes into chunks
+ * 7. Add overlap between chunks
+ * 8. Normalize text
+ * 9. Attach metadata
+ * 10. Add embed text
+ * 11. Validate chunks
+ * 12. Compute statistics
+ * 13. Stop timer and finalize
  *
  * Each step is composable and can be used individually for custom pipelines.
  *
@@ -193,6 +206,7 @@ export function stopTimerStep(context: ProcessingContext): ProcessingContext {
 export const runFullPipeline = flow(
 	initializeProcessing,
 	parseMarkdownStep,
+	analyzeAstStep,
 	flattenAstStep,
 	splitOversizedStep,
 	packNodesStep,
@@ -202,5 +216,32 @@ export const runFullPipeline = flow(
 	addEmbedTextStep,
 	validateChunksStep,
 	computeStatsStep,
+	stopTimerStep
+);
+
+/**
+ * Analyze-only pipeline for testing and inspection.
+ *
+ * Performs only the initial analysis steps:
+ * 1. Initialize processing context
+ * 2. Parse markdown to AST
+ * 3. Analyze AST structure
+ * 4. Stop timer
+ *
+ * Useful for:
+ * - Testing AST analysis in isolation
+ * - Quick document structure inspection
+ * - Debugging parsing issues
+ * - Getting document metrics without chunking
+ *
+ * @param doc - The markdown content to analyze
+ * @param fileTitle - The title/name of the source file
+ * @param opts - Chunking configuration options
+ * @returns Processing context with source metrics, AST, and structure analysis
+ */
+export const runAnalyzePipeline = flow(
+	initializeProcessing,
+	parseMarkdownStep,
+	analyzeAstStep,
 	stopTimerStep
 );
