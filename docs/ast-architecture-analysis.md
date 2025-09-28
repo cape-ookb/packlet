@@ -291,7 +291,7 @@ function mergeSiblingSections(section: Section): Section {
 
 ### Content Pattern Detection Implementation
 
-The `detectContentPattern()` function uses sophisticated heuristics to analyze section characteristics and make intelligent merging decisions. The complete implementation is available in [`lib/content-pattern-detection.ts`](../lib/content-pattern-detection.ts).
+The `detectContentPattern()` function uses sophisticated heuristics to analyze section characteristics and make intelligent merging decisions. The complete implementation is available in [`lib/content-analysis/`](../lib/content-analysis/) with modular components for maintainability.
 
 **Key Features:**
 - **Multi-layered analysis**: Heading text, content structure, sequential context
@@ -302,12 +302,19 @@ The `detectContentPattern()` function uses sophisticated heuristics to analyze s
 **Pattern Detection Approach:**
 ```typescript
 // Example usage
-import { detectContentPattern, shouldMergeBasedOnPatterns } from './content-pattern-detection';
+import { detectContentPattern, shouldMergeBasedOnPatterns } from './content-analysis';
 
 const pattern = detectContentPattern(section);
 const decision = shouldMergeBasedOnPatterns(section1, section2);
 // Returns: { shouldMerge: boolean, confidence: number, reason: string }
 ```
+
+**Modular Architecture:**
+- `types.ts` - Type definitions and enums
+- `keywords.ts` - Pattern keyword definitions
+- `analyzers.ts` - Content analysis functions
+- `pattern-scoring.ts` - Pattern scoring algorithms
+- `index.ts` - Main API and orchestration
 
 **Supported Content Patterns:**
 - `ORGANIZATIONAL`: Setup, installation, configuration sequences
