@@ -30,6 +30,26 @@ This document outlines the comprehensive refactor needed to align the current im
 
 ## Implementation Tasks
 
+### Code Organization & Architecture Preparation (NEW - HIGH PRIORITY)
+- [ ] Move reusable utilities from analyze-ast.ts to content-analysis
+  - [ ] Create `lib/content-analysis/utils.ts`
+  - [ ] Move `estimateTextLength()` function from analyze-ast.ts
+  - [ ] Move `hasMainlyLinks()` function from analyze-ast.ts
+  - [ ] Update analyze-ast.ts imports to use content-analysis/utils
+  - [ ] Add `calculateSectionTokenCount()` helper for Section structure
+
+- [ ] Fix type alignment between content-analysis and main pipeline
+  - [ ] Update content-analysis Section type to match FlatNode properties
+  - [ ] Add type converters: `flatNodesToSection()` and `sectionToFlatNodes()`
+  - [ ] Ensure content-analysis works with existing FlatNode structure
+  - [ ] Test content-analysis functions with real FlatNode data
+
+- [ ] Integrate content-analysis into main processing context
+  - [ ] Add ContentPattern to StructureAnalysis type
+  - [ ] Export content-analysis types from main processing-context-types.ts
+  - [ ] Add contentPattern field to StructureAnalysis
+  - [ ] Update analyzeAst() to optionally include content pattern detection
+
 ### Preprocessing Optimization
 - [x] Implement early single-chunk detection in main pipeline
   - [x] Add total token count calculation before AST parsing

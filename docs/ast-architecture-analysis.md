@@ -402,19 +402,31 @@ const decision = shouldMergeBasedOnPatterns(section1, section2);
 
 ## Implementation Strategy
 
-### Phase 1: Add Section Grouping
+### Phase 1: Code Organization & Utilities
+- [ ] Move reusable utilities from `analyze-ast.ts` to `content-analysis/utils.ts`
+  - [ ] Move `estimateTextLength()` function
+  - [ ] Move `hasMainlyLinks()` function
+  - [ ] Add `calculateTokenCount()` helper for sections
+- [ ] Update content-analysis types to align with existing FlatNode structure
+  - [ ] Ensure Section type works with current FlatNode properties
+  - [ ] Add type converters between FlatNode[] and Section structure
+- [ ] Integrate content-analysis into main processing context types
+  - [ ] Add ContentPattern to StructureAnalysis
+  - [ ] Export content-analysis types from main types
+
+### Phase 2: Add Section Grouping
 - [ ] Create `group-sections.ts` module
 - [ ] Implement `groupIntoSections()` function
 - [ ] Add comprehensive tests for section grouping
 - [ ] Update pipeline to include grouping stage
 
-### Phase 2: Section-Aware Processing
+### Phase 3: Section-Aware Processing
 - [ ] Modify packer to work with Section structure
 - [ ] Implement small chunk prevention at section level
 - [ ] Add sibling merging logic
 - [ ] Preserve section boundary integrity
 
-### Phase 3: Integration & Optimization
+### Phase 4: Integration & Optimization
 - [ ] Update existing tests to work with new pipeline
 - [ ] Add performance benchmarks
 - [ ] Optimize memory usage for large documents
