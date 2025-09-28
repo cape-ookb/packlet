@@ -53,3 +53,5 @@ temp/
 .DS_Store?
 ._*
 Thumbs.db
+
+code-review-*.md

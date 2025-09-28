@@ -23,22 +23,13 @@
 
 import { Chunk, ChunkOptions } from './types';
 import { countTokens } from './tokenizer';
-import GithubSlugger from 'github-slugger';
+import { createTimestamp, generateChunkId } from './utils';
+import { extractHeading, extractNodeTypes } from './markdown-utils';
+import { resetSlugger, generateHeaderSlugs } from './slug-utils';
 
-function generateChunkId(parentId: string, chunkNumber: number): string {
-  return `${parentId}::ch${chunkNumber}`;
-}
+// Re-export for backward compatibility
+export { resetSlugger } from './slug-utils';
 
-function extractHeading(content: string): string {
-  const lines = content.split('\n');
-  for (const line of lines) {
-    const trimmed = line.trim();
-    if (trimmed.startsWith('#')) {
-      return trimmed;
-    }
-  }
-  return '';
-}
 
 function extractHeaderPath(chunk: Chunk): string[] {
   const existingHeaderPath = chunk.metadata?.headingTrail || chunk.metadata?.headerPath || [];
@@ -51,28 +42,6 @@ function extractHeaderPath(chunk: Chunk): string[] {
   return heading ? [heading] : [];
 }
 
-function extractNodeTypes(chunk: Chunk): string[] {
-  const existingTypes = chunk.metadata?.types || chunk.metadata?.nodeTypes || [];
-  if (Array.isArray(existingTypes) && existingTypes.length > 0) {
-    return existingTypes;
-  }
-
-  const nodeTypes = new Set<string>();
-  const content = chunk.originalText || chunk.content || '';
-
-  if (content.includes('#')) nodeTypes.add('heading');
-  if (content.includes('```')) nodeTypes.add('code');
-  if (content.includes('- ') || content.includes('* ') || /^\d+\./m.test(content)) nodeTypes.add('list-item');
-  if (content.includes('|')) nodeTypes.add('table');
-  if (content.includes('>')) nodeTypes.add('blockquote');
-  nodeTypes.add('paragraph'); // Most chunks contain paragraph content
-
-  return Array.from(nodeTypes);
-}
-
-function createTimestamp(): string {
-  return new Date().toISOString();
-}
 
 function extractHeaderDepths(chunk: Chunk): number[] {
   // Use preserved depth information from packer if available
@@ -87,51 +56,6 @@ function extractHeaderDepths(chunk: Chunk): number[] {
   return headerPath.map((_, index) => index + 1);
 }
 
-function cleanMarkdownFromHeading(heading: string): string {
-  return heading
-    // Remove # symbols
-    .replace(/^#+\s*/, '')
-    // Remove markdown links [text](url) -> text
-    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
-    // Remove inline code `text` -> text
-    .replace(/`([^`]+)`/g, '$1')
-    // Remove bold **text** -> text
-    .replace(/\*\*([^*]+)\*\*/g, '$1')
-    // Remove italic *text* -> text
-    .replace(/\*([^*]+)\*/g, '$1')
-    // Remove strikethrough ~~text~~ -> text
-    .replace(/~~([^~]+)~~/g, '$1')
-    .trim();
-}
-
-// Global slugger instance and cache to maintain state across all chunks
-let globalSlugger = new GithubSlugger();
-let slugCache = new Map<string, string>();
-
-export function resetSlugger(): void {
-  globalSlugger = new GithubSlugger();
-  slugCache.clear();
-}
-
-function generateHeaderSlugs(headerPath: string[]): string[] {
-  const result: string[] = [];
-
-  for (const heading of headerPath) {
-    const cleanHeading = cleanMarkdownFromHeading(heading);
-
-    // Check cache first - if we've seen this exact heading text before, use the same slug
-    if (slugCache.has(cleanHeading)) {
-      result.push(slugCache.get(cleanHeading)!);
-    } else {
-      // Generate new slug and cache it
-      const slug = globalSlugger.slug(cleanHeading);
-      slugCache.set(cleanHeading, slug);
-      result.push(slug);
-    }
-  }
-
-  return result;
-}
 
 function calculateSourcePosition(chunkNumber: number, chunks: Chunk[]): { charStart: number; charEnd: number; totalChars: number } {
   let charStart = 0;
