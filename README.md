@@ -129,32 +129,6 @@ pnpm install
 pnpm dev
 ```
 
-### 🧪 Testing
-
-```bash
-# Run tests (watch mode)
-pnpm test
-
-# Run tests once (CI mode)
-pnpm test:run
-
-# Run specific test file
-pnpm test:run flatten-ast
-
-# Run tests with coverage
-pnpm test:coverage
-```
-
-### 🔧 Code Quality
-
-```bash
-# Type checking
-pnpm typecheck
-
-# Linting
-pnpm lint
-```
-
 ### Package Management
 This project uses **pnpm** for dependency management. All commands should use `pnpm` instead of `npm` or `yarn`.
 

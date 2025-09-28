@@ -42,6 +42,31 @@ See `README.md` for complete project overview, architecture, design principles, 
   // ❌ BAD - Inline markdown in integration tests
   const doc = `# Title\n\nContent here...`;  // Don't do this for integration tests!
   ```
+#### Run Tests
+
+```bash
+# Run tests (watch mode)
+pnpm test
+
+# Run tests once (CI mode)
+pnpm test:run
+
+# Run specific test file
+pnpm test:run flatten-ast
+
+# Run tests with coverage
+pnpm test:coverage
+```
+
+### 🔧 Code Quality
+
+```bash
+# Type checking
+pnpm typecheck
+
+# Linting
+pnpm lint
+```
 
 ### Code Standards
 - Filenames use `kebab-case.ext`

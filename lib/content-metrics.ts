@@ -6,6 +6,7 @@
 
 import { countTokens } from './tokenizer';
 import type { ChunkOptions } from './types';
+import type { SourceData } from './processing-context-types';
 
 export interface SourceMetrics {
   length: number;
@@ -61,5 +62,26 @@ export function calculateSourceMetrics(sourceDocument: string, options: ChunkOpt
     // - Resource allocation and memory planning
     // - Performance optimization decisions
     estimatedChunks: estimateChunks(tokens, options)
+  };
+}
+
+/**
+ * Initialize source data from input document and options.
+ * This is the first step in processing - creating the immutable source data object.
+ *
+ * @param sourceDocument - The markdown content to process
+ * @param fileTitle - The source file title/name
+ * @param options - Chunking options with defaults applied
+ * @returns Complete SourceData object ready for processing
+ */
+export function initializeSource(
+  sourceDocument: string,
+  fileTitle: string,
+  options: ChunkOptions
+): SourceData {
+  return {
+    content: sourceDocument,
+    title: fileTitle,
+    ...calculateSourceMetrics(sourceDocument, options)
   };
 }

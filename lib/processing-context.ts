@@ -16,28 +16,44 @@ import type {
   SourceData,
   StructureAnalysis
 } from './processing-context-types';
-import { calculateSourceMetrics } from './content-metrics';
+import { initializeSource } from './content-metrics';
+import { withDefaults } from './default-config';
+import { startTimer, stopTimer } from './timer';
 
 // Re-export types for convenience
 export * from './processing-context-types';
 
 /**
- * Create initial processing context from input parameters
+ * Initialize processing with source data, options defaults, and timing.
+ * This creates the minimal initialized processing context.
+ *
+ * @param sourceDocument - The markdown content to process
+ * @param fileTitle - The source file title/name
+ * @param partialOptions - Chunking options (defaults will be applied)
+ * @returns Object with source data, complete options, and overall timer
+ */
+export function initializeProcessing(
+  sourceDocument: string,
+  fileTitle: string,
+  partialOptions: Partial<import('./types').ChunkOptions>
+): { source: SourceData; options: import('./types').ChunkOptions; overallTimer: import('./timer').Timer } {
+  const overallTimer = startTimer();
+  const options = withDefaults(partialOptions as import('./types').ChunkOptions);
+  const source = initializeSource(sourceDocument, fileTitle, options);
+
+  return { source, options, overallTimer };
+}
+
+/**
+ * Create initial processing context from input parameters.
+ * This is a convenience wrapper around initializeProcessing for full context creation.
  */
 export function createProcessingContext(
   sourceDocument: string,
   fileTitle: string,
   options: import('./types').ChunkOptions
 ): ProcessingContext {
-  const startTime = performance.now();
-
-  // Create immutable source data object
-  const source: SourceData = {
-    content: sourceDocument,
-    title: fileTitle,
-    // Calculate source metrics upfront
-    ...calculateSourceMetrics(sourceDocument, options),
-  };
+  const { source, overallTimer } = initializeProcessing(sourceDocument, fileTitle, options);
 
   return {
     source,
@@ -47,9 +63,9 @@ export function createProcessingContext(
     chunks: [],
     metrics: {},
     timing: {
-      startTime,
+      overall: overallTimer,
       stageMetrics: {
-        initialized: { startTime }
+        initialized: startTimer()
       }
     }
   };
@@ -62,19 +78,15 @@ export function transitionStage(
   context: ProcessingContext,
   nextStage: ProcessingStage
 ): ProcessingContext {
-  const now = performance.now();
-
   // Complete timing for current stage
-  const currentStageMetric = context.timing.stageMetrics[context.stage];
-  if (currentStageMetric && !currentStageMetric.endTime) {
-    currentStageMetric.endTime = now;
-    currentStageMetric.durationMs = now - currentStageMetric.startTime;
-  }
+  const currentStageTimer = context.timing.stageMetrics[context.stage];
+  const completedStageTimer = currentStageTimer ? stopTimer(currentStageTimer) : undefined;
 
   // Start timing for new stage
   const updatedStageMetrics = {
     ...context.timing.stageMetrics,
-    [nextStage]: { startTime: now }
+    ...(completedStageTimer && { [context.stage]: completedStageTimer }),
+    [nextStage]: startTimer()
   };
 
   return {
@@ -91,17 +103,17 @@ export function transitionStage(
  * Complete processing by recording final timing
  */
 export function completeProcessing(context: ProcessingContext): ProcessingContext {
-  const endTime = performance.now();
-
   // Complete final stage timing
   const finalContext = transitionStage(context, 'completed');
+
+  // Stop the overall timer
+  const completedOverallTimer = stopTimer(finalContext.timing.overall);
 
   return {
     ...finalContext,
     timing: {
       ...finalContext.timing,
-      endTime,
-      totalDurationMs: endTime - finalContext.timing.startTime
+      overall: completedOverallTimer
     },
     metrics: {
       ...finalContext.metrics,
@@ -228,7 +240,7 @@ export function isComplete(context: ProcessingContext): boolean {
  * Get total processing duration
  */
 export function getProcessingDuration(context: ProcessingContext): number | undefined {
-  return context.timing.totalDurationMs;
+  return context.timing.overall.durationMs;
 }
 
 /**

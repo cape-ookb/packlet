@@ -8,6 +8,7 @@
 import { Chunk, ChunkOptions } from './types';
 import { FlatNode } from './flatten-ast';
 import type { ContentAnalysis } from './content-analysis/types';
+import type { Timer } from './timer';
 
 /**
  * Processing stage indicators for pipeline flow control
@@ -35,21 +36,11 @@ export type ProcessingPath = 'single-chunk' | 'multi-chunk' | 'undetermined';
  * Comprehensive timing information for performance analysis
  */
 export type ProcessingTiming = {
-  /** Overall processing start time */
-  startTime: number;
-
-  /** Overall processing end time */
-  endTime?: number;
-
-  /** Total processing duration in milliseconds */
-  totalDurationMs?: number;
+  /** Overall processing timer */
+  overall: Timer;
 
   /** Performance metrics for each pipeline stage */
-  stageMetrics: Partial<Record<ProcessingStage, {
-    startTime: number;
-    endTime?: number;
-    durationMs?: number;
-  }>>;
+  stageMetrics: Partial<Record<ProcessingStage, Timer>>;
 };
 
 /**
