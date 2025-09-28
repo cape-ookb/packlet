@@ -27,10 +27,6 @@ export type ProcessingStage =
   | 'validated'          // Quality validation completed
   | 'completed';         // Processing finished, ready for stats
 
-/**
- * Processing path determination
- */
-export type ProcessingPath = 'single-chunk' | 'multi-chunk' | 'undetermined';
 
 /**
  * Minimal processing context for initialization
@@ -42,6 +38,8 @@ export type ProcessingBase = {
   readonly options: ChunkOptions;
   /** Overall processing timer */
   timer: Timer;
+  /** Current stage in the processing pipeline */
+  stage: ProcessingStage;
 };
 
 /**
@@ -126,19 +124,12 @@ export type ErrorTracking = {
  * Contains all input data, configuration, intermediate state, and results.
  */
 export type ProcessingContext = ProcessingBase & {
-  // === Processing Control ===
-  /** Current stage in the processing pipeline */
-  stage: ProcessingStage;
-
-  /** Processing path: single-chunk optimization vs full pipeline */
-  path: ProcessingPath;
-
   // === Core Data ===
   /** Processed chunks (main output) */
-  chunks: Chunk[];
+  chunks?: Chunk[];
 
   /** Processing metrics collected during chunking */
-  metrics: ProcessingMetrics;
+  metrics?: ProcessingMetrics;
 
   // === Analysis Results ===
   /** Document structure analysis (computed during processing) */

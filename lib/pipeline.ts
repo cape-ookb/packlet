@@ -25,7 +25,7 @@ import { ProcessingContext } from "./processing-context";
  */
 
 // Parse markdown to AST
-function parseMarkdownStep(context: ProcessingContext): ProcessingContext {
+export function parseMarkdownStep(context: ProcessingContext): ProcessingContext {
 	return {
 		...context,
 		ast: parseMarkdown(context.source.content)
@@ -33,7 +33,7 @@ function parseMarkdownStep(context: ProcessingContext): ProcessingContext {
 }
 
 // Flatten AST to nodes
-function flattenAstStep(context: ProcessingContext): ProcessingContext {
+export function flattenAstStep(context: ProcessingContext): ProcessingContext {
 	if (!context.ast) {
 		throw new Error('AST not available for flattening');
 	}
@@ -44,7 +44,7 @@ function flattenAstStep(context: ProcessingContext): ProcessingContext {
 }
 
 // Split oversized nodes
-function splitOversizedStep(context: ProcessingContext): ProcessingContext {
+export function splitOversizedStep(context: ProcessingContext): ProcessingContext {
 	if (!context.nodes) {
 		throw new Error('Nodes not available for splitting');
 	}
@@ -55,7 +55,7 @@ function splitOversizedStep(context: ProcessingContext): ProcessingContext {
 }
 
 // Pack nodes into chunks
-function packNodesStep(context: ProcessingContext): ProcessingContext {
+export function packNodesStep(context: ProcessingContext): ProcessingContext {
 	if (!context.nodes) {
 		throw new Error('Nodes not available for packing');
 	}
@@ -66,7 +66,7 @@ function packNodesStep(context: ProcessingContext): ProcessingContext {
 }
 
 // Add overlap between chunks
-function addOverlapStep(context: ProcessingContext): ProcessingContext {
+export function addOverlapStep(context: ProcessingContext): ProcessingContext {
 	return {
 		...context,
 		chunks: addOverlap(context.chunks, context.options)
@@ -74,7 +74,7 @@ function addOverlapStep(context: ProcessingContext): ProcessingContext {
 }
 
 // Normalize chunk text
-function normalizeChunksStep(context: ProcessingContext): ProcessingContext {
+export function normalizeChunksStep(context: ProcessingContext): ProcessingContext {
 	return {
 		...context,
 		chunks: normalizeChunks(context.chunks)
@@ -82,7 +82,7 @@ function normalizeChunksStep(context: ProcessingContext): ProcessingContext {
 }
 
 // Attach metadata to chunks
-function attachMetadataStep(context: ProcessingContext): ProcessingContext {
+export function attachMetadataStep(context: ProcessingContext): ProcessingContext {
 	return {
 		...context,
 		chunks: attachMetadata(context.chunks, context.options, context.source.title)
@@ -90,7 +90,7 @@ function attachMetadataStep(context: ProcessingContext): ProcessingContext {
 }
 
 // Add embed text for vector search
-function addEmbedTextStep(context: ProcessingContext): ProcessingContext {
+export function addEmbedTextStep(context: ProcessingContext): ProcessingContext {
 	return {
 		...context,
 		chunks: addEmbedText(
@@ -102,7 +102,7 @@ function addEmbedTextStep(context: ProcessingContext): ProcessingContext {
 }
 
 // Validate chunks
-function validateChunksStep(context: ProcessingContext): ProcessingContext {
+export function validateChunksStep(context: ProcessingContext): ProcessingContext {
 	return {
 		...context,
 		chunks: assertOrFilterInvalid(context.chunks, context.options)
@@ -110,7 +110,7 @@ function validateChunksStep(context: ProcessingContext): ProcessingContext {
 }
 
 // Finalize processing and compute statistics
-function finalizeWithStatsStep(context: ProcessingContext): ProcessingContext {
+export function finalizeWithStatsStep(context: ProcessingContext): ProcessingContext {
 	const endTime = performance.now();
 
 	// Compute final statistics
@@ -127,8 +127,8 @@ function finalizeWithStatsStep(context: ProcessingContext): ProcessingContext {
 		metrics: {
 			...context.metrics,
 			chunks: {
-				...context.metrics.chunks,
-				count: context.chunks.length,
+				...(context.metrics?.chunks || {}),
+				count: context.chunks?.length || 0,
 				// Additional chunk metrics could be added here
 			}
 		},

@@ -5,8 +5,12 @@
 /**
  * Functional composition utility.
  * Composes functions from left to right.
+ * The first function can accept multiple arguments, subsequent functions receive one argument.
  */
-export const flow = (...fns: Function[]) => (x: any) => fns.reduce((v, f) => f(v), x);
+export const flow = (...fns: Function[]) => (...args: any[]) => {
+  const [firstFn, ...restFns] = fns;
+  return restFns.reduce((v, f) => f(v), firstFn(...args));
+};
 
 /**
  * Create an ISO timestamp string.
