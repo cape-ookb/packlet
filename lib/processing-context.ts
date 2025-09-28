@@ -20,20 +20,6 @@ import { initializeProcessing } from './initialize';
 export * from './processing-context-types';
 
 /**
- * Create initial processing context from input parameters.
- * This is a legacy wrapper - prefer using initializeProcessing directly.
- *
- * @deprecated Use initializeProcessing from './initialize' instead
- */
-export function createProcessingContext(
-  sourceDocument: string,
-  fileTitle: string,
-  options: import('./types').ChunkOptions
-): ProcessingContext {
-  return initializeProcessing(sourceDocument, fileTitle, options);
-}
-
-/**
  * Transition context to next processing stage
  */
 export function transitionStage(
