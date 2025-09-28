@@ -9,7 +9,7 @@ import { attachMetadata } from "./metadata";
 import { addEmbedText } from "./embed-text";
 import { assertOrFilterInvalid } from "./guardrails";
 import { computeStats } from "./stats";
-import { preprocess } from "./preprocess";
+import { collectContentMetrics } from "./content-metrics";
 import { flow } from "./utils";
 import { ChunkOptions, Chunk } from "./types";
 import { FlatNode } from "./flatten-ast";

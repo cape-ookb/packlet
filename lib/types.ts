@@ -2,9 +2,9 @@
 export type ChunkOptions = {
 	minTokens: number;  // e.g., 200
 	maxTokens: number;  // e.g., 800
+	targetTokens?: number; // for estimates
 	overlapSentences: number; // e.g., 1..3
 	strictMode?: boolean;
-	targetTokens?: number; // for estimates
 	breadcrumbMode?: "conditional" | "always" | "none";
 };
 

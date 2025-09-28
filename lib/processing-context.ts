@@ -1,191 +1,24 @@
 /**
  * processing-context.ts
  *
- * Unified context object that flows through the entire chunking pipeline.
- * Eliminates parameter passing duplication and provides single source of truth
- * for all processing state, configuration, and intermediate results.
+ * Utility functions for managing the ProcessingContext throughout the pipeline.
+ * Provides helper functions to create, update, and query the context.
  */
 
-import { Chunk, ChunkOptions } from './types';
-import { FlatNode } from './flatten-ast';
-import type { ContentAnalysis } from './content-analysis/types';
+import type { Chunk } from './types';
+import type { FlatNode } from './flatten-ast';
+import type {
+  ProcessingContext,
+  ProcessingStage,
+  ContentMetrics,
+  PreprocessingData,
+  ProcessingPath,
+  ErrorTracking
+} from './processing-context-types';
+import { calculateSourceMetrics } from './content-metrics';
 
-/**
- * Processing stage indicators for pipeline flow control
- */
-export type ProcessingStage =
-  | 'initialized'        // Context created with input data
-  | 'preprocessed'       // Preprocessing analysis completed
-  | 'parsed'             // Markdown parsed to AST (multi-chunk only)
-  | 'flattened'          // AST flattened to nodes (multi-chunk only)
-  | 'split'              // Oversized nodes split (multi-chunk only)
-  | 'packed'             // Nodes packed into chunks (multi-chunk only)
-  | 'overlapped'         // Overlap added between chunks
-  | 'normalized'         // Text normalized and cleaned
-  | 'metadata_attached'  // Metadata and IDs attached
-  | 'embed_text_added'   // EmbedText generated
-  | 'validated'          // Quality validation completed
-  | 'completed';         // Processing finished, ready for stats
-
-/**
- * Processing path determination
- */
-export type ProcessingPath = 'single-chunk' | 'multi-chunk' | 'undetermined';
-
-/**
- * Comprehensive timing information for performance analysis
- */
-export type ProcessingTiming = {
-  /** Overall processing start time */
-  startTime: number;
-
-  /** Overall processing end time */
-  endTime?: number;
-
-  /** Total processing duration in milliseconds */
-  totalDurationMs?: number;
-
-  /** Performance metrics for each pipeline stage */
-  stageMetrics: Partial<Record<ProcessingStage, {
-    startTime: number;
-    endTime?: number;
-    durationMs?: number;
-  }>>;
-};
-
-/**
- * Content size and token metrics
- */
-export type ContentMetrics = {
-  /** Total source document length in characters */
-  sourceLength: number;
-
-  /** Total tokens in source document (from preprocessing) */
-  sourceTokens?: number;
-
-  /** Estimated vs actual token counts */
-  tokenEstimates?: {
-    estimated: number;
-    actual: number;
-    compressionRatio: number; // actual/estimated
-  };
-
-  /** Basic content structure metrics */
-  structure?: {
-    headingCount: number;
-    paragraphCount: number;
-    codeBlockCount: number;
-    listCount: number;
-    tableCount: number;
-  };
-
-  /** Detailed content analysis (from content-analysis system) */
-  analysis?: ContentAnalysis;
-};
-
-/**
- * Chunk processing state and results
- */
-export type ChunkData = {
-  /** Current chunks being processed */
-  chunks: Chunk[];
-
-  /** Final chunk count */
-  finalChunkCount?: number;
-
-  /** Chunk quality metrics */
-  quality?: {
-    chunksUnderTarget: number;
-    chunksAtTarget: number;
-    chunksOverTarget: number;
-    qualityFlags: Array<{
-      chunkIndex: number;
-      issue: string;
-      severity: 'warning' | 'error';
-    }>;
-  };
-};
-
-/**
- * Preprocessing analysis results
- */
-export type PreprocessingData = {
-  /** Whether pipeline can be skipped (single chunk optimization) */
-  canSkipPipeline: boolean;
-
-  /** Pre-created chunk for single-chunk optimization */
-  singleChunk?: Chunk;
-
-  /** Early processing estimates */
-  estimates?: {
-    estimatedChunks: number;
-    recommendedPath: ProcessingPath;
-  };
-};
-
-/**
- * Error tracking and recovery information
- */
-export type ErrorTracking = {
-  /** Processing errors encountered */
-  errors: Array<{
-    stage: ProcessingStage;
-    error: Error;
-    recoverable: boolean;
-    timestamp: number;
-  }>;
-
-  /** Recovery actions taken */
-  recoveries?: Array<{
-    fromStage: ProcessingStage;
-    action: string;
-    successful: boolean;
-  }>;
-};
-
-/**
- * Comprehensive context object that flows through the entire pipeline.
- * Contains all input data, configuration, intermediate state, and results.
- */
-export type ProcessingContext = {
-  // === Input Data ===
-  /** Original markdown document content */
-  readonly sourceDocument: string;
-
-  /** Source file title/name for metadata and breadcrumbs */
-  readonly fileTitle: string;
-
-  /** Chunking configuration with defaults applied */
-  readonly options: ChunkOptions;
-
-  // === Processing Control ===
-  /** Current stage in the processing pipeline */
-  stage: ProcessingStage;
-
-  /** Processing path: single-chunk optimization vs full pipeline */
-  path: ProcessingPath;
-
-  // === Structured Data Categories ===
-  /** All timing and performance metrics */
-  timing: ProcessingTiming;
-
-  /** Content size and token analysis */
-  content: ContentMetrics;
-
-  /** Chunk processing state and results */
-  chunks: ChunkData;
-
-  /** Preprocessing analysis and optimization */
-  preprocessing?: PreprocessingData;
-
-  // === Intermediate Pipeline Data ===
-  /** AST nodes (multi-chunk path only) */
-  nodes?: FlatNode[];
-
-  // === Error Handling ===
-  /** Error tracking and recovery */
-  errors?: ErrorTracking;
-};
+// Re-export types for convenience
+export * from './processing-context-types';
 
 /**
  * Create initial processing context from input parameters
@@ -193,9 +26,12 @@ export type ProcessingContext = {
 export function createProcessingContext(
   sourceDocument: string,
   fileTitle: string,
-  options: ChunkOptions
+  options: import('./types').ChunkOptions
 ): ProcessingContext {
   const startTime = performance.now();
+
+  // Calculate source metrics upfront
+  const sourceMetrics = calculateSourceMetrics(sourceDocument);
 
   return {
     sourceDocument,
@@ -209,9 +45,7 @@ export function createProcessingContext(
         initialized: { startTime }
       }
     },
-    content: {
-      sourceLength: sourceDocument.length
-    },
+    content: sourceMetrics,
     chunks: {
       chunks: []
     }
@@ -346,17 +180,58 @@ export function updateChunks(
 }
 
 /**
+ * Update AST nodes in context
+ */
+export function updateNodes(
+  context: ProcessingContext,
+  nodes: FlatNode[]
+): ProcessingContext {
+  return {
+    ...context,
+    nodes
+  };
+}
+
+/**
+ * Set processing path
+ */
+export function setProcessingPath(
+  context: ProcessingContext,
+  path: ProcessingPath
+): ProcessingContext {
+  return {
+    ...context,
+    path
+  };
+}
+
+// === Type Guards ===
+
+/**
  * Type guard to check if context has preprocessing data
  */
-export function hasPreprocessing(context: ProcessingContext): context is ProcessingContext & { preprocessing: PreprocessingData } {
+export function hasPreprocessing(
+  context: ProcessingContext
+): context is ProcessingContext & { preprocessing: PreprocessingData } {
   return context.preprocessing !== undefined;
 }
 
 /**
  * Type guard to check if context has nodes (multi-chunk path)
  */
-export function hasNodes(context: ProcessingContext): context is ProcessingContext & { nodes: FlatNode[] } {
+export function hasNodes(
+  context: ProcessingContext
+): context is ProcessingContext & { nodes: FlatNode[] } {
   return context.nodes !== undefined && context.nodes.length > 0;
+}
+
+/**
+ * Type guard to check if context has errors
+ */
+export function hasErrors(
+  context: ProcessingContext
+): context is ProcessingContext & { errors: ErrorTracking } {
+  return context.errors !== undefined && context.errors.errors.length > 0;
 }
 
 /**
@@ -364,4 +239,28 @@ export function hasNodes(context: ProcessingContext): context is ProcessingConte
  */
 export function canSkipPipeline(context: ProcessingContext): boolean {
   return context.preprocessing?.canSkipPipeline === true;
+}
+
+/**
+ * Check if processing is complete
+ */
+export function isComplete(context: ProcessingContext): boolean {
+  return context.stage === 'completed';
+}
+
+/**
+ * Get total processing duration
+ */
+export function getProcessingDuration(context: ProcessingContext): number | undefined {
+  return context.timing.totalDurationMs;
+}
+
+/**
+ * Get stage duration
+ */
+export function getStageDuration(
+  context: ProcessingContext,
+  stage: ProcessingStage
+): number | undefined {
+  return context.timing.stageMetrics[stage]?.durationMs;
 }
