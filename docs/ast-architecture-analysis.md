@@ -157,34 +157,132 @@ type ProcessedDocument = {
 AST → Extract-Sections → Analyze-Patterns → Apply-Merging → Flatten → Pack → Chunks
 ```
 
-**Stage Details:**
+### Two-Stage Processing: Sectioning vs Chunking
+
+The pipeline implements a **two-stage approach** that separates structural understanding from size constraints:
+
+#### **Stage 1: Sectioning (Structure-Aware Rough Pass)**
+- **Purpose**: Respects document structure and content boundaries
+- **Boundaries**: Natural semantic boundaries (H1, H2, H3 headings)
+- **Size**: Variable - could be tiny (50 tokens) or huge (5000+ tokens)
+- **Goal**: Preserve logical document structure and enable intelligent merging
+
+#### **Stage 2: Chunking (Size-Constrained Final Pass)**
+- **Purpose**: Meets token size constraints for downstream processing
+- **Boundaries**: Token limits (e.g., 512 tokens max)
+- **Size**: Constrained to fit within `minTokens` to `maxTokens` range
+- **Goal**: Optimize for embedding models, context windows, etc.
+
+#### **Example Flow:**
+
+```
+Document Structure:
+├── H1: Setup (50 tokens) ← Small section
+├── H1: Installation (80 tokens) ← Small section
+└── H1: Advanced Usage (2000 tokens) ← Large section
+
+After Sectioning + Smart Merging:
+├── Section: Setup + Installation (130 tokens) ← Merged small siblings
+└── Section: Advanced Usage (2000 tokens) ← Too large, needs recursive sectioning
+
+After Recursive Sectioning (H2 level):
+├── Section: Setup + Installation (130 tokens) ← Ready for chunking
+├── H2: Basic Concepts (400 tokens) ← Under maxTokens, good size
+├── H2: Configuration (300 tokens) ← Under maxTokens, good size
+├── H2: API Reference (800 tokens) ← Still large, could recurse to H3
+└── H2: Examples (500 tokens) ← Under maxTokens, good size
+
+After Final Chunking:
+├── Chunk 1: Setup + Installation (130 tokens) ← Perfect size
+├── Chunk 2: Basic Concepts (400 tokens) ← Perfect size
+├── Chunk 3: Configuration (300 tokens) ← Perfect size
+├── Chunk 4: API Reference Part 1 (512 tokens) ← Split at token boundary
+├── Chunk 5: API Reference Part 2 (288 tokens) ← Remainder
+└── Chunk 6: Examples (500 tokens) ← Perfect size
+```
+
+#### **Why This Two-Stage Approach Works:**
+
+1. **Intelligent Merging**: Small sections can be merged with siblings based on content patterns
+2. **Recursive Sectioning**: Large sections are recursively sectioned at deeper levels (H1→H2→H3)
+3. **Boundary Respect**: Final splits preserve internal structure using natural boundaries
+4. **Content Awareness**: Merging decisions use semantic understanding, not just token counts
+5. **Structure Preservation**: Document hierarchy informs all decisions at every level
+
+### Recursive Sectioning Algorithm
+
+When a section exceeds size thresholds after initial merging, the algorithm applies **recursive sectioning**:
+
+```typescript
+function processSection(section: AstSection, maxTokens: number): AstSection[] {
+  // If section is appropriately sized, return as-is
+  if (section.tokenCount <= maxTokens * 1.2) {
+    return [section];
+  }
+
+  // If section has children (H2s under H1, H3s under H2), recurse to next level
+  if (section.children.length > 0) {
+    const processedChildren: AstSection[] = [];
+
+    for (const child of section.children) {
+      processedChildren.push(...processSection(child, maxTokens));
+    }
+
+    // Apply merging logic to processed children
+    return applySmartMerging(processedChildren);
+  }
+
+  // If no children and still too large, return for token-based splitting
+  return [section];
+}
+```
+
+#### **Recursive Sectioning Benefits:**
+
+1. **Natural Boundaries**: Splits happen at semantic boundaries (H2, H3) not arbitrary token counts
+2. **Preserves Context**: Related subsections stay together when possible
+3. **Adaptive Depth**: Only recurses as deep as needed based on content structure
+4. **Fallback Handling**: Sections without subsections fall back to token-based splitting
+
+**Detailed Stage Breakdown:**
+
+#### **Structure-Aware Stages (Stage 1: Sectioning)**
 
 1. **AST → Extract-Sections** (new stage)
    - Walk AST tree to identify section boundaries naturally
    - Group content under appropriate headings using AST parent-child relationships
    - Calculate token counts during extraction
    - Preserve AST nodes for content analysis
+   - **Output**: Variable-sized sections respecting document structure
 
 2. **Extract-Sections → Analyze-Patterns** (content analysis stage)
    - Detect content patterns for each section (`detectContentPattern()`)
    - Analyze heading text, content structure, sequential context
    - Work directly with AST nodes for richer analysis
    - Attach pattern metadata to AstSections
+   - **Output**: Sections with content pattern classifications
 
 3. **Analyze-Patterns → Apply-Merging** (hierarchical merging)
    - Apply small chunk prevention at section level
    - Use pattern analysis and AST structure for intelligent merging
    - Natural sibling detection via `section.children` arrays
-   - Maintain section boundary integrity
+   - **Recursive sectioning**: If merged section still exceeds size thresholds, recurse to next heading level
+   - Maintain section boundary integrity based on content patterns
+   - **Output**: Optimally-merged sections sized appropriately for chunking
+
+#### **Size-Constrained Stages (Stage 2: Chunking)**
 
 4. **Apply-Merging → Flatten** (reuse current logic)
    - Convert merged AstSections back to flat node array
    - Apply current flattening logic to generate FlatNodes
    - Preserve all current flattening benefits
+   - **Output**: Linear array ready for size-based processing
 
 5. **Flatten → Pack → Chunks** (keep current pipeline)
    - Use existing packer, overlap, and normalization logic
-   - No changes to final chunk generation
+   - Apply token size constraints (`minTokens` to `maxTokens`)
+   - Split large sections while preserving internal structure where possible
+   - **Output**: Final chunks meeting size requirements
 
 ### Data Flow Integration
 
