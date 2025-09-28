@@ -53,67 +53,61 @@ export type ProcessingTiming = {
 };
 
 /**
- * Content size and token metrics
+ * Source document information (immutable)
  */
-export type ContentMetrics = {
-  /** Total source document length in characters */
-  sourceLength: number;
-
-  /** Total tokens in source document (from preprocessing) */
-  sourceTokens?: number;
-
-  /** Basic content structure metrics */
-  structure?: {
-    headingCount: number;
-    paragraphCount: number;
-    codeBlockCount: number;
-    listCount: number;
-    tableCount: number;
-  };
-
-  /** Detailed content analysis (from content-analysis system) */
-  analysis?: ContentAnalysis;
+export type SourceData = {
+  /** Original markdown document content */
+  content: string;
+  /** Source file title/name for metadata and breadcrumbs */
+  title: string;
+  /** Total document length in characters */
+  length: number;
+  /** Total tokens in source document */
+  tokens: number;
+  /** Estimated number of chunks this document will produce */
+  estimatedChunks: number;
 };
 
 /**
- * Chunk processing state and results
+ * Document structure analysis (computed during processing)
  */
-export type ChunkData = {
-  /** Current chunks being processed */
-  chunks: Chunk[];
-
-  /** Final chunk count */
-  finalChunkCount?: number;
-
-  /** Chunk quality metrics */
-  quality?: {
-    chunksUnderTarget: number;
-    chunksAtTarget: number;
-    chunksOverTarget: number;
-    qualityFlags: Array<{
-      chunkIndex: number;
-      issue: string;
-      severity: 'warning' | 'error';
-    }>;
-  };
+export type StructureAnalysis = {
+  headingCount: number;
+  paragraphCount: number;
+  codeBlockCount: number;
+  listCount: number;
+  tableCount: number;
 };
 
 /**
- * Preprocessing analysis results
+ * Processing metrics collected during chunking
  */
-export type PreprocessingData = {
-  /** Whether pipeline can be skipped (single chunk optimization) */
-  canSkipPipeline: boolean;
-
-  /** Pre-created chunk for single-chunk optimization */
-  singleChunk?: Chunk;
-
-  /** Early processing estimates */
-  estimates?: {
-    estimatedChunks: number;
-    recommendedPath: ProcessingPath;
+export type ProcessingMetrics = {
+  /** Chunk metrics */
+  chunks?: {
+    /** Final chunk count */
+    count: number;
+    /** Token distribution */
+    tokenDistribution?: {
+      min: number;
+      max: number;
+      avg: number;
+      median: number;
+    };
+    /** Quality assessment */
+    quality?: {
+      chunksUnderTarget: number;
+      chunksAtTarget: number;
+      chunksOverTarget: number;
+      qualityFlags: Array<{
+        chunkIndex: number;
+        issue: string;
+        severity: 'warning' | 'error';
+      }>;
+    };
   };
 };
+
 
 /**
  * Error tracking and recovery information
@@ -140,12 +134,9 @@ export type ErrorTracking = {
  * Contains all input data, configuration, intermediate state, and results.
  */
 export type ProcessingContext = {
-  // === Input Data ===
-  /** Original markdown document content */
-  readonly sourceDocument: string;
-
-  /** Source file title/name for metadata and breadcrumbs */
-  readonly fileTitle: string;
+  // === Source Data (immutable) ===
+  /** Source document and metadata */
+  readonly source: SourceData;
 
   /** Chunking configuration with defaults applied */
   readonly options: ChunkOptions;
@@ -157,24 +148,35 @@ export type ProcessingContext = {
   /** Processing path: single-chunk optimization vs full pipeline */
   path: ProcessingPath;
 
-  // === Structured Data Categories ===
-  /** All timing and performance metrics */
+  // === Core Data ===
+  /** Processed chunks (main output) */
+  chunks: Chunk[];
+
+  /** Processing metrics collected during chunking */
+  metrics: ProcessingMetrics;
+
+  /** Timing and performance data */
   timing: ProcessingTiming;
 
-  /** Content size and token analysis */
-  content: ContentMetrics;
+  // === Analysis Results ===
+  /** Document structure analysis (computed during processing) */
+  structure?: StructureAnalysis;
 
-  /** Chunk processing state and results */
-  chunks: ChunkData;
-
-  /** Preprocessing analysis and optimization */
-  preprocessing?: PreprocessingData;
+  /** Content analysis (from content-analysis system) */
+  contentAnalysis?: ContentAnalysis;
 
   // === Intermediate Pipeline Data ===
-  /** AST nodes (multi-chunk path only) */
+  /** Parsed markdown AST */
+  ast?: import('./types').AstRoot;
+
+  /** Flattened AST nodes */
   nodes?: FlatNode[];
 
   // === Error Handling ===
   /** Error tracking and recovery */
   errors?: ErrorTracking;
+
+  // === Final Results ===
+  /** Final statistics (populated after processing completes) */
+  stats?: any; // TODO: Type this properly with ChunkStats from stats.ts
 };

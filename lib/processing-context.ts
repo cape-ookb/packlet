@@ -10,10 +10,11 @@ import type { FlatNode } from './flatten-ast';
 import type {
   ProcessingContext,
   ProcessingStage,
-  ContentMetrics,
-  PreprocessingData,
+  ProcessingMetrics,
   ProcessingPath,
-  ErrorTracking
+  ErrorTracking,
+  SourceData,
+  StructureAnalysis
 } from './processing-context-types';
 import { calculateSourceMetrics } from './content-metrics';
 
@@ -30,24 +31,26 @@ export function createProcessingContext(
 ): ProcessingContext {
   const startTime = performance.now();
 
-  // Calculate source metrics upfront
-  const sourceMetrics = calculateSourceMetrics(sourceDocument);
+  // Create immutable source data object
+  const source: SourceData = {
+    content: sourceDocument,
+    title: fileTitle,
+    // Calculate source metrics upfront
+    ...calculateSourceMetrics(sourceDocument, options),
+  };
 
   return {
-    sourceDocument,
-    fileTitle,
+    source,
     options,
     stage: 'initialized',
     path: 'undetermined',
+    chunks: [],
+    metrics: {},
     timing: {
       startTime,
       stageMetrics: {
         initialized: { startTime }
       }
-    },
-    content: sourceMetrics,
-    chunks: {
-      chunks: []
     }
   };
 }
@@ -100,9 +103,12 @@ export function completeProcessing(context: ProcessingContext): ProcessingContex
       endTime,
       totalDurationMs: endTime - finalContext.timing.startTime
     },
-    chunks: {
-      ...finalContext.chunks,
-      finalChunkCount: finalContext.chunks.chunks.length
+    metrics: {
+      ...finalContext.metrics,
+      chunks: {
+        ...finalContext.metrics.chunks,
+        count: finalContext.chunks.length
+      }
     }
   };
 }
@@ -134,50 +140,21 @@ export function addError(
 }
 
 /**
- * Update content metrics in context
+ * Update metrics in context
  */
-export function updateContentMetrics(
+export function updateMetrics(
   context: ProcessingContext,
-  updates: Partial<ContentMetrics>
+  updates: Partial<ProcessingMetrics>
 ): ProcessingContext {
   return {
     ...context,
-    content: {
-      ...context.content,
+    metrics: {
+      ...context.metrics,
       ...updates
     }
   };
 }
 
-/**
- * Update preprocessing data in context
- */
-export function updatePreprocessing(
-  context: ProcessingContext,
-  data: PreprocessingData
-): ProcessingContext {
-  return {
-    ...context,
-    preprocessing: data,
-    path: data.canSkipPipeline ? 'single-chunk' : 'multi-chunk'
-  };
-}
-
-/**
- * Update chunks in context
- */
-export function updateChunks(
-  context: ProcessingContext,
-  chunks: Chunk[]
-): ProcessingContext {
-  return {
-    ...context,
-    chunks: {
-      ...context.chunks,
-      chunks
-    }
-  };
-}
 
 /**
  * Update AST nodes in context
@@ -205,16 +182,21 @@ export function setProcessingPath(
   };
 }
 
+/**
+ * Update structure analysis in context
+ */
+export function updateStructure(
+  context: ProcessingContext,
+  structure: StructureAnalysis
+): ProcessingContext {
+  return {
+    ...context,
+    structure
+  };
+}
+
 // === Type Guards ===
 
-/**
- * Type guard to check if context has preprocessing data
- */
-export function hasPreprocessing(
-  context: ProcessingContext
-): context is ProcessingContext & { preprocessing: PreprocessingData } {
-  return context.preprocessing !== undefined;
-}
 
 /**
  * Type guard to check if context has nodes (multi-chunk path)
@@ -234,12 +216,6 @@ export function hasErrors(
   return context.errors !== undefined && context.errors.errors.length > 0;
 }
 
-/**
- * Type guard to check if context can skip pipeline (single-chunk optimization)
- */
-export function canSkipPipeline(context: ProcessingContext): boolean {
-  return context.preprocessing?.canSkipPipeline === true;
-}
 
 /**
  * Check if processing is complete
