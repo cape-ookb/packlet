@@ -28,8 +28,8 @@ This chunker implements **sentence-based forward overlap** (see `lib/overlap.ts`
 
 1. **Sentence-Based**: Instead of raw token overlap, we extract complete sentences
    - Preserves semantic units (complete thoughts)
-   - Headers naturally stay with their content
    - Better for retrieval quality
+   - Note: Header context is handled separately via breadcrumbs (see below)
 
 2. **Configurable Count**: Default is 2 sentences (see `lib/default-config.ts`)
    - Set via `overlapSentences` option
@@ -65,8 +65,8 @@ function addOverlap(chunks: Chunk[], options: ChunkOptions): Chunk[] {
 ### Benefits Over Token-Based Overlap
 
 * **Semantic Integrity**: Complete thoughts vs arbitrary cutoffs
-* **Consistent Context**: Headers and their content stay together
 * **Better Embeddings**: Sentence boundaries create more meaningful overlap
+* **Clean Separation**: Content overlap is distinct from structural context
 
 ### When You Might Want Different Strategies
 
@@ -75,3 +75,19 @@ function addOverlap(chunks: Chunk[], options: ChunkOptions): Chunk[] {
 * **Very small chunks**: Where sentence overlap might be too large
 
 For typical Markdown documentation (technical guides, references), forward-only sentence-based overlap provides the best balance of context preservation and storage efficiency.
+
+## Header Context Strategy
+
+While the overlap system handles **content continuity** between chunks through sentence overlap, **header context (breadcrumbs) is handled separately** through the metadata and embedding pipeline.
+
+> **For complete documentation on header handling**, see [`title-in-each-chunk.md`](./title-in-each-chunk.md) which defines the full specification for titles, headers, breadcrumbs, and conditional context prepending.
+
+### Key Points
+
+* **Overlap (this document)**: Focuses on content continuity via sentence-based overlap
+* **Header Context** ([`title-in-each-chunk.md`](./title-in-each-chunk.md)): Handles structural context via metadata and conditional breadcrumb prepending
+* **Clean Separation**: Content overlap is independent from header trail preservation
+
+This dual approach ensures chunks maintain both:
+- **Content continuity** through sentence overlap (forward-only)
+- **Structural context** through header metadata and conditional breadcrumbs
