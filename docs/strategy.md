@@ -19,11 +19,14 @@ This document defines the ideal chunking approach for creating high-quality, sem
    * Test Coverage target: ≥ 90% for core chunker modules.
    * Filenames `kebab-case.ext`. No uppercase.
 
-2. **Hierarchy First**
+2. **Hierarchy First - Descending Order Processing**
 
-   * Split by logical structure (Markdown headings → paragraphs → sentences).
-   * Only descend into finer levels when a section is too large.
-   * Use an AST (e.g. Markdown → mdast) to identify structure reliably.
+   * **Primary boundaries are headings**: Split at H1 first, then within each H1 split at H2, then within each H2 split at H3
+   * **Section definition**: Each Hn section includes its heading line plus all following content up to the next heading of the same or higher level
+   * **Depth-first processing**: Process content within each H1 section completely before moving to the next H1
+   * **No cross-boundary mixing**: Never mix content from different H1 sections or sibling H2 sections in the same chunk
+   * Only descend to finer levels (paragraphs → sentences) when a heading section exceeds token limits
+   * Use an AST (e.g. Markdown → mdast) to identify structure reliably
 
 3. **Token-Aware Sizing**
 
@@ -63,14 +66,30 @@ This document defines the ideal chunking approach for creating high-quality, sem
    * Clean whitespace, dedent code, collapse extra line breaks.
    * Keep fenced code blocks intact (AST makes this trivial).
 
+## Hierarchical Boundary Rules
+
+### Primary Splitting Order
+1. **H1 boundaries** - Split document into H1 sections first
+2. **H2 boundaries** - Within each H1, split by H2 sections
+3. **H3 boundaries** - Within each H2, split by H3 sections
+4. **Paragraph boundaries** - Only when heading sections exceed limits
+5. **Sentence boundaries** - Only when paragraphs exceed limits
+6. **Hard cuts** - Last resort for oversized atomic content
+
+### Section Integrity Rules
+- **Complete sections**: Each Hn section = heading + all content until next same/higher heading
+- **No boundary crossing**: Never mix content from different H1 sections
+- **No sibling mixing**: Never mix content from sibling H2 or H3 sections
+- **Depth-first processing**: Complete all content within an H1 before moving to next H1
+
 ## Step-by-Step Process
 
 1. Configuration object sets token budgets (target, min, max, overlap)
 2. Compute total token count
 3. Estimate chunks based on target size. `count = ceil(totalTokens / cfg.targetTokens)`
 4. Parse Markdown into an AST
-4. Flatten AST. Tree to array (./flatten-ast.md)
-5. Extract nodes in hierarchical order
+4. Flatten AST into hierarchical node sequence (./flatten-ast.md)
+5. Extract nodes in descending hierarchical order: H1 sections first, then H2 within each H1, then H3 within each H2
 6. Measure token length of each node
 7. If node exceeds max tokens, apply recursive splitting logic (split by paragraph → sentence → hard cut)
 7. Determine if entire document would fit in single chunk (prevention strategy decision)
