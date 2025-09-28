@@ -16,7 +16,9 @@ import { addEmbedText } from "./embed-text";
 import { assertOrFilterInvalid } from "./guardrails";
 import { computeStats } from "./stats";
 import { flow } from "./utils";
-import { ProcessingContext } from "./processing-context";
+import { ProcessingContext, ProcessingBase } from "./processing-context";
+import { initializeProcessing } from "./initialize";
+import { stopTimer } from "./timer";
 
 /**
  * Pipeline orchestrator functions
@@ -67,6 +69,9 @@ export function packNodesStep(context: ProcessingContext): ProcessingContext {
 
 // Add overlap between chunks
 export function addOverlapStep(context: ProcessingContext): ProcessingContext {
+	if (!context.chunks) {
+		throw new Error('Chunks not available for adding overlap');
+	}
 	return {
 		...context,
 		chunks: addOverlap(context.chunks, context.options)
@@ -75,6 +80,9 @@ export function addOverlapStep(context: ProcessingContext): ProcessingContext {
 
 // Normalize chunk text
 export function normalizeChunksStep(context: ProcessingContext): ProcessingContext {
+	if (!context.chunks) {
+		throw new Error('Chunks not available for normalization');
+	}
 	return {
 		...context,
 		chunks: normalizeChunks(context.chunks)
@@ -83,6 +91,9 @@ export function normalizeChunksStep(context: ProcessingContext): ProcessingConte
 
 // Attach metadata to chunks
 export function attachMetadataStep(context: ProcessingContext): ProcessingContext {
+	if (!context.chunks) {
+		throw new Error('Chunks not available for metadata attachment');
+	}
 	return {
 		...context,
 		chunks: attachMetadata(context.chunks, context.options, context.source.title)
@@ -91,6 +102,9 @@ export function attachMetadataStep(context: ProcessingContext): ProcessingContex
 
 // Add embed text for vector search
 export function addEmbedTextStep(context: ProcessingContext): ProcessingContext {
+	if (!context.chunks) {
+		throw new Error('Chunks not available for embed text');
+	}
 	return {
 		...context,
 		chunks: addEmbedText(
@@ -103,70 +117,95 @@ export function addEmbedTextStep(context: ProcessingContext): ProcessingContext 
 
 // Validate chunks
 export function validateChunksStep(context: ProcessingContext): ProcessingContext {
+	if (!context.chunks) {
+		throw new Error('Chunks not available for validation');
+	}
 	return {
 		...context,
 		chunks: assertOrFilterInvalid(context.chunks, context.options)
 	};
 }
 
-// Finalize processing and compute statistics
-export function finalizeWithStatsStep(context: ProcessingContext): ProcessingContext {
-	const endTime = performance.now();
+// Compute statistics
+export function computeStatsStep(context: ProcessingContext): ProcessingContext {
+	// Get current elapsed time without stopping the timer
+	const elapsedTime = performance.now() - context.timer.startTime;
 
-	// Compute final statistics
+	// Compute statistics using the elapsed time
 	const stats = computeStats(
-		context.chunks,
+		context.chunks || [],
 		context.options,
 		context.timer.startTime,
-		endTime
+		context.timer.startTime + elapsedTime
 	);
 
-	// Update context with final timing, chunk metrics, and stats
+	// Update context with stats and chunk metrics
 	return {
 		...context,
 		metrics: {
 			...context.metrics,
 			chunks: {
 				...(context.metrics?.chunks || {}),
-				count: context.chunks?.length || 0,
-				// Additional chunk metrics could be added here
+				count: context.chunks?.length || 0
 			}
 		},
 		stats
 	} as ProcessingContext & { stats: any };
 }
 
+// Stop the timer and finalize processing
+export function stopTimerStep(context: ProcessingContext): ProcessingContext {
+	return {
+		...context,
+		timer: stopTimer(context.timer)
+	};
+}
+
 /**
- * Main processing pipeline that transforms markdown into chunks.
+ * Complete chunking pipeline using functional composition.
+ *
+ * Chunks a markdown document into semantically coherent pieces optimized for vector search.
+ * Uses a unified pipeline with ProcessingContext that flows through all stages.
+ *
+ * All documents receive full processing including:
+ * - AST parsing and analysis
+ * - Rich metadata (IDs, breadcrumbs, node types, source positions)
+ * - embedText with conditional context prepending
+ * - Token statistics and validation
+ * - Performance metrics
  *
  * Pipeline stages:
- * 1. Parse markdown to AST
- * 2. Flatten AST to linear nodes
- * 3. Split oversized nodes
- * 4. Pack nodes into chunks
- * 5. Add overlap between chunks
- * 6. Normalize text
- * 7. Attach metadata
- * 8. Add embed text
- * 9. Validate chunks
- * 10. Compute statistics and finalize
+ * 1. Initialize processing context
+ * 2. Parse markdown to AST
+ * 3. Flatten AST to linear nodes
+ * 4. Split oversized nodes
+ * 5. Pack nodes into chunks
+ * 6. Add overlap between chunks
+ * 7. Normalize text
+ * 8. Attach metadata
+ * 9. Add embed text
+ * 10. Validate chunks
+ * 11. Compute statistics
+ * 12. Stop timer and finalize
  *
- * @param context - Initial processing context with source document
- * @returns Final context with processed chunks, stats, and all metadata
+ * Each step is composable and can be used individually for custom pipelines.
+ *
+ * @param doc - The markdown content to chunk
+ * @param fileTitle - The title/name of the source file (used for metadata and breadcrumbs)
+ * @param opts - Chunking configuration options
+ * @returns Complete processing context including chunks, stats, timing, and all metadata
  */
-export function runFullPipeline(context: ProcessingContext): ProcessingContext & { stats: any } {
-	const pipeline = flow(
-		parseMarkdownStep,
-		flattenAstStep,
-		splitOversizedStep,
-		packNodesStep,
-		addOverlapStep,
-		normalizeChunksStep,
-		attachMetadataStep,
-		addEmbedTextStep,
-		validateChunksStep,
-		finalizeWithStatsStep
-	);
-
-	return pipeline(context);
-}
+export const runFullPipeline = flow(
+	initializeProcessing,
+	parseMarkdownStep,
+	flattenAstStep,
+	splitOversizedStep,
+	packNodesStep,
+	addOverlapStep,
+	normalizeChunksStep,
+	attachMetadataStep,
+	addEmbedTextStep,
+	validateChunksStep,
+	computeStatsStep,
+	stopTimerStep
+);

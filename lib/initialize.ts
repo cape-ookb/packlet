@@ -25,14 +25,12 @@ export function initializeProcessing(
   fileTitle: string,
   rawOptions: import('./types').ChunkOptions
 ): ProcessingBase {
-  const timer = startTimer();
   const options = withDefaults(rawOptions);
-  const source = initializeSource(sourceDocument, fileTitle, options);
 
   return {
-    source,
     options,
-    timer,
+    source: initializeSource(sourceDocument, fileTitle, options),
+    timer: startTimer(),
     stage: 'initialized'
   };
 }
