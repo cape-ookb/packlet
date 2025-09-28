@@ -117,7 +117,7 @@ function finalizeWithStatsStep(context: ProcessingContext): ProcessingContext {
 	const stats = computeStats(
 		context.chunks,
 		context.options,
-		context.timing.overall.startTime,
+		context.timer.startTime,
 		endTime
 	);
 

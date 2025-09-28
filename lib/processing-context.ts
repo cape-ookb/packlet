@@ -9,6 +9,7 @@ import type { Chunk } from './types';
 import type { FlatNode } from './flatten-ast';
 import type {
   ProcessingContext,
+  ProcessingBase,
   ProcessingStage,
   ProcessingMetrics,
   ProcessingPath,
@@ -36,12 +37,12 @@ export function initializeProcessing(
   sourceDocument: string,
   fileTitle: string,
   partialOptions: Partial<import('./types').ChunkOptions>
-): { source: SourceData; options: import('./types').ChunkOptions; overallTimer: import('./timer').Timer } {
-  const overallTimer = startTimer();
+): ProcessingBase {
+  const timer = startTimer();
   const options = withDefaults(partialOptions as import('./types').ChunkOptions);
   const source = initializeSource(sourceDocument, fileTitle, options);
 
-  return { source, options, overallTimer };
+  return { source, options, timer };
 }
 
 /**
@@ -53,49 +54,27 @@ export function createProcessingContext(
   fileTitle: string,
   options: import('./types').ChunkOptions
 ): ProcessingContext {
-  const { source, overallTimer } = initializeProcessing(sourceDocument, fileTitle, options);
+  const base = initializeProcessing(sourceDocument, fileTitle, options);
 
   return {
-    source,
-    options,
+    ...base,
     stage: 'initialized',
     path: 'undetermined',
     chunks: [],
-    metrics: {},
-    timing: {
-      overall: overallTimer,
-      stageMetrics: {
-        initialized: startTimer()
-      }
-    }
+    metrics: {}
   };
 }
 
 /**
- * Transition context to next processing stage with timing
+ * Transition context to next processing stage
  */
 export function transitionStage(
   context: ProcessingContext,
   nextStage: ProcessingStage
 ): ProcessingContext {
-  // Complete timing for current stage
-  const currentStageTimer = context.timing.stageMetrics[context.stage];
-  const completedStageTimer = currentStageTimer ? stopTimer(currentStageTimer) : undefined;
-
-  // Start timing for new stage
-  const updatedStageMetrics = {
-    ...context.timing.stageMetrics,
-    ...(completedStageTimer && { [context.stage]: completedStageTimer }),
-    [nextStage]: startTimer()
-  };
-
   return {
     ...context,
-    stage: nextStage,
-    timing: {
-      ...context.timing,
-      stageMetrics: updatedStageMetrics
-    }
+    stage: nextStage
   };
 }
 
@@ -107,14 +86,11 @@ export function completeProcessing(context: ProcessingContext): ProcessingContex
   const finalContext = transitionStage(context, 'completed');
 
   // Stop the overall timer
-  const completedOverallTimer = stopTimer(finalContext.timing.overall);
+  const completedTimer = stopTimer(finalContext.timer);
 
   return {
     ...finalContext,
-    timing: {
-      ...finalContext.timing,
-      overall: completedOverallTimer
-    },
+    timer: completedTimer,
     metrics: {
       ...finalContext.metrics,
       chunks: {
@@ -240,15 +216,16 @@ export function isComplete(context: ProcessingContext): boolean {
  * Get total processing duration
  */
 export function getProcessingDuration(context: ProcessingContext): number | undefined {
-  return context.timing.overall.durationMs;
+  return context.timer.durationMs;
 }
 
 /**
- * Get stage duration
+ * Get stage duration - placeholder for future stage-specific timing
  */
 export function getStageDuration(
-  context: ProcessingContext,
-  stage: ProcessingStage
+  _context: ProcessingContext,
+  _stage: ProcessingStage
 ): number | undefined {
-  return context.timing.stageMetrics[stage]?.durationMs;
+  // TODO: Implement stage-specific timing when needed
+  return undefined;
 }

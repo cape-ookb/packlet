@@ -33,14 +33,15 @@ export type ProcessingStage =
 export type ProcessingPath = 'single-chunk' | 'multi-chunk' | 'undetermined';
 
 /**
- * Comprehensive timing information for performance analysis
+ * Minimal processing context for initialization
  */
-export type ProcessingTiming = {
+export type ProcessingBase = {
+  /** Source document and metadata */
+  readonly source: SourceData;
+  /** Chunking configuration with defaults applied */
+  readonly options: ChunkOptions;
   /** Overall processing timer */
-  overall: Timer;
-
-  /** Performance metrics for each pipeline stage */
-  stageMetrics: Partial<Record<ProcessingStage, Timer>>;
+  timer: Timer;
 };
 
 /**
@@ -124,14 +125,7 @@ export type ErrorTracking = {
  * Comprehensive context object that flows through the entire pipeline.
  * Contains all input data, configuration, intermediate state, and results.
  */
-export type ProcessingContext = {
-  // === Source Data (immutable) ===
-  /** Source document and metadata */
-  readonly source: SourceData;
-
-  /** Chunking configuration with defaults applied */
-  readonly options: ChunkOptions;
-
+export type ProcessingContext = ProcessingBase & {
   // === Processing Control ===
   /** Current stage in the processing pipeline */
   stage: ProcessingStage;
@@ -145,9 +139,6 @@ export type ProcessingContext = {
 
   /** Processing metrics collected during chunking */
   metrics: ProcessingMetrics;
-
-  /** Timing and performance data */
-  timing: ProcessingTiming;
 
   // === Analysis Results ===
   /** Document structure analysis (computed during processing) */
