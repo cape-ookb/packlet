@@ -128,15 +128,10 @@ export function validateChunksStep(context: ProcessingContext): ProcessingContex
 
 // Compute statistics
 export function computeStatsStep(context: ProcessingContext): ProcessingContext {
-	// Get current elapsed time without stopping the timer
-	const elapsedTime = performance.now() - context.timer.startTime;
-
-	// Compute statistics using the elapsed time
+	// Compute chunk statistics
 	const stats = computeStats(
 		context.chunks || [],
-		context.options,
-		context.timer.startTime,
-		context.timer.startTime + elapsedTime
+		context.options
 	);
 
 	// Update context with stats and chunk metrics

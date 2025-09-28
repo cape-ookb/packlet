@@ -24,7 +24,7 @@ describe('computeStats', () => {
 
   describe('basic statistics', () => {
     it('should handle empty chunk array', () => {
-      const stats = computeStats([], defaultOptions, countTokens);
+      const stats = computeStats([], defaultOptions);
 
       expect(stats.totalChunks).toBe(0);
       expect(stats.totalTokens).toBe(0);
@@ -47,7 +47,7 @@ describe('computeStats', () => {
         createChunk('This chunk has even more content than the previous ones, with detailed explanations and comprehensive information that makes it valuable.')
       ];
 
-      const stats = computeStats(chunks, defaultOptions, countTokens);
+      const stats = computeStats(chunks, defaultOptions);
 
       expect(stats.totalChunks).toBe(4);
       expect(stats.totalTokens).toBeGreaterThan(0);
@@ -65,7 +65,7 @@ describe('computeStats', () => {
         createChunk('Text with exactly thirty tokens for testing median calculation purposes with even more substantial content here.') // ~30 tokens
       ];
 
-      const stats = computeStats(chunks, defaultOptions, countTokens);
+      const stats = computeStats(chunks, defaultOptions);
 
       expect(stats.totalChunks).toBe(3);
       // Median should be the middle value
@@ -81,7 +81,7 @@ describe('computeStats', () => {
         createChunk('Much longer text content with significantly more words and information.') // ~12 tokens
       ];
 
-      const stats = computeStats(chunks, defaultOptions, countTokens);
+      const stats = computeStats(chunks, defaultOptions);
 
       expect(stats.totalChunks).toBe(4);
       // Median should be average of middle two values
@@ -96,7 +96,7 @@ describe('computeStats', () => {
       const content = 'a'.repeat(1000); // 1000 characters
       const chunks = [createChunk(content)];
 
-      const stats = computeStats(chunks, defaultOptions, countTokens);
+      const stats = computeStats(chunks, defaultOptions);
 
       expect(stats.expectedChunks).toBeGreaterThan(0);
       expect(stats.actualChunks).toBe(1);
@@ -108,7 +108,7 @@ describe('computeStats', () => {
       // Create many small chunks that would deviate significantly from expected
       const chunks = Array(20).fill(null).map(() => createChunk('Short.'));
 
-      const stats = computeStats(chunks, defaultOptions, countTokens);
+      const stats = computeStats(chunks, defaultOptions);
 
       expect(stats.deviation).toBeGreaterThan(0.2);
       expect(stats.qualityFlag).toBe(true);
@@ -119,7 +119,7 @@ describe('computeStats', () => {
       const content = 'This is content. '.repeat(100); // ~200 tokens total
       const chunks = [createChunk(content)];
 
-      const stats = computeStats(chunks, defaultOptions, countTokens);
+      const stats = computeStats(chunks, defaultOptions);
 
       expect(stats.deviation).toBeGreaterThanOrEqual(0);
       expect(stats.deviation).toBeLessThanOrEqual(1.5); // Reasonable upper bound
@@ -139,7 +139,7 @@ describe('computeStats', () => {
         createChunk('This is an extremely long chunk that significantly exceeds our target token count by including extensive additional content, detailed explanations, comprehensive coverage of multiple topics, elaborate descriptions, redundant information, repetitive phrases, and unnecessary verbosity that pushes the token count well beyond our target range for testing purposes. This ensures we have content that clearly exceeds the target.') // Over target (~65+ tokens)
       ];
 
-      const stats = computeStats(chunks, { ...defaultOptions, targetTokens }, countTokens);
+      const stats = computeStats(chunks, { ...defaultOptions, targetTokens });
 
       expect(stats.tokenDistribution.underTarget).toBeGreaterThan(0);
       expect(stats.tokenDistribution.atTarget).toBeGreaterThan(0);
@@ -153,7 +153,7 @@ describe('computeStats', () => {
       const content = loadFixture('simple.md');
       const chunks = [createChunk(content)];
 
-      const stats = computeStats(chunks, defaultOptions, countTokens);
+      const stats = computeStats(chunks, defaultOptions);
 
       expect(stats.totalChunks).toBe(1);
       expect(stats.totalTokens).toBeGreaterThan(0);
@@ -177,7 +177,7 @@ describe('computeStats', () => {
         }
       }
 
-      const stats = computeStats(chunks, defaultOptions, countTokens);
+      const stats = computeStats(chunks, defaultOptions);
 
       expect(stats.totalChunks).toBeGreaterThan(1);
       expect(stats.totalTokens).toBeGreaterThan(0);
@@ -191,7 +191,7 @@ describe('computeStats', () => {
       const content = loadFixture('large-nodes.md');
       const chunks = [createChunk(content)];
 
-      const stats = computeStats(chunks, defaultOptions, countTokens);
+      const stats = computeStats(chunks, defaultOptions);
 
       expect(stats.totalChunks).toBe(1);
       expect(stats.totalTokens).toBeGreaterThan(100); // Should be substantial
@@ -207,7 +207,7 @@ describe('computeStats', () => {
       const paragraphs = content.split('\n\n').filter(p => p.trim());
       const chunks = paragraphs.map(p => createChunk(p));
 
-      const stats = computeStats(chunks, defaultOptions, countTokens);
+      const stats = computeStats(chunks, defaultOptions);
 
       expect(stats.totalChunks).toBeGreaterThan(1);
       expect(stats.totalTokens).toBeGreaterThan(0);
@@ -222,7 +222,7 @@ describe('computeStats', () => {
     it('should handle single chunk', () => {
       const chunks = [createChunk('Single chunk content for testing.')];
 
-      const stats = computeStats(chunks, defaultOptions, countTokens);
+      const stats = computeStats(chunks, defaultOptions);
 
       expect(stats.totalChunks).toBe(1);
       expect(stats.minTokens).toBe(stats.maxTokens);
@@ -236,7 +236,7 @@ describe('computeStats', () => {
         createChunk('Normal chunk with content.')
       ];
 
-      const stats = computeStats(chunks, defaultOptions, countTokens);
+      const stats = computeStats(chunks, defaultOptions);
 
       expect(stats.totalChunks).toBe(2);
       expect(stats.minTokens).toBe(0);
@@ -249,7 +249,7 @@ describe('computeStats', () => {
         { content: 'Another large chunk', tokens: 15000, metadata: {} }
       ];
 
-      const stats = computeStats(chunks, defaultOptions, countTokens);
+      const stats = computeStats(chunks, defaultOptions);
 
       expect(stats.totalChunks).toBe(2);
       expect(stats.totalTokens).toBe(25000);
@@ -265,7 +265,7 @@ describe('computeStats', () => {
         createChunk('Test chunk three maintaining consistency in size.')
       ];
 
-      const stats = computeStats(chunks, defaultOptions, countTokens);
+      const stats = computeStats(chunks, defaultOptions);
 
       expect(stats.efficiencyRatio).toBeGreaterThan(0);
       expect(stats.efficiencyRatio).toBeLessThanOrEqual(5.0); // Reasonable upper bound for test chunks

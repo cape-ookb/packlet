@@ -59,9 +59,6 @@ export type ChunkStats = {
   compressionRatio: number; // totalTokens/sourceLength
   qualityFlag: boolean; // true if deviation > 20%
 
-  // Performance metrics (added by pipeline)
-  processingTimeMs?: number;
-  processingTime?: string;
 };
 
 function calculateExpectedChunks(sourceLength: number, options: ChunkOptions): number {
@@ -100,7 +97,7 @@ function analyzeTokenDistribution(chunks: Chunk[], options: ChunkOptions) {
   return { underTarget, atTarget, overTarget };
 }
 
-function createEmptyStats(): Omit<ChunkStats, 'processingTimeMs' | 'processingTime'> {
+function createEmptyStats(): ChunkStats {
   return {
     totalChunks: 0,
     totalTokens: 0,
@@ -119,23 +116,9 @@ function createEmptyStats(): Omit<ChunkStats, 'processingTimeMs' | 'processingTi
   };
 }
 
-export function computeStats(chunks: Chunk[], options: ChunkOptions, startTime?: number, endTime?: number): ChunkStats {
+export function computeStats(chunks: Chunk[], options: ChunkOptions): ChunkStats {
   if (chunks.length === 0) {
-    const processingTimeMs = (startTime !== undefined && endTime !== undefined)
-      ? Math.round(endTime - startTime)
-      : undefined;
-
-    const baseStats = createEmptyStats();
-
-    if (processingTimeMs !== undefined) {
-      return {
-        ...baseStats,
-        processingTimeMs,
-        processingTime: `${processingTimeMs}ms`
-      };
-    }
-
-    return baseStats;
+    return createEmptyStats();
   }
 
   const tokenCounts = chunks.map(chunk => chunk.tokenStats?.tokens || chunk.tokens || 0);
@@ -147,12 +130,7 @@ export function computeStats(chunks: Chunk[], options: ChunkOptions, startTime?:
   const efficiencyRatio = expectedChunks > 0 ? actualChunks / expectedChunks : 0;
   const deviation = expectedChunks > 0 ? Math.abs(actualChunks - expectedChunks) / expectedChunks : 0;
 
-  // Calculate processing time if provided
-  const processingTimeMs = (startTime !== undefined && endTime !== undefined)
-    ? Math.round(endTime - startTime)
-    : undefined;
-
-  const baseStats = {
+  return {
     totalChunks: chunks.length,
     totalTokens,
     minTokens: Math.min(...tokenCounts),
@@ -168,15 +146,4 @@ export function computeStats(chunks: Chunk[], options: ChunkOptions, startTime?:
     compressionRatio: Math.round((totalTokens / sourceLength) * 100) / 100,
     qualityFlag: deviation > 0.2 // Flag if deviation > 20%
   };
-
-  // Add timing fields if available
-  if (processingTimeMs !== undefined) {
-    return {
-      ...baseStats,
-      processingTimeMs,
-      processingTime: `${processingTimeMs}ms`
-    };
-  }
-
-  return baseStats;
 }
