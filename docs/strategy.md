@@ -49,7 +49,7 @@ This document defines the ideal chunking approach for creating high-quality, sem
 7. **Guardrails on Chunk Quality**
    * Prevent low-quality chunks during creation through intelligent packing, not post-filtering
    * Single-chunk documents: Allow any size (entire small file = valid chunk)
-   * Multi-chunk documents: Merge small final chunks with previous chunks to prevent orphaned small chunks
+   * Multi-chunk documents: Merge small final chunks with previous (or next) chunks to prevent orphaned small chunks
    * May slightly exceed maxTokens to avoid creating tiny chunks (quality over strict limits)
    * Define minimum meaningful chunk size (e.g., 64+ tokens for multi-chunk documents)
 
