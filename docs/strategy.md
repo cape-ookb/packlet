@@ -78,26 +78,27 @@ This document defines the ideal chunking approach for creating high-quality, sem
 
 ### Section Integrity Rules
 - **Complete sections**: Each Hn section = heading + all content until next same/higher heading
-- **No boundary crossing**: Never mix content from different H1 sections
-- **No sibling mixing**: Never mix content from sibling H2 or H3 sections
+- **Contextual boundary respect**: Apply smart merging rules based on content patterns and size
+- **Sibling relationship awareness**: Prefer merging related siblings over cross-section merging
 - **Depth-first processing**: Complete all content within an H1 before moving to next H1
 
 ## Step-by-Step Process
 
 1. Configuration object sets token budgets (target, min, max, overlap)
-2. Compute total token count
-3. Estimate chunks based on target size. `count = ceil(totalTokens / cfg.targetTokens)`
-4. Parse Markdown into an AST
-4. Flatten AST into hierarchical node sequence (./flatten-ast.md)
-5. Extract nodes in descending hierarchical order: H1 sections first, then H2 within each H1, then H3 within each H2
-6. Measure token length of each node
-7. If node exceeds max tokens, apply recursive splitting logic (split by paragraph → sentence → hard cut)
-7. Determine if entire document would fit in single chunk (prevention strategy decision)
-8. For single-chunk documents: Accumulate all nodes into one chunk regardless of size
-9. For multi-chunk documents: Accumulate nodes with small chunk prevention logic
-10. If a chunk would be too small in multi-chunk mode, keep accumulating or merge with previous chunk
+2. **Early optimization check**: Compute total document token count
+3. **Single-chunk fast path**: If `totalTokens <= maxTokens`, return entire document as single chunk
+4. Estimate chunks based on target size. `count = ceil(totalTokens / cfg.targetTokens)`
+5. Parse Markdown into an AST (only if multi-chunk processing needed)
+6. Flatten AST into hierarchical node sequence (./flatten-ast.md)
+7. Extract nodes in descending hierarchical order: H1 sections first, then H2 within each H1, then H3 within each H2
+8. Measure token length of each node and apply small chunk detection thresholds
+9. If node exceeds max tokens, apply recursive splitting logic (split by paragraph → sentence → hard cut)
+10. For multi-chunk documents: Apply intelligent merging based on small chunk guardrails
+    - Merge tiny chunks (`< minTokens`) with adjacent sections
+    - Consider merging small chunks (`< 0.6 * targetTokens`) within same parent section
+    - Apply contextual H1 boundary rules based on content patterns and size
 11. If a single node exceeds max tokens, split it with finer rules or hard-cut as a last resort
-12. Flush chunk when token limit is reached (only if meets minimum or is single-chunk)
+12. Flush chunk when token limit is reached or merging conditions are met
 13. Add overlap sentences from previous chunk
 14. Normalize text and preserve code blocks intact
 15. Attach metadata such as heading trail and node type
@@ -109,24 +110,64 @@ This document defines the ideal chunking approach for creating high-quality, sem
 
 Our approach prevents low-quality chunks during creation rather than filtering them afterward:
 
+### Preprocessing Optimization
+- **Early single-chunk detection**: Calculate total document tokens before processing
+- **If `totalTokens <= maxTokens`**: Skip complex splitting logic, return single chunk
+- **Benefits**: Avoid unnecessary AST traversal and splitting for small documents
+
+### Small Chunk Thresholds
+- **Tiny chunks**: `< minTokens` (default 64) - Always prevent in multi-chunk documents
+- **Small chunks**: `< 0.6 * targetTokens` (default < 210 tokens) - Consider for merging
+- **Acceptable chunks**: `>= 0.6 * targetTokens` - Generally keep as-is
+
 ### Single-Chunk Documents
 - **Definition**: Entire document fits within `maxTokens`
 - **Strategy**: Allow any size chunk (even if below `minTokens`)
 - **Rationale**: Small documents shouldn't be penalized for being small
 
-### Multi-Chunk Documents
-- **Definition**: Document requires splitting due to size
-- **Strategy**: Prevent chunks below `minTokens` through intelligent merging
-- **Implementation**:
-  - Keep accumulating nodes if current chunk would be too small
-  - Merge small final chunks with previous chunks (may exceed `maxTokens` slightly)
-  - Quality over strict token limits
+### Multi-Chunk Documents - Merging Rules
+
+#### Within Same Parent Section (Preferred)
+- **Sibling H2s under same H1**: Merge if both are small (`< 0.6 * targetTokens`)
+- **Sibling H3s under same H2**: Merge if both are small
+- **Condition**: Combined size must not exceed `1.2 * maxTokens`
+
+#### Cross-Section Boundaries (Contextual)
+- **Smart H1 merging**: Consider content patterns, size, and semantic similarity
+  - **Prefer merging**: Organizational H1s (Prerequisites → Installation → Configuration)
+  - **Consider merging**: Reference sections, FAQ entries, short procedural steps
+  - **Avoid merging**: Conceptually distinct topics, large sections (`> 0.5 * targetTokens`)
+  - **Size override**: Allow merging if both H1s are small AND combined < `maxTokens`
+- **H2 sibling merging**: Within same H1, merge if both small (`< 0.6 * targetTokens`) OR both tiny (`< minTokens`) AND topically related
+
+#### Specific Scenarios
+1. **Many small H2 sections**: Merge consecutive small H2s within same H1
+2. **Single tiny H3**: Merge up to parent H2 section if H2 is also small
+3. **Final small chunk**: Merge back to previous chunk (may exceed `maxTokens`)
+4. **Orphaned sentences**: Always merge with adjacent section
+
+### Implementation Logic
+```
+if (totalTokens <= maxTokens) {
+  return singleChunk()
+}
+
+for each section:
+  if (section.tokens < minTokens) {
+    mergeBehavior = "required"
+  } else if (section.tokens < 0.6 * targetTokens) {
+    mergeBehavior = "preferred"
+  } else {
+    mergeBehavior = "none"
+  }
+```
 
 ### Benefits
 - No orphaned tiny chunks in large documents
 - Preserves small documents as valid single chunks
 - Maintains semantic coherence by preferring slightly larger chunks over fragmented tiny ones
 - Clear quality guarantee: 0 small chunks in multi-chunk scenarios
+- Early optimization prevents unnecessary processing
 
 ### Throw (Fail Fast)
 * Best during early development.
