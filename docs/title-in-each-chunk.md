@@ -170,86 +170,60 @@ This conditional approach:
 * Maintains clean reading experience for continuous prose
 * Can be toggled via `options.breadcrumbMode: "conditional" | "always" | "none"` (default: `"conditional"`)
 
-## Implementation TODO List
+### Notes on Implementation
 
-### High Priority - Core Metadata Fields
+**Type System:**
+- The `Chunk` type is used throughout the pipeline with flexible metadata
+- The metadata fields are populated in `lib/metadata.ts` during the `attachMetadata` stage
+- All specified fields are added to the metadata object:
+  - `fileTitle` - passed as parameter to `chunkMarkdown`
+  - `headerPath` - array of heading texts (internally uses `headingTrail` from flatten-ast)
+  - `headerBreadcrumb` - pre-joined string with `" > "` separator
+  - `headerDepths` - array tracking depth of each heading
+  - `headerSlugs` - array of URL-safe anchor IDs
+  - `sectionSlug` - anchor ID for current section
+  - `sectionTitle` - text of current section heading
 
-- [ ] **Add missing metadata fields** (lib/metadata.ts:119-150)
-  - [ ] Accept `fileTitle` as parameter from calling code
-  - [ ] Rename existing `headerPath` to match spec (currently using `headingTrail`)
-  - [ ] Add `headerBreadcrumb` as pre-joined string with `" > "` separator
-  - [ ] Add `headerDepths` array tracking depth of each heading in path
-  - [ ] Add `headerSlugs` array for anchor IDs
-  - [ ] Add `sectionSlug` as slug of current section
-  - [ ] Add `sectionTitle` field for current section (last value from headerPath)
-  - [ ] Replace deprecated `heading` field with `sectionTitle` throughout codebase
+## Key Implementation Files
 
-### High Priority - Header Path Logic
+The specification described in this document is implemented across the following files:
 
-- [ ] **Fix header path building** (lib/flatten-ast.ts)
-  - [ ] Ensure headerPath contains only actual headings from document (no `#` marks)
-  - [ ] Keep headerPath separate from fileTitle (don't mix them)
-  - [ ] Properly handle multiple H1s (first is root, later ones start new sections)
-  - [ ] Handle edge case when no H1 present (start at first heading found)
+1. **Core Metadata Fields** (`lib/metadata.ts`)
+   - Accepts `fileTitle` parameter and stores it in metadata
+   - Generates `headerPath`, `headerBreadcrumb`, `headerDepths`, `headerSlugs`
+   - Extracts `sectionTitle` and `sectionSlug` for current section
+   - Links chunks with `prevId`/`nextId` for navigation
 
-### Medium Priority - Text Embedding Rules
+2. **Header Path Building** (`lib/flatten-ast.ts`)
+   - Builds `headingTrail` array while flattening the AST
+   - Tracks heading depths alongside the heading text
+   - Properly handles heading hierarchy (H1-H6)
+   - Maintains clean heading text without markdown symbols
 
-- [ ] **Implement conditional breadcrumb prepending** (new module: lib/embed-text.ts)
-  - [ ] Create separate function that reads metadata but doesn't modify it
-  - [ ] Detect when chunk starts new section (contains heading node)
-  - [ ] Detect context-less chunks (code-only, table-only, list-only)
-  - [ ] Detect short chunks (< minTokens + overlap)
-  - [ ] Build fullBreadcrumb when fileTitle !== headerPath[0]
-  - [ ] Add deduplication logic (don't add if chunk starts with exact heading)
-  - [ ] Implement 160-char truncation with middle ellipsis
-  - [ ] Generate final embedText field without modifying metadata
+3. **Text Embedding with Breadcrumbs** (`lib/embed-text.ts`)
+   - Implements conditional breadcrumb prepending logic
+   - Detects context-less chunks (code-only, table-only, list-only)
+   - Handles short chunks below minTokens threshold
+   - Truncates breadcrumbs to 160 characters with middle ellipsis
+   - Supports three modes: "conditional", "always", "none"
 
-- [ ] **Add breadcrumbMode option** (lib/types.ts, lib/default-config.ts)
-  - [ ] Add to ChunkOptions type: `breadcrumbMode?: "conditional" | "always" | "none"`
-  - [ ] Set default to "conditional" in default config
-  - [ ] Implement mode switching logic in embedding function
+4. **Configuration Options** (`lib/types.ts`, `lib/default-config.ts`)
+   - Defines `breadcrumbMode` option in ChunkOptions type
+   - Sets default to "conditional" for optimal balance
+   - Configurable via options parameter
 
-### Low Priority - Edge Cases & Polish
+5. **Main Pipeline** (`lib/index.ts`)
+   - Requires `fileTitle` as parameter to `chunkMarkdown()` function
+   - Passes fileTitle through pipeline to metadata stage
+   - Orchestrates all processing stages in correct order
 
-- [ ] **Update function signatures** (lib/index.ts, lib/metadata.ts)
-  - [ ] Add `fileTitle: string` parameter (required) to main chunking function
-  - [ ] Pass fileTitle through pipeline to metadata stage
-  - [ ] Document that calling code handles frontmatter/title extraction
+6. **Slug Generation** (`lib/slug-utils.ts`)
+   - Uses github-slugger library for GitHub-compatible anchor IDs
+   - Maintains state to ensure unique slugs across document
+   - Handles slug collisions with automatic numbering
+   - Provides reset functionality for new documents
 
-- [ ] **Add slug generation** (using github-slugger library)
-  - [ ] Install github-slugger dependency
-  - [ ] Generate slugs for each heading in headerPath
-  - [ ] Store in headerSlugs array
-  - [ ] Use last slug as sectionSlug
-
-### Type Definition Updates Required
-
-**Current state in lib/types.ts:**
-- Has basic `Chunk` type with: `content`, `tokens`, `metadata?: Record<string, any>`
-- Has separate `EnhancedChunk` type that partially matches the spec
-
-**Required changes to `EnhancedChunk`:**
-- Rename `displayMarkdown` to `originalText` (stores the original chunk content before any modifications)
-- Keep `embedText` field (this is what actually gets encoded/embedded in vector databases - may have breadcrumbs prepended)
-- Add missing metadata fields:
-  - `fileTitle` field
-  - `headerBreadcrumb` field (pre-joined string)
-  - `headerDepths` array
-  - `headerSlugs` array
-  - `sectionSlug` field
-  - `sectionTitle` field
-
-**Implementation approach:** Update `EnhancedChunk` to include all spec fields and use it as the output type, while keeping `Chunk` simple for internal pipeline processing
-
-### Testing Requirements
-
-- [ ] Add tests for fileTitle parameter handling (required parameter validation)
-- [ ] Add tests for headerBreadcrumb building with separator
-- [ ] Add tests for breadcrumb prepending logic (all conditions)
-- [ ] Add tests for edge cases (no H1, multiple H1s, no headings)
-- [ ] Add tests for truncation at 160 chars
-- [ ] Update existing tests that may break with new metadata fields
-- [ ] Test sectionTitle extraction (last item from headerPath)
-- [ ] Test headerDepths array generation
-- [ ] Test github-slugger integration for headerSlugs and sectionSlug
-- [ ] Test slug collision handling (github-slugger auto-appends numbers)
+7. **Supporting Utilities** (`lib/markdown-utils.ts`)
+   - Extracts clean heading text from markdown
+   - Detects node types for metadata
+   - Provides helper functions for content analysis
