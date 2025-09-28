@@ -57,7 +57,7 @@ Modular pipeline-based chunker following functional programming principles:
 3. **Sentence-Based Overlap** - Maintains semantic continuity better than token boundaries
 4. **Quality-First** - Prevent low-quality chunks during creation through intelligent packing, not post-filtering
 5. **Small Pure Functions** - Each function ≤25 lines, single responsibility, no side effects where possible
-6. **Flow Composition** - Pipeline uses functional composition, not method chaining
+6. **Flow Composition** - Pipeline uses functional composition
 
 ## 🎯 Target Metrics
 

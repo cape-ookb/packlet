@@ -155,109 +155,162 @@ function calculateSourcePosition(chunkNumber: number, chunks: Chunk[]): { charSt
   return { charStart: 0, charEnd: 0, totalChars: totalLength };
 }
 
+function generateChunkIds(parentId: string, index: number, totalChunks: number): {
+  chunkId: string;
+  prevId: string | null;
+  nextId: string | null;
+} {
+  const chunkId = generateChunkId(parentId, index);
+  const prevId = index > 0 ? generateChunkId(parentId, index - 1) : null;
+  const nextId = index < totalChunks - 1 ? generateChunkId(parentId, index + 1) : null;
+
+  return { chunkId, prevId, nextId };
+}
+
+function resolveChunkContent(chunk: Chunk): string {
+  return chunk.content || chunk.originalText || '';
+}
+
+function extractStructuralData(chunk: Chunk, index: number, chunks: Chunk[]): {
+  headerPath: string[];
+  headerDepths: number[];
+  headerSlugs: string[];
+  nodeTypes: string[];
+  sourcePosition: { charStart: number; charEnd: number; totalChars: number };
+  tokenCount: number;
+} {
+  const content = resolveChunkContent(chunk);
+  const headerPath = extractHeaderPath(chunk);
+  const headerDepths = extractHeaderDepths(chunk);
+  const headerSlugs = generateHeaderSlugs(headerPath);
+  const nodeTypes = extractNodeTypes(chunk);
+  const sourcePosition = calculateSourcePosition(index, chunks);
+  const tokenCount = chunk.tokens || countTokens(content);
+
+  return {
+    headerPath,
+    headerDepths,
+    headerSlugs,
+    nodeTypes,
+    sourcePosition,
+    tokenCount
+  };
+}
+
+function createDerivedFields(headerPath: string[], headerSlugs: string[], content: string): {
+  headerBreadcrumb: string;
+  sectionTitle: string;
+  sectionSlug: string;
+  estimatedTokens: number;
+} {
+  const headerBreadcrumb = headerPath.join(' > ');
+  const sectionTitle = headerPath.length > 0 ? headerPath[headerPath.length - 1] : '';
+  const sectionSlug = headerSlugs.length > 0 ? headerSlugs[headerSlugs.length - 1] : '';
+  const estimatedTokens = Math.ceil(content.length / 3.8);
+
+  return {
+    headerBreadcrumb,
+    sectionTitle,
+    sectionSlug,
+    estimatedTokens
+  };
+}
+
+type MetadataContext = {
+  ids: ReturnType<typeof generateChunkIds>;
+  structural: ReturnType<typeof extractStructuralData>;
+  derived: ReturnType<typeof createDerivedFields>;
+  options: ChunkOptions;
+  fileTitle?: string;
+  contentType: string;
+  sourceFile: string;
+  processedAt: string;
+  index: number;
+};
+
+function buildChunkMetadata(chunk: Chunk, context: MetadataContext): Chunk {
+  const content = resolveChunkContent(chunk).trim();
+  const { ids, structural, derived, options, fileTitle, contentType, sourceFile, processedAt, index } = context;
+  const parentId = ids.chunkId.split('::')[0];
+
+  return {
+    ...chunk,
+    id: ids.chunkId,
+    parentId,
+    prevId: ids.prevId,
+    nextId: ids.nextId,
+    content: chunk.content || content,
+    embedText: content,
+    originalText: content,
+    tokens: chunk.tokens || structural.tokenCount,
+    sourcePosition: structural.sourcePosition,
+    tokenStats: {
+      tokens: structural.tokenCount,
+      estimatedTokens: derived.estimatedTokens
+    },
+    pipeline: {
+      version: '1.0.0',
+      processingTimeMs: 0
+    },
+    chunkNumber: index,
+    chunkingOptions: options,
+    metadata: {
+      ...chunk.metadata,
+      contentType,
+      sectionTitle: derived.sectionTitle,
+      headerPath: structural.headerPath,
+      fileTitle: fileTitle || 'untitled',
+      headerBreadcrumb: derived.headerBreadcrumb,
+      headerDepths: structural.headerDepths,
+      headerSlugs: structural.headerSlugs,
+      sectionSlug: derived.sectionSlug,
+      sourceFile,
+      nodeTypes: structural.nodeTypes,
+      processedAt
+    }
+  };
+}
+
+function updatePipelineTimings(chunks: Chunk[], processingTimeMs: number): Chunk[] {
+  return chunks.map(chunk => ({
+    ...chunk,
+    pipeline: {
+      version: chunk.pipeline?.version || '1.0.0',
+      processingTimeMs
+    }
+  }));
+}
+
 export function attachMetadata(chunks: Chunk[], options: ChunkOptions, fileTitle?: string): Chunk[] {
-  // Reset slugger for each document to ensure consistent slug generation
   resetSlugger();
 
-  const contentType = 'doc'; // Default content type
-  const sourceFile = 'processed-content.md'; // Default source file name
+  const contentType = 'doc';
+  const sourceFile = 'processed-content.md';
   const parentId = `${contentType}:${sourceFile}`;
   const processedAt = createTimestamp();
   const startTime = performance.now();
 
   const result = chunks.map((chunk, index) => {
-    // Core identifiers
-    const chunkId = generateChunkId(parentId, index);
-    const prevId = index > 0 ? generateChunkId(parentId, index - 1) : null;
-    const nextId = index < chunks.length - 1 ? generateChunkId(parentId, index + 1) : null;
+    const ids = generateChunkIds(parentId, index, chunks.length);
+    const structural = extractStructuralData(chunk, index, chunks);
+    const content = resolveChunkContent(chunk);
+    const derived = createDerivedFields(structural.headerPath, structural.headerSlugs, content);
 
-    // Extract structural information
-    // Get content for processing (prefer existing content during pipeline)
-    const content = chunk.content || chunk.originalText || '';
-
-    const headerPath = extractHeaderPath(chunk);
-    const headerDepths = extractHeaderDepths(chunk);
-    const headerSlugs = generateHeaderSlugs(headerPath);
-    const nodeTypes = extractNodeTypes(chunk);
-    const sourcePosition = calculateSourcePosition(index, chunks);
-    const tokenCount = chunk.tokens || countTokens(content);
-
-    // Build derived fields
-    const headerBreadcrumb = headerPath.join(' > ');
-    const sectionTitle = headerPath.length > 0 ? headerPath[headerPath.length - 1] : '';
-    const sectionSlug = headerSlugs.length > 0 ? headerSlugs[headerSlugs.length - 1] : '';
-
-    // Calculate estimated tokens (rough character-based estimate)
-    const estimatedTokens = Math.ceil(content.length / 3.8);
-
-    return {
-      // Preserve existing chunk fields
-      ...chunk,
-
-      // Core identifiers
-      id: chunkId,
-      parentId,
-      prevId,
-      nextId,
-
-      // Content fields (preserve existing or set new)
-      content: chunk.content || content.trim(),
-      embedText: content.trim(), // Will be updated in embed text generation phase
-      originalText: content.trim(),
-
-      // Token count (preserve existing or set new)
-      tokens: chunk.tokens || tokenCount,
-
-      // Position tracking
-      sourcePosition,
-
-      // Token information
-      tokenStats: {
-        tokens: tokenCount,
-        estimatedTokens
-      },
-
-      // Pipeline information (will be updated later)
-      pipeline: {
-        version: '1.0.0',
-        processingTimeMs: 0 // Will be calculated at end
-      },
-
-      // Structural information
-      chunkNumber: index,
-
-      // Chunking configuration used to generate this chunk
-      chunkingOptions: options,
-
-      // Metadata object (for vector database filtering)
-      metadata: {
-        // Preserve existing metadata
-        ...chunk.metadata,
-        // Override with new computed metadata
-        contentType,
-        sectionTitle,
-        headerPath,
-        fileTitle: fileTitle || 'untitled',
-        headerBreadcrumb,
-        headerDepths,
-        headerSlugs,
-        sectionSlug,
-        sourceFile,
-        nodeTypes,
-        processedAt
-      }
+    const context: MetadataContext = {
+      ids,
+      structural,
+      derived,
+      options,
+      fileTitle,
+      contentType,
+      sourceFile,
+      processedAt,
+      index
     };
+
+    return buildChunkMetadata(chunk, context);
   });
 
-  // Update pipeline processing time for all chunks
-  const endTime = performance.now();
-  const processingTimeMs = Math.round(endTime - startTime);
-
-  return result.map(chunk => ({
-    ...chunk,
-    pipeline: {
-      ...chunk.pipeline,
-      processingTimeMs
-    }
-  }));
+  const processingTimeMs = Math.round(performance.now() - startTime);
+  return updatePipelineTimings(result, processingTimeMs);
 }
