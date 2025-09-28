@@ -10,7 +10,9 @@
     "test:run": "vitest --run",
     "test:coverage": "vitest --coverage",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "analyze": "npx tsx examples/analyze-document.ts",
+    "analyze:json": "npx tsx examples/analyze-document.ts --json"
   },
   "keywords": [
     "chunking",

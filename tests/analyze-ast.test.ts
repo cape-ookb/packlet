@@ -9,7 +9,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import { runAnalyzePipeline } from '../lib/index';
-import { analyzeAst, analyzeAstExtended } from '../lib/analyze-ast';
+import { analyzeAst } from '../lib/analyze-ast';
 import { parseMarkdown } from '../lib/parse-markdown';
 import { withDefaults } from '../lib/default-config';
 
@@ -133,11 +133,11 @@ describe('AST Analysis', () => {
     });
   });
 
-  describe('analyzeAstExtended function', () => {
+  describe('comprehensive analysis (unified)', () => {
     it('should provide detailed heading level analysis for headings.md', () => {
       const content = loadFixture('headings.md');
       const ast = parseMarkdown(content);
-      const analysis = analyzeAstExtended(ast);
+      const analysis = analyzeAst(ast);
 
       expect(analysis.headingCount).toBe(8);
 
@@ -160,7 +160,7 @@ describe('AST Analysis', () => {
     it('should detect blockquotes in mixed-content.md', () => {
       const content = loadFixture('mixed-content.md');
       const ast = parseMarkdown(content);
-      const analysis = analyzeAstExtended(ast);
+      const analysis = analyzeAst(ast);
 
       // mixed-content.md has exactly 1 blockquote
       expect(analysis.blockquoteCount).toBe(1);
@@ -171,7 +171,7 @@ describe('AST Analysis', () => {
     it('should provide comprehensive metrics for simple.md', () => {
       const content = loadFixture('simple.md');
       const ast = parseMarkdown(content);
-      const analysis = analyzeAstExtended(ast);
+      const analysis = analyzeAst(ast);
 
       // Verify all basic counts match
       expect(analysis.headingCount).toBe(5);
@@ -301,26 +301,29 @@ describe('AST Analysis', () => {
       expect(result1.source.length).toBe(result2.source.length);
     });
 
-    it('should maintain count consistency in extended analysis', () => {
+    it('should maintain internal consistency in analysis', () => {
       const fixtures = ['simple.md', 'headings.md', 'code-heavy.md', 'mixed-content.md'];
 
       fixtures.forEach(fixture => {
         const content = loadFixture(fixture);
         const ast = parseMarkdown(content);
-
-        const basicAnalysis = analyzeAst(ast);
-        const extendedAnalysis = analyzeAstExtended(ast);
-
-        // Extended analysis should have same basic counts
-        expect(extendedAnalysis.headingCount).toBe(basicAnalysis.headingCount);
-        expect(extendedAnalysis.paragraphCount).toBe(basicAnalysis.paragraphCount);
-        expect(extendedAnalysis.codeBlockCount).toBe(basicAnalysis.codeBlockCount);
-        expect(extendedAnalysis.listCount).toBe(basicAnalysis.listCount);
-        expect(extendedAnalysis.tableCount).toBe(basicAnalysis.tableCount);
+        const analysis = analyzeAst(ast);
 
         // Heading levels should sum to total heading count
-        const levelSum = Object.values(extendedAnalysis.headingLevels).reduce((sum, count) => sum + count, 0);
-        expect(levelSum).toBe(extendedAnalysis.headingCount);
+        const levelSum = Object.values(analysis.headingLevels).reduce((sum, count) => sum + count, 0);
+        expect(levelSum).toBe(analysis.headingCount);
+
+        // All counts should be non-negative
+        expect(analysis.headingCount).toBeGreaterThanOrEqual(0);
+        expect(analysis.paragraphCount).toBeGreaterThanOrEqual(0);
+        expect(analysis.codeBlockCount).toBeGreaterThanOrEqual(0);
+        expect(analysis.listCount).toBeGreaterThanOrEqual(0);
+        expect(analysis.tableCount).toBeGreaterThanOrEqual(0);
+        expect(analysis.linkCount).toBeGreaterThanOrEqual(0);
+        expect(analysis.imageCount).toBeGreaterThanOrEqual(0);
+        expect(analysis.blockquoteCount).toBeGreaterThanOrEqual(0);
+        expect(analysis.horizontalRuleCount).toBeGreaterThanOrEqual(0);
+        expect(analysis.maxNestingDepth).toBeGreaterThanOrEqual(0);
       });
     });
 

@@ -62,11 +62,31 @@ export type SourceData = {
  * Document structure analysis (computed during processing)
  */
 export type StructureAnalysis = {
+  // Basic element counts
   headingCount: number;
   paragraphCount: number;
   codeBlockCount: number;
   listCount: number;
   tableCount: number;
+
+  // Detailed heading analysis
+  headingLevels: Record<number, number>; // Count by heading level (1-6)
+
+  // Document characteristics
+  maxNestingDepth: number;
+  avgParagraphLength?: number;
+
+  // Content type detection
+  hasTableOfContents: boolean;
+  hasFrontmatter: boolean;
+
+  // Link and media counts
+  linkCount: number;
+  imageCount: number;
+
+  // Additional markdown elements
+  blockquoteCount: number;
+  horizontalRuleCount: number;
 };
 
 /**

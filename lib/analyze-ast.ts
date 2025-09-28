@@ -9,96 +9,37 @@ import type { AstRoot, AstNode } from './types';
 import type { StructureAnalysis } from './processing-context-types';
 
 /**
- * Analyze AST to extract document structure statistics.
- * Traverses the AST once to count different node types.
+ * Analyze AST to extract comprehensive document structure statistics.
+ * Traverses the AST once to count different node types and gather detailed metrics.
  *
  * @param ast - The parsed markdown AST
- * @returns Structure analysis with counts of different element types
+ * @returns Complete structure analysis with all available metrics
  */
 export function analyzeAst(ast: AstRoot): StructureAnalysis {
   const analysis: StructureAnalysis = {
-    headingCount: 0,
-    paragraphCount: 0,
-    codeBlockCount: 0,
-    listCount: 0,
-    tableCount: 0
-  };
-
-  // Recursive function to traverse AST
-  function traverse(node: AstNode): void {
-    // Count based on node type
-    switch (node.type) {
-      case 'heading':
-        analysis.headingCount++;
-        break;
-      case 'paragraph':
-        analysis.paragraphCount++;
-        break;
-      case 'code':
-        analysis.codeBlockCount++;
-        break;
-      case 'list':
-        analysis.listCount++;
-        break;
-      case 'table':
-        analysis.tableCount++;
-        break;
-    }
-
-    // Traverse children if they exist
-    if ('children' in node && Array.isArray(node.children)) {
-      for (const child of node.children) {
-        traverse(child as AstNode);
-      }
-    }
-  }
-
-  // Start traversal from root
-  if (ast.children && Array.isArray(ast.children)) {
-    for (const child of ast.children) {
-      traverse(child);
-    }
-  }
-
-  return analysis;
-}
-
-/**
- * Extended structure analysis with more detailed metrics.
- * This can be used for more sophisticated analysis if needed.
- */
-export interface ExtendedStructureAnalysis extends StructureAnalysis {
-  headingLevels: Record<number, number>; // Count by heading level (1-6)
-  avgParagraphLength?: number;
-  maxNestingDepth: number;
-  hasTableOfContents: boolean;
-  hasFrontmatter: boolean;
-  linkCount: number;
-  imageCount: number;
-  blockquoteCount: number;
-  horizontalRuleCount: number;
-}
-
-/**
- * Perform extended analysis of the AST with more detailed metrics.
- * Provides deeper insights for advanced use cases.
- *
- * @param ast - The parsed markdown AST
- * @returns Extended structure analysis with detailed metrics
- */
-export function analyzeAstExtended(ast: AstRoot): ExtendedStructureAnalysis {
-  const analysis: ExtendedStructureAnalysis = {
+    // Basic element counts
     headingCount: 0,
     paragraphCount: 0,
     codeBlockCount: 0,
     listCount: 0,
     tableCount: 0,
+
+    // Detailed heading analysis
     headingLevels: {},
+
+    // Document characteristics
     maxNestingDepth: 0,
+    avgParagraphLength: undefined,
+
+    // Content type detection
     hasTableOfContents: false,
     hasFrontmatter: false,
+
+    // Link and media counts
     linkCount: 0,
     imageCount: 0,
+
+    // Additional markdown elements
     blockquoteCount: 0,
     horizontalRuleCount: 0
   };
@@ -120,17 +61,22 @@ export function analyzeAstExtended(ast: AstRoot): ExtendedStructureAnalysis {
         break;
       case 'paragraph':
         analysis.paragraphCount++;
-        if ('children' in node) {
-          // Estimate paragraph length by counting text nodes
-          const textLength = estimateTextLength(node);
-          totalParagraphLength += textLength;
-        }
+        // Estimate paragraph length by counting text nodes
+        const textLength = estimateTextLength(node);
+        totalParagraphLength += textLength;
         break;
       case 'code':
         analysis.codeBlockCount++;
         break;
       case 'list':
         analysis.listCount++;
+        // Check for table of contents pattern (list of links in early paragraphs)
+        if (depth <= 2 && analysis.headingCount <= 2) {
+          // Simple heuristic: early list might be TOC
+          if (hasMainlyLinks(node)) {
+            analysis.hasTableOfContents = true;
+          }
+        }
         break;
       case 'table':
         analysis.tableCount++;
@@ -150,14 +96,6 @@ export function analyzeAstExtended(ast: AstRoot): ExtendedStructureAnalysis {
       case 'yaml':
         analysis.hasFrontmatter = true;
         break;
-    }
-
-    // Check for table of contents pattern (list of links in early paragraphs)
-    if (node.type === 'list' && depth <= 2 && analysis.headingCount <= 2) {
-      // Simple heuristic: early list might be TOC
-      if (hasMainlyLinks(node)) {
-        analysis.hasTableOfContents = true;
-      }
     }
 
     // Traverse children if they exist
@@ -230,3 +168,4 @@ function hasMainlyLinks(node: AstNode): boolean {
   // Consider it a TOC if >70% of items contain links
   return totalItems > 0 && (linkCount / totalItems) > 0.7;
 }
+
