@@ -1,7 +1,7 @@
 /**
- * content-metrics.ts
+ * source.ts
  *
- * Simple utilities for measuring source document characteristics.
+ * Utilities for creating and initializing source document data.
  */
 
 import { countTokens } from './tokenizer';

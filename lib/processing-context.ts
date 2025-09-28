@@ -14,10 +14,9 @@ import type {
   ProcessingMetrics,
   ProcessingPath,
   ErrorTracking,
-  SourceData,
   StructureAnalysis
 } from './processing-context-types';
-import { initializeSource } from './content-metrics';
+import { initializeSource } from './source';
 import { withDefaults } from './default-config';
 import { startTimer, stopTimer } from './timer';
 
