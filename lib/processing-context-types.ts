@@ -72,6 +72,9 @@ export type StructureAnalysis = {
   // Detailed heading analysis
   headingLevels: Record<number, number>; // Count by heading level (1-6)
 
+  // Top-level node distribution
+  nodeTypeDistribution: Record<string, number>; // Count by node type at document root
+
   // Document characteristics
   maxNestingDepth: number;
   avgParagraphLength?: number;

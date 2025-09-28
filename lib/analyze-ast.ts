@@ -27,6 +27,9 @@ export function analyzeAst(ast: AstRoot): StructureAnalysis {
     // Detailed heading analysis
     headingLevels: {},
 
+    // Top-level node distribution
+    nodeTypeDistribution: {},
+
     // Document characteristics
     maxNestingDepth: 0,
     avgParagraphLength: undefined,
@@ -106,9 +109,13 @@ export function analyzeAst(ast: AstRoot): StructureAnalysis {
     }
   }
 
-  // Start traversal from root
+  // Start traversal from root and collect top-level node types
   if (ast.children && Array.isArray(ast.children)) {
     for (const child of ast.children) {
+      // Track top-level node distribution
+      analysis.nodeTypeDistribution[child.type] = (analysis.nodeTypeDistribution[child.type] || 0) + 1;
+
+      // Then traverse the node
       traverse(child);
     }
   }

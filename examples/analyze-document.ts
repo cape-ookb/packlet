@@ -93,20 +93,6 @@ console.log('🌳 AST Information:');
 if (result.ast) {
   console.log(`   Type: ${result.ast.type}`);
   console.log(`   Children: ${result.ast.children?.length || 0} top-level nodes`);
-
-  // Show AST node types
-  if (result.ast.children) {
-    const nodeTypes = result.ast.children.map(child => child.type);
-    const typeCounts = nodeTypes.reduce((acc, type) => {
-      acc[type] = (acc[type] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-
-    console.log('   Node type distribution:');
-    Object.entries(typeCounts).forEach(([type, count]) => {
-      console.log(`     - ${type}: ${count}`);
-    });
-  }
 } else {
   console.log('   AST: Not available');
 }
@@ -133,6 +119,11 @@ if (result.structure) {
     console.log(`     - H${level}: ${count}`);
   });
 
+  console.log('   Node type distribution:');
+  Object.entries(result.structure.nodeTypeDistribution).forEach(([type, count]) => {
+    console.log(`     - ${type}: ${count}`);
+  });
+
   console.log(`   Max nesting depth: ${result.structure.maxNestingDepth}`);
   console.log(`   Links: ${result.structure.linkCount}`);
   console.log(`   Images: ${result.structure.imageCount}`);
@@ -147,40 +138,29 @@ if (result.structure) {
 }
 console.log();
 
-// What's NOT included (since this is analysis-only)
-console.log('❌ Not Included (Analysis Pipeline Only):');
-console.log(`   Nodes: ${result.nodes ? 'Available' : 'Not generated'}`);
-console.log(`   Chunks: ${result.chunks ? 'Available' : 'Not generated'}`);
-console.log(`   Stats: ${result.stats ? 'Available' : 'Not generated'}`);
-console.log(`   Metrics: ${result.metrics ? 'Partial' : 'Not generated'}`);
-console.log();
-
 // Context fields summary
-console.log('📋 Complete Context Fields:');
-console.log('   ✅ source (document info & metrics)');
-console.log('   ✅ options (processing configuration)');
-console.log('   ✅ timer (performance timing)');
-console.log('   ✅ stage (processing stage)');
-console.log('   ✅ ast (parsed markdown tree)');
-console.log('   ✅ structure (document structure stats)');
-console.log('   ❌ nodes (not generated in analyze pipeline)');
-console.log('   ❌ chunks (not generated in analyze pipeline)');
-console.log('   ❌ stats (not generated in analyze pipeline)');
-console.log();
+// console.log('📋 Complete Context Fields:');
+// console.log('   ✅ source (document info & metrics)');
+// console.log('   ✅ options (processing configuration)');
+// console.log('   ✅ timer (performance timing)');
+// console.log('   ✅ stage (processing stage)');
+// console.log('   ✅ ast (parsed markdown tree)');
+// console.log('   ✅ structure (document structure stats)');
+// console.log();
 
-console.log('🎯 Use Cases for Analysis Pipeline:');
-console.log('  • Quick document structure inspection');
-console.log('  • Debugging markdown parsing issues');
-console.log('  • Getting document metrics without chunking');
-console.log('  • Testing AST analysis in isolation');
-console.log('  • Performance testing (fast, no chunking overhead)');
-console.log();
+// console.log('🎯 Use Cases for Analysis Pipeline:');
+// console.log('  • Quick document structure inspection');
+// console.log('  • Debugging markdown parsing issues');
+// console.log('  • Getting document metrics without chunking');
+// console.log('  • Testing AST analysis in isolation');
+// console.log('  • Performance testing (fast, no chunking overhead)');
+// console.log();
 
-console.log('💡 Next Steps:');
-console.log('  • Use runFullPipeline() for complete chunking');
-console.log('  • Use individual pipeline steps for custom workflows');
-console.log('  • Examine result.ast for detailed AST inspection');
-console.log('  • Check result.structure for document composition');
+// console.log('💡 Next Steps:');
+// console.log('  • Use runFullPipeline() for complete chunking');
+// console.log('  • Use individual pipeline steps for custom workflows');
+// console.log('  • Examine result.ast for detailed AST inspection');
+// console.log('  • Check result.structure for document composition');
 
 // Raw JSON output option
 const showRawJSON = process.argv.includes('--json');
