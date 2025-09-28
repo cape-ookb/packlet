@@ -67,21 +67,39 @@ Modular pipeline-based chunker following functional programming principles:
 
 ## Flow Architecture
 
-The chunker uses functional composition via `flow()` utility:
+The chunker uses a two-phase approach with preprocessing optimization and a main pipeline:
+
+### Phase 1: Preprocessing (Performance Optimization)
 ```typescript
-const pipeline = flow(
-  parseMarkdown,
-  flattenAst,
-  (nodes) => splitOversized(nodes, options, countTokens),
-  (nodes) => packNodes(nodes, options, countTokens),
-  (chunks) => addOverlap(chunks, options),
-  normalizeChunks,
-  (chunks) => attachMetadata(chunks, options, countTokens),
-  (chunks) => assertOrFilterInvalid(chunks, options),
-);
+// Early single-chunk detection
+const preprocessResult = preprocess(doc, options);
+if (preprocessResult.canSkipPipeline) {
+  // Fast path: return single chunk directly, skip expensive AST operations
+  return { chunks: [preprocessResult.chunk], stats };
+}
 ```
 
-Each stage transforms the data and passes it to the next stage. Functions are pure with no side effects.
+### Phase 2: Main Pipeline (Complex Documents)
+```typescript
+const pipeline = flow(
+  parseMarkdown,        // Parse markdown to AST
+  flattenAst,          // Extract nodes from AST
+  splitOversized,      // Recursive splitting of oversized nodes
+  packNodes,           // Intelligent buffering with look-ahead merge
+  addOverlap,          // Sentence-based context overlap
+  normalizeChunks,     // Text cleanup preserving code blocks
+  attachMetadata,      // Attach chunk metadata (headings, breadcrumbs)
+  addEmbedText,        // Add embed text for vector search
+  assertOrFilterInvalid // Quality validation
+);
+
+const chunks = pipeline(doc);
+const stats = computeStats(chunks, options, startTime, endTime);
+```
+
+**Preprocessing Benefits**: For small documents (≤ maxTokens), the preprocessing step skips the entire pipeline, avoiding expensive AST parsing, node flattening, and splitting operations while still generating accurate statistics.
+
+Each pipeline stage transforms the data and passes it to the next stage. Functions are pure with no side effects.
 
 ## 🛠️ Development
 
@@ -147,3 +165,4 @@ This project uses **pnpm** for dependency management. All commands should use `p
 - **`docs/chunk-output-format.md`** - Complete specification for individual chunk file output format with comprehensive field definitions, examples, and migration notes
 - **`docs/title-in-each-chunk.md`** - Specification for title and header handling, breadcrumb generation, and context prepending
 - **`docs/testing-guidelines.md`** - ⚠️ Testing best practices and fixture usage requirements
+- **`docs/stats.md`** - Statistics system documentation for performance monitoring and quality analysis

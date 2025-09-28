@@ -31,11 +31,11 @@ This document outlines the comprehensive refactor needed to align the current im
 ## Implementation Tasks
 
 ### Preprocessing Optimization
-- [ ] Implement early single-chunk detection in main pipeline
-  - [ ] Add total token count calculation before AST parsing
-  - [ ] Create fast path: if `totalTokens <= maxTokens`, return single chunk
-  - [ ] Skip AST parsing and complex splitting logic for small documents
-  - [ ] Add performance metrics to measure optimization impact
+- [x] Implement early single-chunk detection in main pipeline
+  - [x] Add total token count calculation before AST parsing
+  - [x] Create fast path: if `totalTokens <= maxTokens`, return single chunk
+  - [x] Skip AST parsing and complex splitting logic for small documents
+  - [x] Add performance metrics to measure optimization impact
 
 ### Small Chunk Prevention System
 - [ ] Implement small chunk detection thresholds

@@ -153,7 +153,7 @@ type ProcessedDocument = {
 ### Processing Pipeline
 
 ```
-AST → Flatten → Group-Sections → Process-Sections → Emit-Chunks
+AST → Flatten → Group-Sections → Analyze-Patterns → Process-Sections → Emit-Chunks
 ```
 
 **Stage Details:**
@@ -168,15 +168,61 @@ AST → Flatten → Group-Sections → Process-Sections → Emit-Chunks
    - Build parent-child relationships
    - Calculate section-level token counts
 
-3. **Group-Sections → Process-Sections** (enhanced processing)
-   - Apply small chunk prevention at section level
-   - Use hierarchical relationships for merging decisions
-   - Maintain section boundary integrity
+3. **Group-Sections → Analyze-Patterns** (content analysis stage)
+   - Detect content patterns for each section (`detectContentPattern()`)
+   - Analyze heading text, content structure, sequential context
+   - Attach pattern metadata to sections for merging decisions
 
-4. **Process-Sections → Emit-Chunks** (modified current logic)
+4. **Analyze-Patterns → Process-Sections** (enhanced processing)
+   - Apply small chunk prevention at section level
+   - Use pattern analysis results for intelligent merging (`shouldMergeBasedOnPatterns()`)
+   - Maintain section boundary integrity based on content patterns
+
+5. **Process-Sections → Emit-Chunks** (modified current logic)
    - Flatten processed sections back to linear chunks
    - Apply overlap and normalization
    - Attach final metadata
+
+### Data Flow Integration
+
+```typescript
+// Enhanced Section type with pattern metadata
+type AnalyzedSection = Section & {
+  contentPattern: ContentPattern;
+  patternConfidence: number;
+  mergingRecommendation?: MergingDecision;
+};
+
+// Stage 3: Analyze-Patterns implementation
+function analyzePatterns(sections: Section[]): AnalyzedSection[] {
+  return sections.map(section => ({
+    ...section,
+    contentPattern: detectContentPattern(section),
+    patternConfidence: calculatePatternConfidence(section)
+  }));
+}
+
+// Stage 4: Process-Sections with pattern awareness
+function processSectionsWithPatterns(analyzedSections: AnalyzedSection[]): AnalyzedSection[] {
+  const processed: AnalyzedSection[] = [];
+
+  for (let i = 0; i < analyzedSections.length; i++) {
+    const current = analyzedSections[i];
+    const next = analyzedSections[i + 1];
+
+    if (next && shouldMergeBasedOnPatterns(current, next).shouldMerge) {
+      // Merge sections based on pattern analysis
+      const merged = mergeSections(current, next);
+      processed.push(merged);
+      i++; // Skip next since it's merged
+    } else {
+      processed.push(current);
+    }
+  }
+
+  return processed;
+}
+```
 
 ### Implementation Example
 
