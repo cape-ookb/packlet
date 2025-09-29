@@ -32,10 +32,6 @@ This document outlines the comprehensive refactor needed to align the current im
 
 ### Code Organization & Architecture Preparation (NEW - HIGH PRIORITY)
 - [ ] Move reusable utilities from analyze-ast.ts to content-analysis
-  - [ ] Create `lib/content-analysis/utils.ts`
-  - [ ] Move `estimateTextLength()` function from analyze-ast.ts
-  - [ ] Move `hasMainlyLinks()` function from analyze-ast.ts
-  - [ ] Update analyze-ast.ts imports to use content-analysis/utils
   - [ ] Add `calculateSectionTokenCount()` helper for Section structure
 
 - [ ] Fix type alignment between content-analysis and main pipeline

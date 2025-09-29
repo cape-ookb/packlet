@@ -507,8 +507,6 @@ const decision = shouldMergeBasedOnPatterns(section1, section2);
 
 ### Phase 1: Code Organization & Utilities
 - [ ] Move reusable utilities from `analyze-ast.ts` to `content-analysis/utils.ts`
-  - [ ] Move `estimateTextLength()` function for AST nodes
-  - [ ] Move `hasMainlyLinks()` function for AST nodes
   - [ ] Add `calculateTokenCountFromAst()` helper for AstSection structure
 - [ ] Update content-analysis types to work with AST nodes
   - [ ] Create `AstSection` type as defined in architecture
@@ -638,14 +636,89 @@ function getSiblings(node: FlatNode, allNodes: FlatNode[]): FlatNode[] {
 - [ ] Empty sections
 - [ ] Deeply nested structures
 
+## Implementation Notes & Critical Context
+
+### Current Code Structure Integration
+
+**Existing Systems to Leverage:**
+- `lib/analyze-ast.ts` - Contains `estimateTextLength()` and `hasMainlyLinks()` utilities (move to content-analysis/utils.ts)
+- `lib/content-analysis/` - Pattern detection system already exists, needs AST node integration
+- `lib/flatten-ast.ts` - Keep for final flattening stage after merging
+- `lib/processing-context-types.ts` - Add AstSection and ContentPattern types
+
+**Key Type Definitions Needed:**
+```typescript
+// Add to processing-context-types.ts
+type AstSection = {
+  node: AstNode;               // The heading node itself
+  content: AstNode[];          // Direct content under this heading
+  children: AstSection[];      // Child sections (H2s under H1, etc.)
+  level: number;              // 1, 2, 3
+  tokenCount: number;         // total tokens in this section
+  contentPattern?: ContentPattern; // detected pattern for merging decisions
+}
+
+// Update StructureAnalysis to include content patterns
+type StructureAnalysis = {
+  // ... existing fields ...
+  contentPatterns: Record<string, ContentPattern>; // sectionId -> pattern
+  recursiveSectioningApplied: boolean;
+  maxSectionDepth: number;
+}
+```
+
+### Integration with Tasks.md
+
+**Immediate Next Steps (from docs/tasks.md):**
+1. **Code Organization** - Move utilities from analyze-ast.ts to content-analysis/utils.ts
+2. **Type Updates** - Update content-analysis to work with AST nodes instead of FlatNodes
+3. **Pipeline Integration** - Add AST section extraction before existing flattening
+4. **Testing** - Create test fixtures for recursive sectioning scenarios
+
+**Relationship to Small Chunk Prevention:**
+- This architecture directly enables the small chunk prevention requirements in tasks.md
+- Recursive sectioning solves "merge consecutive small H2s within same H1" naturally
+- Content pattern analysis enables intelligent boundary decisions
+
+### Key Architectural Decisions Made
+
+1. **NO flatNodesToSection() conversion** - Work directly with AST structure
+2. **Two-stage processing** - Structure-aware sectioning + size-constrained chunking
+3. **Recursive sectioning** - Auto-recurse to H2→H3→H4 when sections too large
+4. **Preserve existing pipeline** - Only add stages before flattening, keep everything after
+
+### Critical Implementation Order
+
+**Phase 1**: Foundation (content-analysis integration)
+- Move utilities from analyze-ast.ts
+- Update content-analysis types for AST nodes
+- Add AstSection type definitions
+
+**Phase 2**: Core Algorithm
+- Implement `extractSectionsFromAst()`
+- Implement recursive sectioning with `processSection()`
+- Add content pattern integration
+
+**Phase 3**: Pipeline Integration
+- Insert new stages before existing flattening
+- Ensure backward compatibility
+- Update tests
+
+### Performance Considerations
+
+**Memory Usage**: O(n) for AST + O(s) for section structure where s << n
+**Processing Time**: One additional tree walk vs current single flatten pass
+**Large Documents**: Process sections independently, stream through pipeline
+
 ## Conclusion
 
-The Section-Grouped Hybrid approach provides the optimal balance for implementing the enhanced small chunk prevention strategy while preserving the benefits of the current architecture.
+The Direct AST Processing approach provides the optimal solution for implementing enhanced small chunk prevention while preserving current architecture benefits.
 
 **Key advantages:**
-- Enables natural implementation of hierarchical merging rules
-- Preserves performance and testability of linear processing
-- Maintains clean separation of concerns
-- Provides clear migration path from current implementation
+- Eliminates unnecessary data conversions (no flatNodesToSection needed)
+- Leverages existing AST hierarchy naturally
+- Enables recursive sectioning for optimal boundaries
+- Preserves all current pipeline benefits
+- Provides clear migration path
 
-**Recommendation**: Proceed with hybrid approach implementation, starting with Phase 1 (Section Grouping) to validate the concept before full integration.
+**Next Action**: Begin with Phase 1 (Code Organization) to move utilities and update types before implementing core algorithms.
